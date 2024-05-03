@@ -5,7 +5,6 @@ import java.util.Date;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.model.AIModel;
@@ -46,7 +45,8 @@ public class ImageAgentImpl implements ImageAgentIFC, DBSaveTaskIFC {
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        String[] urls = generateImagesFromSuperAI(dbConnection, session, userInput);
+        AIModel.ImagePrompt imagePrompt = constructImagePrompt(dbConnection, session, userInput);
+        String[] urls = generateImagesFromSuperAI(dbConnection, imagePrompt);
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
         newResponseRecord.setContent("<img src=\"" + urls[0] + "\">");
@@ -59,10 +59,14 @@ public class ImageAgentImpl implements ImageAgentIFC, DBSaveTaskIFC {
         return urls;
     }
 
-    private String[] generateImagesFromSuperAI(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.ImagePrompt constructImagePrompt(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.ImagePrompt imagePrompt = new AIModel.ImagePrompt();
         imagePrompt.setUserInput(userInput);
 
+        return imagePrompt;
+    }
+
+    private String[] generateImagesFromSuperAI(DBConnectionIFC dbConnection, AIModel.ImagePrompt imagePrompt) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getImageModels();
         return superAI.generateImages(models[0], imagePrompt);
