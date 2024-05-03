@@ -17,19 +17,13 @@ import org.neo.servaaibase.impl.StorageInDBImpl;
 
 import org.neo.servaaiagent.ifc.ChatAgentIFC;
 
-public class ChatAgentImpl implements ChatAgentIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+public class ChatAgentImpl implements ChatAgentIFC, DBSaveTaskIFC {
     private ChatAgentImpl() {
     }
 
     public static ChatAgentImpl getInstance() {
         return new ChatAgentImpl();
     }
-
-    @Override
-    public Object query(DBConnectionIFC dbConnection) {
-        return null;
-    }
-
 
     @Override
     public Object save(DBConnectionIFC dbConnection) {
@@ -53,7 +47,7 @@ public class ChatAgentImpl implements ChatAgentIFC, DBQueryTaskIFC, DBSaveTaskIF
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
 
-        AIModel.ChatResponse chatResponse = fetchChatResponse(dbConnection, session, userInput);
+        AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, session, userInput);
         if(chatResponse.getIsSuccess()) {
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
             newResponseRecord.setChatTime(new Date());
@@ -71,7 +65,7 @@ public class ChatAgentImpl implements ChatAgentIFC, DBQueryTaskIFC, DBSaveTaskIF
         } 
     }
 
-    private AIModel.ChatResponse fetchChatResponse(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
