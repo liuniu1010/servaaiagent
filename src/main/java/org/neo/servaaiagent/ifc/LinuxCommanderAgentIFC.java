@@ -7,4 +7,6 @@ public interface LinuxCommanderAgentIFC {
     public String execute(DBConnectionIFC dbConnection, String session, String userInput);
     public String generateCommand(String session, String userInput);
     public String generateCommand(DBConnectionIFC dbConnection, String session, String userInput);
+    public String generateAndExecute(String session, String userInput);
+    public String generateAndExecute(DBConnectionIFC dbConnection, String session, String userInput);
 }
