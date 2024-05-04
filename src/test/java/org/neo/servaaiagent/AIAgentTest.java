@@ -1,6 +1,7 @@
 package org.neo.servaframe;
 
 import java.util.*;
+import java.io.*;
 import java.sql.SQLException;
 
 import junit.framework.Test;
@@ -79,5 +80,57 @@ public class AIAgentTest
         System.out.println("userInput = " + userInput);
         System.out.println("response = " + response);
     }
+
+    public void testImageAgent() {
+        ImageAgentIFC imageAgent = ImageAgentImpl.getInstance();
+        String userInput = "Blue sky outside the window, with white clouds and blue sea";
+        String[] urls = imageAgent.generateImages(imageTestSession, userInput);
+        System.out.println("userInput = " + userInput);
+        for(String url: urls) {
+            System.out.println("image url = " + url);
+        }
+    }
+
+    public void testVisionAgent() throws Exception {
+        VisionAgentIFC visionAgent = VisionAgentImpl.getInstance();
+        String userInput = "Hello, please give me an description of the images";
+        InputStream in1 = new FileInputStream("/tmp/dogandcat.png");
+        String rawBase64OfAttach1 = IOUtil.inputStreamToRawBase64(in1);
+        String file1Content = "data:image/png;base64," + rawBase64OfAttach1;
+
+        InputStream in2 = new FileInputStream("/tmp/image.jpg");
+        String rawBase64OfAttach2 = IOUtil.inputStreamToRawBase64(in2);
+        String file2Content = "data:image/jpeg;base64," + rawBase64OfAttach2;
+
+        List<String> attachFiles = new ArrayList<String>();
+        attachFiles.add(file1Content);
+        attachFiles.add(file2Content);
+        String response = visionAgent.vision(visionTestSession, userInput, attachFiles);
+
+        System.out.println("userInput = " + userInput);
+        System.out.println("response = " + response);
+    }
+
+    public void testLinuxCommanderAgent() {
+        String userInput = "please check amount of disk left";
+        LinuxCommanderAgentIFC commandIFC = LinuxCommanderAgentImpl.getInstance();
+
+        System.out.println("test generateCommand");
+        String response = commandIFC.generateCommand(commandTestSession, userInput);
+        System.out.println("userInput = " + userInput);
+        System.out.println("response = " + response);
+
+        System.out.println("test generateAndExecute");
+        response = commandIFC.generateAndExecute(commandTestSession, userInput);
+        System.out.println("userInput = " + userInput);
+        System.out.println("response = " + response);
+
+        System.out.println("test execute");
+        userInput = "ls -l";
+        response = commandIFC.generateAndExecute(commandTestSession, userInput);
+        System.out.println("userInput = " + userInput);
+        System.out.println("response = " + response);
+    }
 }
+
 
