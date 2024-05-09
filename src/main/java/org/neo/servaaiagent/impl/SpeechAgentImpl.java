@@ -13,15 +13,15 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 
-import org.neo.servaaiagent.ifc.TextToSpeechAgentIFC;
+import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 
-public class TextToSpeechAgentImpl implements TextToSpeechAgentIFC, DBSaveTaskIFC {
+public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     private String outputFormat = "mp3";
-    private TextToSpeechAgentImpl() {
+    private SpeechAgentImpl() {
     }
 
-    public static TextToSpeechAgentImpl getInstance() {
-        return new TextToSpeechAgentImpl();
+    public static SpeechAgentImpl getInstance() {
+        return new SpeechAgentImpl();
     }
 
     @Override
@@ -33,7 +33,7 @@ public class TextToSpeechAgentImpl implements TextToSpeechAgentIFC, DBSaveTaskIF
     public String generateSpeech(String session, String userInput, String onlineFileMountPoint) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeSaveTask(new TextToSpeechAgentImpl() {
+        return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
                 return generateSpeech(dbConnection, session, userInput, onlineFileMountPoint);
@@ -48,8 +48,8 @@ public class TextToSpeechAgentImpl implements TextToSpeechAgentIFC, DBSaveTaskIF
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.TextToSpeechPrompt textToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
-        String filePath = generateSpeechFromSuperAI(dbConnection, textToSpeechPrompt, onlineFileMountPoint);
+        AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
+        String filePath = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileMountPoint);
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
         String content = "<b>speech generated</b>";
@@ -68,16 +68,16 @@ public class TextToSpeechAgentImpl implements TextToSpeechAgentIFC, DBSaveTaskIF
     }
 
     private AIModel.TextToSpeechPrompt constructTextToSpeechPrompt(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.TextToSpeechPrompt textToSpeechPrompt = new AIModel.TextToSpeechPrompt();
-        textToSpeechPrompt.setUserInput(userInput);
-        textToSpeechPrompt.setOutputFormat(outputFormat);
+        AIModel.TextToSpeechPrompt TextToSpeechPrompt = new AIModel.TextToSpeechPrompt();
+        TextToSpeechPrompt.setUserInput(userInput);
+        TextToSpeechPrompt.setOutputFormat(outputFormat);
 
-        return textToSpeechPrompt;
+        return TextToSpeechPrompt;
     }
 
-    private String generateSpeechFromSuperAI(DBConnectionIFC dbConnection, AIModel.TextToSpeechPrompt textToSpeechPrompt, String onlineFileMountPoint) {
+    private String generateSpeechFromSuperAI(DBConnectionIFC dbConnection, AIModel.TextToSpeechPrompt TextToSpeechPrompt, String onlineFileMountPoint) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getTextToSpeechModels();
-        return superAI.generateSpeech(models[0], textToSpeechPrompt, onlineFileMountPoint);
+        return superAI.generateSpeech(models[0], TextToSpeechPrompt, onlineFileMountPoint);
     }
 }
