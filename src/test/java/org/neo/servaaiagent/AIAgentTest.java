@@ -49,6 +49,7 @@ public class AIAgentTest
     private String imageTestSession = "imageTestSession";
     private String visionTestSession = "visionTestSession";
     private String commandTestSession = "commandTestSession";
+    private String textToSpeechTestSession = "textToSpeechTestSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -60,6 +61,7 @@ public class AIAgentTest
                 storage.clearChatRecords(imageTestSession);
                 storage.clearChatRecords(visionTestSession);
                 storage.clearChatRecords(commandTestSession);
+                storage.clearChatRecords(textToSpeechTestSession);
                 return null;
             }
         });
@@ -89,6 +91,15 @@ public class AIAgentTest
         for(String url: urls) {
             System.out.println("image url = " + url);
         }
+    }
+
+    public void testTextToSpeechAgent() {
+        TextToSpeechAgentIFC textToSpeechAgent = TextToSpeechAgentImpl.getInstance();
+        String userInput = "Blue sky outside the window, with white clouds and blue sea";
+        String mountPoint = "/tmp/";
+        System.out.println("userInput = " + userInput);
+        String filePath = textToSpeechAgent.generateSpeech(textToSpeechTestSession, userInput, mountPoint);
+        System.out.println("file generated = " + filePath); 
     }
 
     public void testVisionAgent() throws Exception {

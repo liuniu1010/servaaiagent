@@ -30,6 +30,7 @@ public class VisionAgentImpl implements VisionAgentIFC, DBSaveTaskIFC {
         return null;
     }
 
+    @Override
     public String vision(String session, String userInput, List<String> attachFiles) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -41,6 +42,7 @@ public class VisionAgentImpl implements VisionAgentIFC, DBSaveTaskIFC {
         });
     }
 
+    @Override
     public String vision(DBConnectionIFC dbConnection, String session, String userInput, List<String> attachFiles) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);

@@ -28,6 +28,7 @@ public class ImageAgentImpl implements ImageAgentIFC, DBSaveTaskIFC {
         return null;
     }
 
+    @Override
     public String[] generateImages(String session, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -39,6 +40,7 @@ public class ImageAgentImpl implements ImageAgentIFC, DBSaveTaskIFC {
         });
     }
 
+    @Override
     public String[] generateImages(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);

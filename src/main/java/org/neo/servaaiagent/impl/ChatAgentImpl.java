@@ -29,6 +29,7 @@ public class ChatAgentImpl implements ChatAgentIFC, DBSaveTaskIFC {
         return null;
     }
 
+    @Override
     public String chat(String session, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -40,6 +41,7 @@ public class ChatAgentImpl implements ChatAgentIFC, DBSaveTaskIFC {
         });
     }
 
+    @Override
     public String chat(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
