@@ -97,8 +97,9 @@ public class AIAgentTest
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
         String userInput = "Blue sky outside the window, with white clouds and blue sea";
         String mountPoint = "/tmp/";
+        String relavantVisitPath = "/";
         System.out.println("userInput = " + userInput);
-        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, mountPoint);
+        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, mountPoint, relavantVisitPath);
         System.out.println("file generated = " + filePath); 
     }
 

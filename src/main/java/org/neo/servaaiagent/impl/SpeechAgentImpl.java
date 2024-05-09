@@ -1,6 +1,7 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.Date;
+import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
@@ -10,6 +11,7 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 
@@ -30,31 +32,33 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateSpeech(String session, String userInput, String onlineFileMountPoint) {
+    public String generateSpeech(String session, String userInput, String onlineFileMountPoint, String relavantVisitPath) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateSpeech(dbConnection, session, userInput, onlineFileMountPoint);
+                return generateSpeech(dbConnection, session, userInput, onlineFileMountPoint, relavantVisitPath);
             }
         });
     }
 
     @Override
-    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileMountPoint) {
+    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileMountPoint, String relavantVisitPath) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
         AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
-        String filePath = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileMountPoint);
+        String fileName = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileMountPoint);
+        String relavantFilePath = CommonUtil.normalizeFolderPath(relavantVisitPath) + File.separator + fileName;
+        String absoluteFilePath = CommonUtil.normalizeFolderPath(onlineFileMountPoint) + File.separator + fileName;
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
         String content = "<b>speech generated</b>";
         content += "<audio controls>";
-        content += "<source src=\"" + filePath + "\" type=\"audio/" + outputFormat + "\">";
+        content += "<source src=\"" + relavantFilePath + "\" type=\"audio/" + outputFormat + "\">";
         content += "Your browser does not support the audio element";
         content += "</audio>";
         newResponseRecord.setContent(content);
@@ -64,7 +68,7 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
         storage.addChatRecord(session, newRequestRecord);
         storage.addChatRecord(session, newResponseRecord);
 
-        return filePath;
+        return absoluteFilePath;
     }
 
     private AIModel.TextToSpeechPrompt constructTextToSpeechPrompt(DBConnectionIFC dbConnection, String session, String userInput) {
