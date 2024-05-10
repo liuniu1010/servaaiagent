@@ -1,6 +1,7 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.List;
+import org.apache.log4j.Logger;
 
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
@@ -15,13 +16,14 @@ import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
 public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
+    final static Logger logger = Logger.getLogger(ChatWithSpeechExpertForUIImpl.class);
     private String onlineFileMountPoint;
     private String relavantVisitPath;
     private ChatWithSpeechExpertForUIImpl() {
     }
 
     private ChatWithSpeechExpertForUIImpl(String inputOnlineFileMountPoint, String inputRelavantVisitPath) {
-        onlineFileMountPoint = onlineFileMountPoint;
+        onlineFileMountPoint = inputOnlineFileMountPoint;
         relavantVisitPath = inputRelavantVisitPath;
     }
 
@@ -36,7 +38,7 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
             return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput);
+                    return innerFetchResponse(dbConnection, session, userInput, onlineFileMountPoint, relavantVisitPath);
                 }
             });
         }
@@ -45,9 +47,9 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput) {
+    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, String inputOnlineFileMountPoint, String inputRelavantVisitPath) {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
-        speechAgent.generateSpeech(dbConnection, session, userInput, onlineFileMountPoint, relavantVisitPath);
+        speechAgent.generateSpeech(dbConnection, session, userInput, inputOnlineFileMountPoint, inputRelavantVisitPath);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
