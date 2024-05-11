@@ -17,18 +17,18 @@ import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
 public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
     final static Logger logger = Logger.getLogger(ChatWithSpeechExpertForUIImpl.class);
-    private String onlineFileMountPoint;
+    private String onlineFileAbsolutePath;
     private String relavantVisitPath;
     private ChatWithSpeechExpertForUIImpl() {
     }
 
-    private ChatWithSpeechExpertForUIImpl(String inputOnlineFileMountPoint, String inputRelavantVisitPath) {
-        onlineFileMountPoint = inputOnlineFileMountPoint;
+    private ChatWithSpeechExpertForUIImpl(String inputOnlineFileAbsolutePath, String inputRelavantVisitPath) {
+        onlineFileAbsolutePath = inputOnlineFileAbsolutePath;
         relavantVisitPath = inputRelavantVisitPath;
     }
 
-    public static ChatWithSpeechExpertForUIImpl getInstance(String inputMountPoint, String inputRelavantVisitPath) {
-        return new ChatWithSpeechExpertForUIImpl(inputMountPoint, inputRelavantVisitPath);
+    public static ChatWithSpeechExpertForUIImpl getInstance(String inputAbsolutePath, String inputRelavantVisitPath) {
+        return new ChatWithSpeechExpertForUIImpl(inputAbsolutePath, inputRelavantVisitPath);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
             return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput, onlineFileMountPoint, relavantVisitPath);
+                    return innerFetchResponse(dbConnection, session, userInput, onlineFileAbsolutePath, relavantVisitPath);
                 }
             });
         }
@@ -47,9 +47,9 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, String inputOnlineFileMountPoint, String inputRelavantVisitPath) {
+    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, String inputOnlineFileAbsolutePath, String inputRelavantVisitPath) {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
-        speechAgent.generateSpeech(dbConnection, session, userInput, inputOnlineFileMountPoint, inputRelavantVisitPath);
+        speechAgent.generateSpeech(dbConnection, session, userInput, inputOnlineFileAbsolutePath, inputRelavantVisitPath);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);

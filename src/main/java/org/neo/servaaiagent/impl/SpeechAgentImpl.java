@@ -32,28 +32,28 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateSpeech(String session, String userInput, String onlineFileMountPoint, String relavantVisitPath) {
+    public String generateSpeech(String session, String userInput, String onlineFileAbsolutePath, String relavantVisitPath) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateSpeech(dbConnection, session, userInput, onlineFileMountPoint, relavantVisitPath);
+                return generateSpeech(dbConnection, session, userInput, onlineFileAbsolutePath, relavantVisitPath);
             }
         });
     }
 
     @Override
-    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileMountPoint, String relavantVisitPath) {
+    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileAbsolutePath, String relavantVisitPath) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
         AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
-        String fileName = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileMountPoint);
+        String fileName = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileAbsolutePath);
         String relavantFilePath = CommonUtil.normalizeFolderPath(relavantVisitPath) + File.separator + fileName;
-        String absoluteFilePath = CommonUtil.normalizeFolderPath(onlineFileMountPoint) + File.separator + fileName;
+        String absoluteFilePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
         String content = "<b>speech generated</b>";
@@ -79,9 +79,9 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
         return TextToSpeechPrompt;
     }
 
-    private String generateSpeechFromSuperAI(DBConnectionIFC dbConnection, AIModel.TextToSpeechPrompt TextToSpeechPrompt, String onlineFileMountPoint) {
+    private String generateSpeechFromSuperAI(DBConnectionIFC dbConnection, AIModel.TextToSpeechPrompt TextToSpeechPrompt, String onlineFileAbsolutePath) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getTextToSpeechModels();
-        return superAI.generateSpeech(models[0], TextToSpeechPrompt, onlineFileMountPoint);
+        return superAI.generateSpeech(models[0], TextToSpeechPrompt, onlineFileAbsolutePath);
     }
 }

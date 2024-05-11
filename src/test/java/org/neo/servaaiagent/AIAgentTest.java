@@ -96,10 +96,10 @@ public class AIAgentTest
     public void testSpeechAgent() {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
         String userInput = "Blue sky outside the window, with white clouds and blue sea";
-        String mountPoint = "/tmp/";
+        String absolutePath = "/tmp/";
         String relavantVisitPath = "/";
         System.out.println("userInput = " + userInput);
-        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, mountPoint, relavantVisitPath);
+        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, absolutePath, relavantVisitPath);
         System.out.println("file generated = " + filePath); 
     }
 
