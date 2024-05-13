@@ -71,6 +71,52 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
         return absoluteFilePath;
     }
 
+    @Override
+    public String speechToText(String session, String filePath, String relevantVisitPath) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                return speechToText(dbConnection, session, filePath, relevantVisitPath);
+            }
+        });
+    }
+
+    @Override
+    public String speechToText(DBConnectionIFC dbConnection, String session, String filePath, String relevantVisitPath) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        newRequestRecord.setIsRequest(true);
+        String fileName = CommonUtil.getFileName(filePath);
+        String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
+        String content = "<b>input speech</b>";
+        content += "<audio controls>";
+        content += "<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
+        content += "Your browser does not support the audio element";
+        content += "</audio>";
+        newRequestRecord.setContent(content);
+        newRequestRecord.setChatTime(new Date());
+
+        AIModel.Attachment attachment = new AIModel.Attachment();
+        attachment.setContent(filePath);
+        AIModel.ChatResponse chatResponse = speechToTextFromSuperAI(dbConnection, attachment);
+        if(chatResponse.getIsSuccess()) {
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            newResponseRecord.setIsRequest(false);
+            newResponseRecord.setContent(chatResponse.getMessage());
+            newResponseRecord.setChatTime(new Date());
+
+            StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+            storage.addChatRecord(session, newRequestRecord);
+            storage.addChatRecord(session, newResponseRecord);
+
+            return chatResponse.getMessage();
+        }
+        else {
+            throw new RuntimeException(chatResponse.getMessage());
+        }
+    }
+
     private AIModel.TextToSpeechPrompt constructTextToSpeechPrompt(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.TextToSpeechPrompt TextToSpeechPrompt = new AIModel.TextToSpeechPrompt();
         TextToSpeechPrompt.setUserInput(userInput);
@@ -83,5 +129,11 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getTextToSpeechModels();
         return superAI.generateSpeech(models[0], TextToSpeechPrompt, onlineFileAbsolutePath);
+    }
+
+    private AIModel.ChatResponse speechToTextFromSuperAI(DBConnectionIFC dbConnection, AIModel.Attachment attachment) {
+        SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
+        String[] models = superAI.getSpeechToTextModels();
+        return superAI.speechToText(models[0], attachment); 
     }
 }
