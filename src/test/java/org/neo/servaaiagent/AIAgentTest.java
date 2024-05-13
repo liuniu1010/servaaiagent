@@ -93,14 +93,23 @@ public class AIAgentTest
         }
     }
 
-    public void testSpeechAgent() {
+    public void testSpeechAgentTextToSpeech() {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
         String userInput = "Blue sky outside the window, with white clouds and blue sea";
         String absolutePath = "/tmp/";
-        String relavantVisitPath = "/";
+        String relevantVisitPath = "/";
         System.out.println("userInput = " + userInput);
-        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, absolutePath, relavantVisitPath);
+        String filePath = speechAgent.generateSpeech(speechTestSession, userInput, absolutePath, relevantVisitPath);
         System.out.println("file generated = " + filePath); 
+    }
+
+    public void testSpeechAgentSpeechToText() {
+        SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
+        String filePath = "/tmp/audio_TcF2bG8YvM.mp3";
+        String relevantVisitPath = "/";
+        System.out.println("filePath = " + filePath);
+        String text = speechAgent.speechToText(speechTestSession, filePath, relevantVisitPath);
+        System.out.println("text = " + text);
     }
 
     public void testVisionAgent() throws Exception {
