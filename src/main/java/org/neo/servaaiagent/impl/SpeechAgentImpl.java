@@ -32,19 +32,19 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateSpeech(String session, String userInput, String onlineFileAbsolutePath, String relavantVisitPath) {
+    public String generateSpeech(String session, String userInput, String onlineFileAbsolutePath, String relevantVisitPath) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateSpeech(dbConnection, session, userInput, onlineFileAbsolutePath, relavantVisitPath);
+                return generateSpeech(dbConnection, session, userInput, onlineFileAbsolutePath, relevantVisitPath);
             }
         });
     }
 
     @Override
-    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileAbsolutePath, String relavantVisitPath) {
+    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileAbsolutePath, String relevantVisitPath) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
@@ -52,13 +52,13 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
 
         AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
         String fileName = generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileAbsolutePath);
-        String relavantFilePath = CommonUtil.normalizeFolderPath(relavantVisitPath) + File.separator + fileName;
+        String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
         String absoluteFilePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
         String content = "<b>speech generated</b>";
         content += "<audio controls>";
-        content += "<source src=\"" + relavantFilePath + "\" type=\"audio/" + outputFormat + "\">";
+        content += "<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
         content += "Your browser does not support the audio element";
         content += "</audio>";
         newResponseRecord.setContent(content);

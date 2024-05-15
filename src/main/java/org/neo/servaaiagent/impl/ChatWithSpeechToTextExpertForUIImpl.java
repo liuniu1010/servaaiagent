@@ -1,7 +1,7 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import java.io.File;
 
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
@@ -15,30 +15,37 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
-public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
-    final static Logger logger = Logger.getLogger(ChatWithSpeechExpertForUIImpl.class);
+public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIImpl {
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;
-    private ChatWithSpeechExpertForUIImpl() {
+    private ChatWithSpeechToTextExpertForUIImpl() {
     }
 
-    private ChatWithSpeechExpertForUIImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+    private ChatWithSpeechToTextExpertForUIImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
         onlineFileAbsolutePath = inputOnlineFileAbsolutePath;
         relevantVisitPath = inputRelevantVisitPath;
     }
 
-    public static ChatWithSpeechExpertForUIImpl getInstance(String inputAbsolutePath, String inputRelevantVisitPath) {
-        return new ChatWithSpeechExpertForUIImpl(inputAbsolutePath, inputRelevantVisitPath);
+    public static ChatWithSpeechToTextExpertForUIImpl getInstance(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        return new ChatWithSpeechToTextExpertForUIImpl(inputOnlineFileAbsolutePath, inputRelevantVisitPath);
     }
 
     @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl() {
+            return (String)dbService.executeSaveTask(new ChatWithSpeechToTextExpertForUIImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput, onlineFileAbsolutePath, relevantVisitPath);
+                    try {
+                        return innerFetchResponse(dbConnection, session, userInput, attachFiles);
+                    }
+                    catch(RuntimeException rex) {
+                        throw rex;
+                    }
+                    catch(Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             });
         }
@@ -47,9 +54,13 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, List<String> attachFiles) throws Exception {
+        String base64 = attachFiles.get(0);
+        String fileName = CommonUtil.base64ToFile(base64, onlineFileAbsolutePath);
+        String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
+
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance();
-        speechAgent.generateSpeech(dbConnection, session, userInput, inputOnlineFileAbsolutePath, inputRelevantVisitPath);
+        speechAgent.speechToText(dbConnection, session, filePath, relevantVisitPath);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
