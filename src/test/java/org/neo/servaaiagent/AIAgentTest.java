@@ -50,6 +50,7 @@ public class AIAgentTest
     private String visionTestSession = "visionTestSession";
     private String commandTestSession = "commandTestSession";
     private String speechTestSession = "speechTestSession";
+    private String translateTestSession = "translateTestSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -62,6 +63,7 @@ public class AIAgentTest
                 storage.clearChatRecords(visionTestSession);
                 storage.clearChatRecords(commandTestSession);
                 storage.clearChatRecords(speechTestSession);
+                storage.clearChatRecords(translateTestSession);
                 return null;
             }
         });
@@ -77,10 +79,21 @@ public class AIAgentTest
     public void testChatAgent() {
         ChatAgentIFC chatAgent = ChatAgentImpl.getInstance();
         String userInput = "Hello, I'm neo, nice to meet you!";
-        String response = chatAgent.chat(chatTestSession, userInput);
-
         System.out.println("userInput = " + userInput);
+        String response = chatAgent.chat(chatTestSession, userInput);
         System.out.println("response = " + response);
+    }
+
+    public void testTranslateAgent() {
+        TranslateAgentIFC translateAgent = TranslateAgentImpl.getInstance();
+        String userInput1 = "Hello, I'm neo, nice to meet you!";
+        String userInput2 = "这是一段翻译测试";
+        String[] userInputs = new String[]{userInput1, userInput2};
+        for(String userInput: userInputs) {
+            System.out.println("userInput = " + userInput);
+            String response = translateAgent.translate(chatTestSession, userInput);
+            System.out.println("response = " + response);
+        }
     }
 
     public void testImageAgent() {
