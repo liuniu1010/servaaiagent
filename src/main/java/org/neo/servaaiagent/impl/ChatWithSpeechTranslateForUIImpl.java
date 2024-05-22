@@ -78,11 +78,19 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
         TranslateAgentIFC translateAgent = TranslateAgentImpl.getInstance();
         String text = speechAgent.speechToText(dbConnection, session, filePath);
         String translation = translateAgent.translate(dbConnection, session, text);
+        String translateFileName = speechAgent.generateSpeech(dbConnection, session, translation, onlineFileAbsolutePath);
+
+        String relevantTranslateFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + translateFileName;
 
         String responseText = "original text:";
         responseText += "\n<b>" + text + "</b>";
         responseText += "\n\n" + "translation:";
         responseText += "\n<b>" + translation + "</b>";
+        responseText += "\n\naudio";
+        responseText += "\n<audio controls>";
+        responseText += "<source src=\"" + relevantTranslateFilePath + "\" type=\"audio/" + outputFormat + "\">";
+        responseText += "Your browser does not support the audio element";
+        responseText += "</audio>";
 
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
