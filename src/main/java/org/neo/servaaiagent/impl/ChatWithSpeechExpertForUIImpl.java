@@ -38,10 +38,10 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl() {
+            return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput, onlineFileAbsolutePath, relevantVisitPath);
+                    return innerFetchResponse(dbConnection, session, userInput);
                 }
             });
         }
@@ -50,14 +50,14 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
-        String fileName = speechAgent.generateSpeech(dbConnection, session, userInput, inputOnlineFileAbsolutePath);
+        String fileName = speechAgent.generateSpeech(dbConnection, session, userInput, onlineFileAbsolutePath);
 
         String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);

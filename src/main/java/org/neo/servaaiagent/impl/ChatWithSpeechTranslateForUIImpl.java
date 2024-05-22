@@ -38,7 +38,7 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithSpeechTranslateForUIImpl() {
+            return (String)dbService.executeSaveTask(new ChatWithSpeechTranslateForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
                     try {
