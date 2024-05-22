@@ -43,23 +43,9 @@ public class TranslateAgentImpl implements TranslateAgentIFC, DBSaveTaskIFC {
 
     @Override
     public String translate(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
-        newRequestRecord.setChatTime(new Date());
-        newRequestRecord.setIsRequest(true);
-        newRequestRecord.setContent(userInput);
-
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         if(chatResponse.getIsSuccess()) {
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-            newResponseRecord.setChatTime(new Date());
-            newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(chatResponse.getMessage());
-
-            StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
-
             return chatResponse.getMessage();
         }
         else {
