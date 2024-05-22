@@ -77,11 +77,16 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
         TranslateAgentIFC translateAgent = TranslateAgentImpl.getInstance();
         String text = speechAgent.speechToText(dbConnection, session, filePath);
-        String translate = translateAgent.translate(dbConnection, session, text);
+        String translation = translateAgent.translate(dbConnection, session, text);
+
+        String responseText = "original text:";
+        responseText += "\n<b>" + text + "</b>";
+        responseText += "\n\n" + "translation:";
+        responseText += "\n<b>" + translation + "</b>";
 
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setIsRequest(false);
-        newResponseRecord.setContent(translate);
+        newResponseRecord.setContent(responseText);
         newResponseRecord.setChatTime(new Date());
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
