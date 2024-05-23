@@ -114,15 +114,15 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
+        promptStruct.setFunctionCall(LinuxCommandCallImpl.getInstance());
 
         return promptStruct;
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
-        FunctionCallIFC functionCallIFC = LinuxCommandCallImpl.getInstance();
         String[] models = superAI.getChatModels();
-        return superAI.fetchChatResponse(models[0], promptStruct, functionCallIFC);
+        return superAI.fetchChatResponse(models[0], promptStruct);
     }
 
     private String extractCommandFromChatResponse(AIModel.ChatResponse chatResponse) {
