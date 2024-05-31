@@ -65,29 +65,27 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
 
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
-        String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
-        String content = "<b>input speech</b>";
-        content += "<audio controls>";
-        content += "<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
-        content += "Your browser does not support the audio element";
-        content += "</audio>";
-        newRequestRecord.setContent(content);
         newRequestRecord.setChatTime(new Date());
+        String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
 
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
         TranslateAgentIFC translateAgent = TranslateAgentImpl.getInstance();
         String text = speechAgent.speechToText(dbConnection, session, filePath);
+
+        String content = "<b>" + text + "</b>";
+        content += "<br><audio controls>";
+        content += "<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
+        content += "Your browser does not support the audio element";
+        content += "</audio>";
+        newRequestRecord.setContent(content);
+
         String translation = translateAgent.translate(dbConnection, session, text);
         String translateFileName = speechAgent.generateSpeech(dbConnection, session, translation, onlineFileAbsolutePath);
 
         String relevantTranslateFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + translateFileName;
 
-        String responseText = "original text:";
-        responseText += "\n<b>" + text + "</b>";
-        responseText += "\n\n" + "translation:";
-        responseText += "\n<b>" + translation + "</b>";
-        responseText += "\n\naudio";
-        responseText += "\n<audio controls>";
+        String responseText = "<b>" + translation + "</b>";
+        responseText += "<br><audio controls>";
         responseText += "<source src=\"" + relevantTranslateFilePath + "\" type=\"audio/" + outputFormat + "\">";
         responseText += "Your browser does not support the audio element";
         responseText += "</audio>";
