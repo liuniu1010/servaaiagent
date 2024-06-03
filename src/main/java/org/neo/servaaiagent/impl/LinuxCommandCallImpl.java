@@ -15,6 +15,7 @@ public class LinuxCommandCallImpl implements FunctionCallIFC {
         return new LinuxCommandCallImpl();
     }
 
+    @Override
     public List<AIModel.Function> getFunctions() {
         // executeCommand
         AIModel.Function executeCommand = generateFunctionForExecuteCommand();
@@ -24,6 +25,7 @@ public class LinuxCommandCallImpl implements FunctionCallIFC {
         return functions;
     }
 
+    @Override
     public Object callFunction(AIModel.Call call) {
         if(call.getMethodName().equals(METHODNAME_EXECUTECOMMAND)) {
             return call_executeCommand(call);
