@@ -65,7 +65,25 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 return chatResponse.getMessage();
             }
             else {
-                String runningResult = promptStruct.getFunctionCall().callFunction(call); 
+                String runningResult = (String)promptStruct.getFunctionCall().callFunction(call);
+
+                AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+                newResponseRecord.setChatTime(new Date());
+                newResponseRecord.setIsRequest(false);
+                newResponseRecord.setContent(runningResult);
+
+                StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+                storage.addChatRecord(session, newRequestRecord);
+                storage.addChatRecord(session, newResponseRecord);
+
+                if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
+                    String newInstruction = runningResult;
+                    // recursively call this method, it should be changed to loop calling later
+                    return generateCode(dbConnection, session, newInstruction);
+                }
+                else {
+                    return runningResult;
+                }
             }
         }
         else {

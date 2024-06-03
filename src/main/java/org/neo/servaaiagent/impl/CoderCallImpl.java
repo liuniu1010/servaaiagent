@@ -84,18 +84,18 @@ public class CoderCallImpl implements FunctionCallIFC {
         return function;
     }
 
-    private static String METHODNAME_EXECUTECOMMAND = "executeCommand";
+    protected static String METHODNAME_EXECUTECOMMAND = "executeCommand";
     private static String EXECUTECOMMAND_PARAM_COMMAND = "command";
     private String executeCommand(String command) {
         return CommonUtil.executeCommand(command);
     }
 
-    private static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";
+    protected static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";
     private String finishCodeGeneration() {
         return "code are all generated, ready to compile and test";
     }
 
-    private static String METHODNAME_FAILCODEGENERATION = "failCodeGeneration";
+    protected static String METHODNAME_FAILCODEGENERATION = "failCodeGeneration";
     private static String FAILCODEGENERATION_PARAM_REASON = "reason";
     private String failCodeGeneration(String reason) {
         return reason;
@@ -110,7 +110,9 @@ public class CoderCallImpl implements FunctionCallIFC {
             }
         }
 
-        return executeCommand(command);
+        String runningResult = "$ " + command;
+        runningResult += "\n" + executeCommand(command);
+        return runningResult;
     }
 
     private String call_finishCodeGeneration(AIModel.Call call) {
