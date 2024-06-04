@@ -112,9 +112,19 @@ public class CoderCallImpl implements FunctionCallIFC {
             }
         }
 
-        String runningResult = "$ " + command;
-        runningResult += "\n" + executeCommand(command);
-        return runningResult;
+        String runningResultDesc = null;
+        try {
+            String commandResult = executeCommand(command);
+            runningResultDesc = "You have run command \n" + command + "\n success with result: ";
+            runningResultDesc += "\n" + commandResult;
+            runningResultDesc += "\nPlease continue to write code to implement the requirement";
+        }
+        catch(Exception ex) {
+            runningResultDesc = "You have run command \n" + command + "\n failed with result: ";
+            runningResultDesc += "\n" + ex.getMessage();
+        }
+
+        return runningResultDesc;
     }
 
     private String call_finishCodeGeneration(AIModel.Call call) {

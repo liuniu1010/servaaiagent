@@ -30,28 +30,32 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateCode(String session, String inputInstruction) {
+    public String generateCode(String session, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new CoderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCode(dbConnection, session, inputInstruction);
+                return generateCode(dbConnection, session, requirement);
             }
         });
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, String inputInstruction) {
-        System.out.println("input for Coder = " + inputInstruction);
+    public String generateCode(DBConnectionIFC dbConnection, String session, String requirement) {
+        return innerGenerateCode(dbConnection, session, requirement, requirement);
+    }
+
+    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String requirement, String newInput) {
+        System.out.println("input for Coder = " + newInput);
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
-        newRequestRecord.setContent(inputInstruction);
+        newRequestRecord.setContent(newInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, inputInstruction);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, requirement, newInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
-        String runningResult = null;
+        String runningResultDesc = null;
         if(chatResponse.getIsSuccess()) {
             AIModel.Call call = extractFunctionCallFromChatResponse(chatResponse);
             if(call == null) {
@@ -64,27 +68,26 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 storage.addChatRecord(session, newRequestRecord);
                 storage.addChatRecord(session, newResponseRecord);
 
-                runningResult = chatResponse.getMessage();
+                runningResultDesc = chatResponse.getMessage();
             }
             else {
-                runningResult = (String)promptStruct.getFunctionCall().callFunction(call);
+                runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
 
                 AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
                 newResponseRecord.setChatTime(new Date());
                 newResponseRecord.setIsRequest(false);
-                newResponseRecord.setContent(runningResult);
+                newResponseRecord.setContent(runningResultDesc);
 
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.addChatRecord(session, newRequestRecord);
                 storage.addChatRecord(session, newResponseRecord);
 
                 if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
-                    String newInstruction = runningResult;
                     // recursively call this method, it should be changed to loop calling later
-                    runningResult = generateCode(dbConnection, session, newInstruction);
+                    runningResultDesc = innerGenerateCode(dbConnection, session, requirement, runningResultDesc);
                 }
             }
-            return runningResult;
+            return runningResultDesc;
         }
         else {
             throw new RuntimeException(chatResponse.getMessage());
@@ -103,12 +106,12 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String inputInstruction) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String requirement, String newInput) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
         promptStruct.setChatRecords(chatRecords);
-        promptStruct.setUserInput(inputInstruction);
+        promptStruct.setUserInput(newInput);
         String systemHint = "You are a profession java coder, expecially good at develop software under linux with command line tools";
         systemHint += "\nThe project path is /tmp/project1, all source code should be generated under this folder.";
         systemHint += "\njava and mvn has been installed, please generate your project based on maven.";
@@ -122,6 +125,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\nFunction 'executeCommand' is to execute any command you need.";
         systemHint += "\nFunction 'finishCodeGeneration' is to declare that all code necessary are generated, ready to compile and test.";
         systemHint += "\nFunction 'failCodeGeneration' is to declare that you cannot generate code for the specified requirement.";
+        systemHint += "\nNow, what you need to do is: " + requirement;
         promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(CoderCallImpl.getInstance());
 
