@@ -76,7 +76,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
                 newResponseRecord.setChatTime(new Date());
                 newResponseRecord.setIsRequest(false);
-                newResponseRecord.setContent(runningResultDesc);
+                newResponseRecord.setContent("Ok, I have executed it success");
 
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.addChatRecord(session, newRequestRecord);
@@ -125,7 +125,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\nFunction 'executeCommand' is to execute any command you need.";
         systemHint += "\nFunction 'finishCodeGeneration' is to declare that all code necessary are generated, ready to compile and test.";
         systemHint += "\nFunction 'failCodeGeneration' is to declare that you cannot generate code for the specified requirement.";
-        systemHint += "\nNow, what you need to do is: " + requirement;
+        systemHint += "\nFollow these steps to write code:";
+        systemHint += "\n1. generate necessary java code";
+        systemHint += "\n2. generate resource files if needed";
+        systemHint += "\n3. generate junit java code which is to verfity functions in main code";
+        systemHint += "\n4. generate necessary pom.xml to ensure we should use mvn command to build the code";
+        systemHint += "\n5. run 'mvn test-compile' to ensure all code are compilable";
+        systemHint += "\n6. run 'mvn test' to ensure all test cases passed";
+        systemHint += "\nin cases if you met any exception in previous steps, please ajust code and try again until the code pass test";
+        systemHint += "\n";
+        systemHint += "\nNow, the requirement what you need to implment is: " + requirement;
         promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(CoderCallImpl.getInstance());
 
