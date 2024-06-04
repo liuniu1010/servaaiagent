@@ -61,8 +61,10 @@ public class CoderCallImpl implements FunctionCallIFC {
     }
 
     private AIModel.Function generateFunctionForFinishCodeGeneration() {
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
         AIModel.Function function = new AIModel.Function();
         function.setMethodName(METHODNAME_FINISHCODEGENERATION);
+        function.setParams(params);
         function.setDescription("to declare the code have been generated, ready to compile and test");
 
         return function;

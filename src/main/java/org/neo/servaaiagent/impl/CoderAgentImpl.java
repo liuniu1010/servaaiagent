@@ -43,6 +43,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
     @Override
     public String generateCode(DBConnectionIFC dbConnection, String session, String inputInstruction) {
+        System.out.println("input for Coder = " + inputInstruction);
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
@@ -50,6 +51,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, inputInstruction);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
+        String runningResult = null;
         if(chatResponse.getIsSuccess()) {
             AIModel.Call call = extractFunctionCallFromChatResponse(chatResponse);
             if(call == null) {
@@ -62,10 +64,10 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 storage.addChatRecord(session, newRequestRecord);
                 storage.addChatRecord(session, newResponseRecord);
 
-                return chatResponse.getMessage();
+                runningResult = chatResponse.getMessage();
             }
             else {
-                String runningResult = (String)promptStruct.getFunctionCall().callFunction(call);
+                runningResult = (String)promptStruct.getFunctionCall().callFunction(call);
 
                 AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
                 newResponseRecord.setChatTime(new Date());
@@ -79,12 +81,10 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
                     String newInstruction = runningResult;
                     // recursively call this method, it should be changed to loop calling later
-                    return generateCode(dbConnection, session, newInstruction);
-                }
-                else {
-                    return runningResult;
+                    runningResult = generateCode(dbConnection, session, newInstruction);
                 }
             }
+            return runningResult;
         }
         else {
             throw new RuntimeException(chatResponse.getMessage());

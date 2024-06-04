@@ -55,7 +55,9 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
         String coderSession = session + "_coder";
         storage.clearChatRecords(coderSession);
+        System.out.println("requirement = " + requirement);
         String coderResult = coderAgent.generateCode(dbConnection, coderSession, requirement);
+        System.out.println("coderResult = " + coderResult);
 
         AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
         newResponseRecord.setChatTime(new Date());

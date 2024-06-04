@@ -76,6 +76,13 @@ public class AIAgentTest
         return new TestSuite( AIAgentTest.class );
     }
 
+    public void testManagerAgent() {
+        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
+        String requirement = "Please generate a java program which add 1 to 100";
+        String response = managerAgent.assignTasks("codesession", requirement);
+        System.out.println("response = " + response);
+    }
+
     public void testChatAgent() {
         ChatAgentIFC chatAgent = ChatAgentImpl.getInstance();
         String userInput = "Hello, I'm neo, nice to meet you!";
