@@ -117,7 +117,7 @@ public class CoderCallImpl implements FunctionCallIFC {
             String commandResult = executeCommand(command);
             runningResultDesc = "You have run command \n" + command + "\n success with result: ";
             runningResultDesc += "\n" + commandResult;
-            runningResultDesc += "\nPlease continue to write code to implement the requirement";
+            runningResultDesc += "\n";
         }
         catch(Exception ex) {
             runningResultDesc = "You have run command \n" + command + "\n failed with result: ";

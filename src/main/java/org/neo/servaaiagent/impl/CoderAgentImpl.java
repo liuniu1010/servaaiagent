@@ -55,39 +55,32 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, requirement, newInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
-        String runningResultDesc = null;
+        String totalRunningResultDesc = "";
         if(chatResponse.getIsSuccess()) {
-            AIModel.Call call = extractFunctionCallFromChatResponse(chatResponse);
-            if(call == null) {
-                AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-                newResponseRecord.setChatTime(new Date());
-                newResponseRecord.setIsRequest(false);
-                newResponseRecord.setContent(chatResponse.getMessage());
+            List<AIModel.Call> calls = chatResponse.getCalls();
+            if(calls != null && calls.size() > 0) {
+                for(AIModel.Call call: calls) {
+                    String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
+                    totalRunningResultDesc += runningResultDesc;
+                }
+                totalRunningResultDesc += "\nPlease continue to write code to implement the requirement.";
+            }
 
-                StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-                storage.addChatRecord(session, newRequestRecord);
-                storage.addChatRecord(session, newResponseRecord);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            newResponseRecord.setChatTime(new Date());
+            newResponseRecord.setIsRequest(false);
+            newResponseRecord.setContent(chatResponse.getMessage());
 
-                runningResultDesc = chatResponse.getMessage();
+            StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+            storage.addChatRecord(session, newRequestRecord);
+            storage.addChatRecord(session, newResponseRecord);
+
+            if(calls != null && calls.size() > 0) {
+                return innerGenerateCode(dbConnection, session, requirement, totalRunningResultDesc);
             }
             else {
-                runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
-
-                AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-                newResponseRecord.setChatTime(new Date());
-                newResponseRecord.setIsRequest(false);
-                newResponseRecord.setContent("Ok, I have executed it success");
-
-                StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-                storage.addChatRecord(session, newRequestRecord);
-                storage.addChatRecord(session, newResponseRecord);
-
-                if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
-                    // recursively call this method, it should be changed to loop calling later
-                    runningResultDesc = innerGenerateCode(dbConnection, session, requirement, runningResultDesc);
-                }
+                return chatResponse.getMessage();
             }
-            return runningResultDesc;
         }
         else {
             throw new RuntimeException(chatResponse.getMessage());
