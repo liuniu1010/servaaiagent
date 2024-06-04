@@ -58,12 +58,18 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         String totalRunningResultDesc = "";
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
+            boolean shouldStop = true;
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
+                    if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
+                        shouldStop = false;
+                    }
                     String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
                     totalRunningResultDesc += runningResultDesc;
                 }
-                totalRunningResultDesc += "\nPlease continue to write code to implement the requirement.";
+                if(!shouldStop) {
+                    totalRunningResultDesc += "\nPlease continue to write code to implement the requirement.";
+                }
             }
 
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
@@ -75,7 +81,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newRequestRecord);
             storage.addChatRecord(session, newResponseRecord);
 
-            if(calls != null && calls.size() > 0) {
+            if(!shouldStop) {
                 return innerGenerateCode(dbConnection, session, requirement, totalRunningResultDesc);
             }
             else {
@@ -126,6 +132,10 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\n5. run 'mvn test-compile' to ensure all code are compilable";
         systemHint += "\n6. run 'mvn test' to ensure all test cases passed";
         systemHint += "\nin cases if you met any exception in previous steps, please ajust code and try again until the code pass test";
+        systemHint += "\n7. generate a Readme.md file under /tmp/project1/ to summarize the source code";
+        systemHint += ", including function description";
+        systemHint += ", environment requirement such as OS, java version, maven version, unit test steps.";
+        systemHint += "\n";
         systemHint += "\n";
         systemHint += "\nNow, the requirement what you need to implment is: " + requirement;
         promptStruct.setSystemHint(systemHint);

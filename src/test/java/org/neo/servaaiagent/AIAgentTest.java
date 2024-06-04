@@ -51,6 +51,7 @@ public class AIAgentTest
     private String commandTestSession = "commandTestSession";
     private String speechTestSession = "speechTestSession";
     private String translateTestSession = "translateTestSession";
+    private String coderTestSession = "coderTestSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -64,6 +65,7 @@ public class AIAgentTest
                 storage.clearChatRecords(commandTestSession);
                 storage.clearChatRecords(speechTestSession);
                 storage.clearChatRecords(translateTestSession);
+                storage.clearChatRecords(coderTestSession);
                 return null;
             }
         });
@@ -76,10 +78,10 @@ public class AIAgentTest
         return new TestSuite( AIAgentTest.class );
     }
 
-    public void testManagerAgent() {
-        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
-        String requirement = "Please generate a java program which add 1 to 100";
-        String response = managerAgent.assignTasks("codesession", requirement);
+    public void testCoderAgent() {
+        CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
+        String requirement = "Please generate a java program which add 1 to 100, the package should be com.neo.calculate";
+        String response = coderAgent.generateCode(coderTestSession, requirement);
         System.out.println("response = " + response);
     }
 
