@@ -49,7 +49,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String requirement, String newInput) {
-        System.out.println("input for Coder = " + newInput);
+        System.out.println("input for Coder: " + newInput);
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
@@ -57,6 +57,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, requirement, newInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
+        System.out.println("response from coder: " + chatResponse.getMessage());
         String totalRunningResultDesc = "";
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
@@ -137,7 +138,8 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\n7. generate a Readme.md file under /tmp/project1/ to summarize the source code";
         systemHint += ", including function description";
         systemHint += ", environment requirement such as OS, java version, maven version, unit test steps.";
-        systemHint += "\n";
+        systemHint += "\nEach previous step must be executed by calling function executeCommand to make sure they were executed really, not just state them in message.";
+        systemHint += "\nAfter Readme.md was generated, call function finishCodeGeneration";
         systemHint += "\n";
         systemHint += "\nNow, the requirement what you need to implment is: " + requirement;
         promptStruct.setSystemHint(systemHint);
