@@ -10,6 +10,7 @@ import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ImageAgentIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
@@ -33,8 +34,11 @@ public class ChatWithImageExpertForUIImpl extends AbsChatForUIImpl {
                 }
             });
         }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
         catch(Exception ex) {
-            throw new RuntimeException(standardExceptionMessage, ex);
+            throw new NeoAIException(standardExceptionMessage, ex);
         }
     }
 

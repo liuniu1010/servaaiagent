@@ -13,6 +13,7 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.ifc.TranslateAgentIFC;
@@ -44,17 +45,20 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
                     try {
                         return innerFetchResponse(dbConnection, session, userInput, attachFiles);
                     }
-                    catch(RuntimeException rex) {
-                        throw rex;
+                    catch(NeoAIException nex) {
+                        throw nex;
                     }
                     catch(Exception ex) {
-                        throw new RuntimeException(ex);
+                        throw new NeoAIException(ex);
                     }
                 }
             });
         }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
         catch(Exception ex) {
-            throw new RuntimeException(standardExceptionMessage, ex);
+            throw new NeoAIException(standardExceptionMessage, ex);
         }
     }
 

@@ -14,6 +14,7 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatAgentIFC;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
@@ -48,8 +49,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
                 }
             });
         }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
         catch(Exception ex) {
-            throw new RuntimeException(standardExceptionMessage, ex);
+            throw new NeoAIException(standardExceptionMessage, ex);
         }
     }
 
@@ -82,8 +86,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
                 }
             });
         }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
         catch(Exception ex) {
-            throw new RuntimeException(standardExceptionMessage, ex);
+            throw new NeoAIException(standardExceptionMessage, ex);
         }
     }
 
@@ -109,8 +116,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
                 }
             });
         }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
         catch(Exception ex) {
-            throw new RuntimeException(standardExceptionMessage, ex);
+            throw new NeoAIException(standardExceptionMessage, ex);
         }
     }
 
