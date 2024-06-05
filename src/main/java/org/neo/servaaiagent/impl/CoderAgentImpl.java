@@ -17,6 +17,8 @@ import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 
 public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(CoderAgentImpl.class);
+
     private CoderAgentImpl() {
     }
 
@@ -147,6 +149,18 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getChatModels();
-        return superAI.fetchChatResponse(models[0], promptStruct);
+        int tryTime = 2;
+        for(int i = 0;i < tryTime;i++) {
+            try {
+                return superAI.fetchChatResponse(models[0], promptStruct);
+            }
+            catch(Exception ex) {
+                // sometime LLM might generate error json which cannot be handled
+                // try once more
+                logger.info(ex.getMessage(), ex);
+                continue;
+            }
+        }
+        throw new RuntimeException("failed to generate code");
     }
 }
