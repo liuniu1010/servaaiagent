@@ -14,6 +14,7 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 
@@ -75,7 +76,7 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
             return chatResponse.getMessage();
         }
         else {
-            throw new RuntimeException(chatResponse.getMessage());
+            throw new NeoAIException(chatResponse.getMessage());
         }
     }
 

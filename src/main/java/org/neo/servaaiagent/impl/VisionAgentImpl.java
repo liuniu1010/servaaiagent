@@ -14,6 +14,7 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.VisionAgentIFC;
 
@@ -64,7 +65,7 @@ public class VisionAgentImpl implements VisionAgentIFC, DBSaveTaskIFC {
             return chatResponse.getMessage(); 
         }
         else {
-            throw new RuntimeException(chatResponse.getMessage());
+            throw new NeoAIException(chatResponse.getMessage());
         }
     }
 

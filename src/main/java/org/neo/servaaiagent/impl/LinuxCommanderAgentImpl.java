@@ -15,6 +15,7 @@ import org.neo.servaaibase.ifc.FunctionCallIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.LinuxCommanderAgentIFC;
 
@@ -104,7 +105,7 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
             return command;
         }
         else {
-            throw new RuntimeException(chatResponse.getMessage());
+            throw new NeoAIException(chatResponse.getMessage());
         }
     }
 
@@ -193,7 +194,7 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
             return runningResult;
         }
         else {
-            throw new RuntimeException(chatResponse.getMessage());
+            throw new NeoAIException(chatResponse.getMessage());
         }
     }
 }

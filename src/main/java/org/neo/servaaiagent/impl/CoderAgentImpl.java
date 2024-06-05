@@ -13,6 +13,7 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 
@@ -103,7 +104,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             }
         }
         else {
-            throw new RuntimeException(chatResponse.getMessage());
+            throw new NeoAIException(chatResponse.getMessage());
         } 
     }
 
@@ -174,6 +175,6 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 continue;
             }
         }
-        throw new RuntimeException("failed to generate code");
+        throw new NeoAIException("failed to generate code");
     }
 }
