@@ -62,17 +62,22 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
             boolean shouldStop = true;
+            boolean hasCommand = false;
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
                     if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
                         shouldStop = false;
+                        hasCommand = true;
                     }
                     String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
                     totalRunningResultDesc += runningResultDesc;
                 }
                 if(!shouldStop) {
-                    totalRunningResultDesc += "\nPlease continue to write code to implement the requirement.";
+                    totalRunningResultDesc += "\nPlease continue to adjust code to implement the requirement.";
                 }
+            }
+            else {
+                shouldStop = false;
             }
 
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
@@ -85,7 +90,13 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerGenerateCode(dbConnection, session, requirement, totalRunningResultDesc);
+                if(hasCommand) {
+                    return innerGenerateCode(dbConnection, session, requirement, totalRunningResultDesc);
+                }
+                else {
+                    String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
+                    return innerGenerateCode(dbConnection, session, requirement, newHint);
+                }
             }
             else {
                 return chatResponse.getMessage();
