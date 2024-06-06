@@ -25,8 +25,8 @@ environment requirement such as OS, java version, maven version, unit test steps
 
 To generate README.md, Please execute command
 'uname -a'
-'java --version'
-'mvn --version'
+'java -version'
+'mvn -version'
 to get information necessary.
 
 Each previous step must be executed by calling function executeCommand to make sure they were really executed.
