@@ -168,11 +168,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             try {
                 return superAI.fetchChatResponse(models[0], promptStruct);
             }
-            catch(Exception ex) {
-                // sometime LLM might generate error json which cannot be handled
-                // try once more
-                logger.info(ex.getMessage(), ex);
-                continue;
+            catch(NeoAIException nex) {
+                logger.info(nex.getMessage(), nex);
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
+                    // sometimes LLM might generate error json which cannot be handled
+                    // try once more in this case
+                    continue;
+                }
+                else {
+                    throw nex;
+                }
             }
         }
         throw new NeoAIException("failed to generate code");
