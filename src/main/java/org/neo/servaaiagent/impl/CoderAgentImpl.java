@@ -13,6 +13,8 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.impl.OpenAIImpl;
+import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
@@ -133,18 +135,31 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
-        SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
-        String[] models = superAI.getChatModels();
+        SuperAIIFC superAI = OpenAIImpl.getInstance(dbConnection);
+        String model = OpenAIImpl.gpt_4o;
+        // SuperAIIFC superAI = GoogleAIImpl.getInstance(dbConnection);
+        // String model = GoogleAIImpl.gemini_1_5_pro_latest;
+
         int tryTime = 2;
         for(int i = 0;i < tryTime;i++) {
             try {
-                return superAI.fetchChatResponse(models[0], promptStruct);
+                return superAI.fetchChatResponse(model, promptStruct);
             }
             catch(NeoAIException nex) {
-                logger.info(nex.getMessage(), nex);
+                logger.error(nex.getMessage(), nex);
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
                     // sometimes LLM might generate error json which cannot be handled
                     // try once more in this case
+                    continue;
+                }
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
+                    // met ioexception with LLM, wait 5 seconds and try again
+                    try {
+                        Thread.sleep(5000);
+                    }
+                    catch(InterruptedException e) {
+                        logger.error(e.getMessage(), e);
+                    }
                     continue;
                 }
                 else {
