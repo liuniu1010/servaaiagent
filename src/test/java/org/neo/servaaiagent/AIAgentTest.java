@@ -78,12 +78,9 @@ public class AIAgentTest
         return new TestSuite( AIAgentTest.class );
     }
 
-    public void testCoderAgent() {
+    public void testCoderAgent() throws Exception {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-        String requirement = "Please generate a java program which solve 8 queens problem";
-        requirement += ", the package should be com.neo.queen, the main code should accept param n";
-        requirement += ", the test code use 8 as the input";
-        requirement += ", in test code, please print out all 8x8 boards with solved result";
+        String requirement = IOUtil.fileToString("/tmp/coderInstruction.txt");
         String response = coderAgent.generateCode(coderTestSession, requirement);
         System.out.println("response = " + response);
     }
