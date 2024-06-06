@@ -61,7 +61,13 @@ public class CoderCallImpl implements FunctionCallIFC {
     }
 
     private AIModel.Function generateFunctionForFinishCodeGeneration() {
+        AIModel.FunctionParam param = new AIModel.FunctionParam();
+        param.setName(FINISHCODEGENERATION_PARAM_CONTENT);
+        param.setDescription("the content you hope to declare of completion of the task");
+
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+        params.add(param);
+
         AIModel.Function function = new AIModel.Function();
         function.setMethodName(METHODNAME_FINISHCODEGENERATION);
         function.setParams(params);
@@ -93,8 +99,9 @@ public class CoderCallImpl implements FunctionCallIFC {
     }
 
     protected static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";
-    private String finishCodeGeneration() {
-        return "code are all generated, ready to compile and test";
+    protected static String FINISHCODEGENERATION_PARAM_CONTENT = "content";
+    private String finishCodeGeneration(String content) {
+        return content;
     }
 
     protected static String METHODNAME_FAILCODEGENERATION = "failCodeGeneration";
@@ -128,12 +135,19 @@ public class CoderCallImpl implements FunctionCallIFC {
     }
 
     private String call_finishCodeGeneration(AIModel.Call call) {
-        return finishCodeGeneration();
+        List<AIModel.CallParam> params = call.getParams();
+        String content = "";
+        for(AIModel.CallParam param: params) {
+            if(param.getName().equals(FINISHCODEGENERATION_PARAM_CONTENT)) {
+                content = param.getValue();
+            }
+        }
+        return finishCodeGeneration(content);
     }
 
     private String call_failCodeGeneration(AIModel.Call call) {
         List<AIModel.CallParam> params = call.getParams();
-        String reason = null;
+        String reason = "";
         for(AIModel.CallParam param: params) {
             if(param.getName().equals(FAILCODEGENERATION_PARAM_REASON)) {
                 reason = param.getValue();
