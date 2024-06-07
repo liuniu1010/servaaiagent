@@ -80,8 +80,11 @@ public class AIAgentTest
 
     public void testCoderAgent() throws Exception {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-        String requirement = IOUtil.fileToString("/tmp/coderInstruction.txt");
-        String response = coderAgent.generateCode(coderTestSession, requirement);
+        String backgroundDesc = IOUtil.fileToString("/tmp/javamavenbackgroundDesc.txt");
+        String requirement = "generate a program add 1 to 100 with two methods:";
+        requirement += "\n one with normal algorithm";
+        requirement += "\n one with high performance algorithm";
+        String response = coderAgent.generateCode(coderTestSession, requirement, backgroundDesc);
         System.out.println("response = " + response);
     }
 

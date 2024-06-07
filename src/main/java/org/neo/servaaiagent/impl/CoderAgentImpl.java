@@ -35,30 +35,30 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateCode(String session, String requirement) {
+    public String generateCode(String session, String requirement, String backgroundDesc) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new CoderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCode(dbConnection, session, requirement);
+                return generateCode(dbConnection, session, requirement, backgroundDesc);
             }
         });
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, String requirement) {
-        return innerGenerateCode(dbConnection, session, requirement, requirement);
+    public String generateCode(DBConnectionIFC dbConnection, String session, String requirement, String backgroundDesc) {
+        return innerGenerateCode(dbConnection, session, requirement, requirement, backgroundDesc);
     }
 
-    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String requirement, String newInput) {
+    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String newInput, String requirement, String backgroundDesc) {
         System.out.println("input for Coder: " + newInput);
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(newInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, requirement, newInput);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         System.out.println("response from coder: " + chatResponse.getMessage());
         String totalRunningResultDesc = "";
@@ -94,11 +94,11 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
             if(!shouldStop) {
                 if(hasCommand) {
-                    return innerGenerateCode(dbConnection, session, requirement, totalRunningResultDesc);
+                    return innerGenerateCode(dbConnection, session, totalRunningResultDesc, requirement, backgroundDesc);
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
-                    return innerGenerateCode(dbConnection, session, requirement, newHint);
+                    return innerGenerateCode(dbConnection, session, newHint, requirement, backgroundDesc);
                 }
             }
             else {
@@ -122,13 +122,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String requirement, String newInput) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String newInput, String requirement, String backgroundDesc) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(newInput);
-        promptStruct.setSystemHint(requirement);
+        String systemHint = backgroundDesc;
+        systemHint += "\n\nNow, the requirement you need to implement is:";
+        systemHint += "\n" + requirement;
+        promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(CoderCallImpl.getInstance());
 
         return promptStruct;

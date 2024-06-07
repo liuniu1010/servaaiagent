@@ -27,11 +27,7 @@ To generate README.md, Please execute command
 'uname -a'
 'java -version'
 'mvn -version'
-to get information necessary.
+to get information necessary. You also need to call function executeCommand to generate README.md
 
 Each previous step must be executed by calling function executeCommand to make sure they were really executed.
 After READMD.md was generated, call function finishCodeGeneration to declare the completion of code generation.
-
-Now, the requirement what you need to implment is:
-Please generate a java program which solve 8 queens problem, the package should be com.neo.queen, the main code should accept param n, the test code use 8 as the input, in test code, please print out all 8x8 boards with solved result.
-
