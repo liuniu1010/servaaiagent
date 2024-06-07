@@ -29,4 +29,5 @@ In case you encounter any exceptions in previous steps, please adjust the code a
     'java -version'
     'gradle --version'
 You also need to call the function 'executeCommand' to generate README.md.
-
+Each previous step must be executed by calling function executeCommand to make sure they were really executed.
+After READMD.md was generated, call function finishCodeGeneration to declare the completion of code generation.

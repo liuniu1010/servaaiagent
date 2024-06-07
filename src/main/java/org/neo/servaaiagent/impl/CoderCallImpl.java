@@ -71,7 +71,7 @@ public class CoderCallImpl implements FunctionCallIFC {
         AIModel.Function function = new AIModel.Function();
         function.setMethodName(METHODNAME_FINISHCODEGENERATION);
         function.setParams(params);
-        function.setDescription("to declare the code have been generated successfully, it was compiled success and all test case passed");
+        function.setDescription("to declare the code task has been completedly finished");
 
         return function;
     }

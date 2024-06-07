@@ -143,7 +143,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         // SuperAIIFC superAI = GoogleAIImpl.getInstance(dbConnection);
         // String model = GoogleAIImpl.gemini_1_5_pro_latest;
 
-        int tryTime = 2;
+        int tryTime = 5;
         for(int i = 0;i < tryTime;i++) {
             try {
                 return superAI.fetchChatResponse(model, promptStruct);
@@ -153,12 +153,15 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
                     // sometimes LLM might generate error json which cannot be handled
                     // try once more in this case
+                    logger.info("Meet json syntax error from LLM, try again...");
                     continue;
                 }
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
                     // met ioexception with LLM, wait 5 seconds and try again
                     try {
-                        Thread.sleep(5000);
+                        int waitSeconds = 2 * (i + 1);
+                        logger.info("Meet IOException from LLM, wait " + waitSeconds + " seconds and try again...");
+                        Thread.sleep(1000 * waitSeconds);
                     }
                     catch(InterruptedException e) {
                         logger.error(e.getMessage(), e);

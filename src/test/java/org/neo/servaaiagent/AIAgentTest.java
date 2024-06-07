@@ -80,10 +80,10 @@ public class AIAgentTest
 
     public void testCoderAgent() throws Exception {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-        String backgroundDesc = IOUtil.fileToString("/tmp/javamavenbackgroundDesc.txt");
-        String requirement = "generate a program add 1 to 100 with two methods:";
-        requirement += "\n one with normal algorithm";
-        requirement += "\n one with high performance algorithm";
+        String backgroundDesc = IOUtil.fileToString("/tmp/codeadjustment.txt");
+        String requirement = "I have a java project under folder /home/liuniu/git/github/servaframe ";
+        requirement += "\nThis is a maven project.";
+        requirement += "\nPlease check all java files under main folder, in each java file, please check all import lines at the head of the file, adjust them in alphabet order";
         String response = coderAgent.generateCode(coderTestSession, requirement, backgroundDesc);
         System.out.println("response = " + response);
     }
