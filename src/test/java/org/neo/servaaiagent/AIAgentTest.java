@@ -80,9 +80,17 @@ public class AIAgentTest
         return new TestSuite( AIAgentTest.class );
     }
 
+    private String loadBackgroundDesc(String coder) throws Exception {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+        String fileName = coder + ".txt";
+        InputStream inputStream = classLoader.getResourceAsStream(fileName);
+        String backgroundDesc = IOUtil.inputStreamToString(inputStream);
+        return backgroundDesc;
+    }
+
     public void _testCoderAgent() throws Exception {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-        String backgroundDesc = IOUtil.fileToString("/tmp/codeadjustment.txt");
+        String backgroundDesc = loadBackgroundDesc("codeadjustment");
         String requirement = "I have a java project under folder /home/liuniu/git/github/servaframe ";
         requirement += "\nThis is a maven project.";
         requirement += "\nPlease check all java files under main folder, in each java file, please check all import lines at the head of the file, adjust them in alphabet order";
@@ -92,7 +100,7 @@ public class AIAgentTest
 
     public void testManagerAgent() throws Exception {
         ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
-        String requirement = "please write javascript which calculate sum from 1 + 100";
+        String requirement = "please write c which calculate sum from 1 + 100";
         System.out.println("requirement = " + requirement);
         String response = managerAgent.runProject(managerTestSession, requirement);
         System.out.println("response = " + response);

@@ -30,7 +30,7 @@ In case you encounter any exceptions in previous steps, please adjust the code a
 To generate README.md, please execute the following commands:
    1) 'uname -a'
    2) 'node --version'
-   3) 	'npm --version'
+   3) 'npm --version'
 You also need to call the function 'executeCommand' to generate README.md.
 Each previous step must be executed by calling function executeCommand to make sure they were really executed.
 After READMD.md was generated, call function finishCodeGeneration to declare the completion of code generation.

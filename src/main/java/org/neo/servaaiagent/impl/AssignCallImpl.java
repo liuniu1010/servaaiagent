@@ -36,12 +36,7 @@ public class AssignCallImpl implements FunctionCallIFC {
         AIModel.FunctionParam param = new AIModel.FunctionParam();
         param.setName(ASSIGNTO_PARAM_RECEIVER);
         String description = "the receiver to whom the task would be assigned.";
-        description += "\nThe only possible option is one of " + ASSIGNTO_PARAM_RECEIVER_JAVAMAVENLINUX;
-        description += "/" + ASSIGNTO_PARAM_RECEIVER_JAVAGRADLELINUX;
-        description += "/" + ASSIGNTO_PARAM_RECEIVER_DOTNETLINUX;
-        description += "/" + ASSIGNTO_PARAM_RECEIVER_PYTHON3LINUX;
-        description += "/" + ASSIGNTO_PARAM_RECEIVER_NODEJSLINUX;
-        param.setDescription("the receiver to whom the task will be assigned.");
+        param.setDescription(description);
 
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
         params.add(param);
@@ -54,13 +49,8 @@ public class AssignCallImpl implements FunctionCallIFC {
         return function;
     }
 
-    public static String METHODNAME_ASSIGNTO = "assignTo";
-    public static String ASSIGNTO_PARAM_RECEIVER = "receiver";
-    public static String ASSIGNTO_PARAM_RECEIVER_JAVAMAVENLINUX = "javamavenlinux";
-    public static String ASSIGNTO_PARAM_RECEIVER_JAVAGRADLELINUX = "javagradlelinux";
-    public static String ASSIGNTO_PARAM_RECEIVER_DOTNETLINUX = "dotnetlinux";
-    public static String ASSIGNTO_PARAM_RECEIVER_PYTHON3LINUX = "python3linux";
-    public static String ASSIGNTO_PARAM_RECEIVER_NODEJSLINUX = "nodejslinux";
+    private static String METHODNAME_ASSIGNTO = "assignTo";
+    private static String ASSIGNTO_PARAM_RECEIVER = "receiver";
     private String assignTo(String receiver) {
         return receiver;
     }

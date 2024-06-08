@@ -3,9 +3,12 @@ package org.neo.servaaiagent.impl;
 import java.util.List;
 import java.util.Date;
 
+import java.io.InputStream;
+
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.util.IOUtil;
 import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.model.AIModel;
@@ -45,10 +48,20 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
 
     @Override
     public String runProject(DBConnectionIFC dbConnection, String session, String requirement) {
-        return chooseCoder(dbConnection, session, requirement); 
+        try {
+            String coder = chooseCoder(dbConnection, session, requirement);
+            // String backgroundDesc = loadBackgroundDesc(coder);
+            return coder;
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
-    private String chooseCoder(DBConnectionIFC dbConnection, String session, String requirement) {
+    private String chooseCoder(DBConnectionIFC dbConnection, String session, String requirement) throws Exception {
         AIModel.PromptStruct promptStruct = constructPromptStructForAssign(dbConnection, session, requirement);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
 
@@ -58,6 +71,14 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
         else {
             throw new NeoAIException(chatResponse.getMessage());
         }
+    }
+
+    private String loadBackgroundDesc(String worker) throws Exception {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+        String fileName = worker + ".txt";
+        InputStream inputStream = classLoader.getResourceAsStream(fileName);
+        String backgroundDesc = IOUtil.inputStreamToString(inputStream);
+        return backgroundDesc;
     }
 
     private String extractCoderFromChatResponse(AIModel.ChatResponse chatResponse) {
@@ -73,22 +94,13 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStructForAssign(DBConnectionIFC dbConnection, String session, String requirement) {
+    private AIModel.PromptStruct constructPromptStructForAssign(DBConnectionIFC dbConnection, String session, String requirement) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String userInput = "Please choose a suitable coder to implement requirement:";
         userInput += "\n" + requirement;
-        String systemHint = "You are a professional cordinator, your are responsible of choosing";
-        systemHint += " a suiable coder to implement the requirment.";
-        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_JAVAMAVENLINUX + " is good at coding with java and maven under linux.";
-        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_JAVAGRADLELINUX + " is good at coding with java and gradle under linux";
-        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_DOTNETLINUX + " is good at coding with .net under linux";
-        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_PYTHON3LINUX + " is good at coding with python3 under linux";
-        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_NODEJSLINUX + " is good at coding with node.js under linux";
-        systemHint += "\nYou must call function " + AssignCallImpl.METHODNAME_ASSIGNTO + " to assign task";
-        systemHint += "\nparameter " + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER + " should be whom you think is the best coder to implement the requirement.";
-        systemHint += "\nIf you think none of them are suitable, please random choose one";
+        String cordinatorDesc = loadBackgroundDesc("taskcordinator"); 
         promptStruct.setUserInput(userInput);
-        promptStruct.setSystemHint(systemHint);
+        promptStruct.setSystemHint(cordinatorDesc);
         promptStruct.setFunctionCall(AssignCallImpl.getInstance());
 
         return promptStruct;
