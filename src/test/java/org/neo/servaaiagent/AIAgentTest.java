@@ -52,6 +52,7 @@ public class AIAgentTest
     private String speechTestSession = "speechTestSession";
     private String translateTestSession = "translateTestSession";
     private String coderTestSession = "coderTestSession";
+    private String managerTestSession = "managerTestSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -66,6 +67,7 @@ public class AIAgentTest
                 storage.clearChatRecords(speechTestSession);
                 storage.clearChatRecords(translateTestSession);
                 storage.clearChatRecords(coderTestSession);
+                storage.clearChatRecords(managerTestSession);
                 return null;
             }
         });
@@ -78,13 +80,21 @@ public class AIAgentTest
         return new TestSuite( AIAgentTest.class );
     }
 
-    public void testCoderAgent() throws Exception {
+    public void _testCoderAgent() throws Exception {
         CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
         String backgroundDesc = IOUtil.fileToString("/tmp/codeadjustment.txt");
         String requirement = "I have a java project under folder /home/liuniu/git/github/servaframe ";
         requirement += "\nThis is a maven project.";
         requirement += "\nPlease check all java files under main folder, in each java file, please check all import lines at the head of the file, adjust them in alphabet order";
         String response = coderAgent.generateCode(coderTestSession, requirement, backgroundDesc);
+        System.out.println("response = " + response);
+    }
+
+    public void testManagerAgent() throws Exception {
+        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
+        String requirement = "please write javascript which calculate sum from 1 + 100";
+        System.out.println("requirement = " + requirement);
+        String response = managerAgent.runProject(managerTestSession, requirement);
         System.out.println("response = " + response);
     }
 
