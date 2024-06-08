@@ -16,6 +16,7 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
@@ -50,8 +51,12 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     public String runProject(DBConnectionIFC dbConnection, String session, String requirement) {
         try {
             String coder = chooseCoder(dbConnection, session, requirement);
-            // String backgroundDesc = loadBackgroundDesc(coder);
-            return coder;
+            String backgroundDesc = loadBackgroundDesc(coder);
+            String coderSession = CommonUtil.getRandomString(5);
+            CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
+            String response = coderAgent.generateCode(dbConnection, coderSession, requirement, backgroundDesc);
+
+            return response;
         }
         catch(NeoAIException nex) {
             throw nex;

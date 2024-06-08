@@ -64,13 +64,13 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         String totalRunningResultDesc = "";
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
-            boolean shouldStop = true;
-            boolean hasCommand = false;
+            boolean shouldStop = false;
+            boolean hasCall = false;
             if(calls != null && calls.size() > 0) {
+                hasCall = true;
                 for(AIModel.Call call: calls) {
-                    if(call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
-                        shouldStop = false;
-                        hasCommand = true;
+                    if(!call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
+                        shouldStop = true;
                     }
                     String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
                     totalRunningResultDesc += runningResultDesc;
@@ -78,9 +78,6 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 if(!shouldStop) {
                     totalRunningResultDesc += "\nPlease continue to adjust code to implement the requirement.";
                 }
-            }
-            else {
-                shouldStop = false;
             }
 
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
@@ -93,16 +90,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                if(hasCommand) {
-                    return innerGenerateCode(dbConnection, session, totalRunningResultDesc, requirement, backgroundDesc);
+                return innerGenerateCode(dbConnection, session, totalRunningResultDesc, requirement, backgroundDesc);
+            }
+            else {
+                if(hasCall) {
+                    return chatResponse.getMessage();
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
                     return innerGenerateCode(dbConnection, session, newHint, requirement, backgroundDesc);
                 }
-            }
-            else {
-                return chatResponse.getMessage();
             }
         }
         else {

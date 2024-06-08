@@ -100,7 +100,7 @@ public class AIAgentTest
 
     public void testManagerAgent() throws Exception {
         ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
-        String requirement = "please write c which calculate sum from 1 + 100";
+        String requirement = "please write java code with maven which calculate sum from 1 + 100";
         System.out.println("requirement = " + requirement);
         String response = managerAgent.runProject(managerTestSession, requirement);
         System.out.println("response = " + response);
