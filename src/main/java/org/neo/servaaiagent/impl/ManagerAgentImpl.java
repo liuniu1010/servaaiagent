@@ -31,43 +31,50 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String assignTasks(String session, String requirement) {
+    public String runProject(String session, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new ManagerAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return assignTasks(dbConnection, session, requirement);
+                return runProject(dbConnection, session, requirement);
             }
         });
     }
 
     @Override
-    public String assignTasks(DBConnectionIFC dbConnection, String session, String requirement) {
-        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.clearChatRecords(session);
+    public String runProject(DBConnectionIFC dbConnection, String session, String requirement) {
+        return null; 
+    }
 
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
-        newRequestRecord.setChatTime(new Date());
-        newRequestRecord.setIsRequest(true);
-        newRequestRecord.setContent(requirement);
+    private String chooseCoder(DBConnectionIFC dbConnection, String session, String requirement) {
+        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(dbConnection, session, requirement);
+        AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
 
-        CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-        String coderSession = session + "_coder";
-        storage.clearChatRecords(coderSession);
-        System.out.println("requirement = " + requirement);
-        String backgroundDesc = ""; // read it from config file
-        String coderResult = coderAgent.generateCode(dbConnection, coderSession, requirement, backgroundDesc);
-        System.out.println("coderResult = " + coderResult);
+        return null;
+    }
 
-        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-        newResponseRecord.setChatTime(new Date());
-        newResponseRecord.setIsRequest(false);
-        newResponseRecord.setContent(coderResult);
+    private AIModel.PromptStruct constructPromptStructForAssign(DBConnectionIFC dbConnection, String session, String requirement) {
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        String userInput = "Please choose a suitable coder";
+        String systemHint = "You are a professional cordinator, your are responsible of choosing";
+        systemHint += " a suiable coder to implement the requirment.";
+        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_JAVAMAVENLINUX + " is good at coding with java and maven under linux.";
+        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_JAVAGRADLELINUX + " is good at coding with java and gradle under linux";
+        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_DOTNETLINUX + " is good at coding with .net under linux";
+        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_PYTHON3LINUX + " is good at coding with python3 under linux";
+        systemHint += "\n" + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER_NODEJSLINUX + " is good at coding with node.js under linux";
+        systemHint += "\nYou must call function " + AssignCallImpl.METHODNAME_ASSIGNTO + " to assign task";
+        systemHint += "\nparameter " + AssignCallImpl.ASSIGNTO_PARAM_RECEIVER + " should be whom you think is the best coder to implement the requirement.";
+        systemHint += "\nIf you think none of them are suitable, please random choose one";
+        promptStruct.setUserInput("The requirement is:\n" + requirement);
+        promptStruct.setSystemHint(systemHint);
+        promptStruct.setFunctionCall(AssignCallImpl.getInstance());
 
-        storage.addChatRecord(session, newRequestRecord);
-        storage.addChatRecord(session, newResponseRecord);
+        return promptStruct;
+    }
 
-        return coderResult;
+    private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
+        return null;
     }
 }
