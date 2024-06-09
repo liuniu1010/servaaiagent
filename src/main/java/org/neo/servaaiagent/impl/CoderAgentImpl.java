@@ -52,7 +52,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String newInput, String requirement, String backgroundDesc) {
-        System.out.println("input for Coder: " + newInput);
+        System.out.println("Request: " + newInput);
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
@@ -60,8 +60,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
-        System.out.println("response from coder: " + chatResponse.getMessage());
+        System.out.println("Response: " + chatResponse.getMessage());
         String totalRunningResultDesc = "";
+        String declare = null;
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
             boolean shouldStop = false;
@@ -71,9 +72,12 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 for(AIModel.Call call: calls) {
                     if(!call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
                         shouldStop = true;
+                        declare = (String)promptStruct.getFunctionCall().callFunction(call);
                     }
-                    String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
-                    totalRunningResultDesc += runningResultDesc;
+                    else {
+                        String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
+                        totalRunningResultDesc += runningResultDesc;
+                    }
                 }
                 if(!shouldStop) {
                     totalRunningResultDesc += "\nPlease continue to adjust code to implement the requirement.";
@@ -94,7 +98,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             }
             else {
                 if(hasCall) {
-                    return chatResponse.getMessage();
+                    return declare;
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
