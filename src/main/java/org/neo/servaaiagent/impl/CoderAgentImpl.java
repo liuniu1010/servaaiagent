@@ -18,6 +18,7 @@ import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(CoderAgentImpl.class);
@@ -35,24 +36,28 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateCode(String session, String requirement, String backgroundDesc) {
+    public String generateCode(String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new CoderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCode(dbConnection, session, requirement, backgroundDesc);
+                return generateCode(dbConnection, session, notifyCallback, requirement, backgroundDesc);
             }
         });
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, String requirement, String backgroundDesc) {
-        return innerGenerateCode(dbConnection, session, requirement, requirement, backgroundDesc);
+    public String generateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc) {
+        return innerGenerateCode(dbConnection, session, notifyCallback, requirement, requirement, backgroundDesc);
     }
 
-    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String newInput, String requirement, String backgroundDesc) {
-        System.out.println("Request: " + newInput);
+    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc) {
+        String information = "Request: " + newInput;
+        System.out.println(information);
+        if(notifyCallback != null) {
+            notifyCallback.notify(information);
+        }
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
@@ -60,7 +65,11 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
-        System.out.println("Response: " + chatResponse.getMessage());
+        information = "Response: " + chatResponse.getMessage();
+        System.out.println(information);
+        if(notifyCallback != null) {
+            notifyCallback.notify(information);
+        }
         String totalRunningResultDesc = "";
         String declare = null;
         if(chatResponse.getIsSuccess()) {
@@ -94,7 +103,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerGenerateCode(dbConnection, session, totalRunningResultDesc, requirement, backgroundDesc);
+                return innerGenerateCode(dbConnection, session, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc);
             }
             else {
                 if(hasCall) {
@@ -102,7 +111,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
-                    return innerGenerateCode(dbConnection, session, newHint, requirement, backgroundDesc);
+                    return innerGenerateCode(dbConnection, session, notifyCallback, newHint, requirement, backgroundDesc);
                 }
             }
         }

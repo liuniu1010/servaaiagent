@@ -44,7 +44,7 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput) {
         ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
-        String declare = managerAgent.runProject(dbConnection, session, userInput);
+        String declare = managerAgent.runProject(dbConnection, session, null, userInput);
         return declare;
     }
 }

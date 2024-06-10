@@ -8,6 +8,7 @@ import java.util.List;
  */
 public interface ChatForUIIFC {
     public String fetchResponse(String session, String userInput, List<String> attachFiles);
+    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles);
     public String initNewChat(String session);
     public String refresh(String session);
     public String echo(String session, String userInput);

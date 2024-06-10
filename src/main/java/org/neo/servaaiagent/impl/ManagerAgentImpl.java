@@ -21,6 +21,7 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     private ManagerAgentImpl() {
@@ -36,25 +37,25 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String runProject(String session, String requirement) {
+    public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new ManagerAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return runProject(dbConnection, session, requirement);
+                return runProject(dbConnection, session, notifyCallback, requirement);
             }
         });
     }
 
     @Override
-    public String runProject(DBConnectionIFC dbConnection, String session, String requirement) {
+    public String runProject(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
             String coder = chooseCoder(dbConnection, session, requirement);
             String backgroundDesc = loadBackgroundDesc(coder);
             String coderSession = CommonUtil.getRandomString(5);
             CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-            String declare = coderAgent.generateCode(dbConnection, coderSession, requirement, backgroundDesc);
+            String declare = coderAgent.generateCode(dbConnection, coderSession, notifyCallback, requirement, backgroundDesc);
             System.out.println("Declare = " + declare);
             return declare;
         }
