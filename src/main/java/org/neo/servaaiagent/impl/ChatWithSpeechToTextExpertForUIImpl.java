@@ -16,6 +16,7 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
 public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIImpl {
@@ -36,6 +37,33 @@ public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIImpl {
 
     @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeSaveTask(new ChatWithSpeechToTextExpertForUIImpl() {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    try {
+                        return innerFetchResponse(dbConnection, session, userInput, attachFiles);
+                    }
+                    catch(NeoAIException nex) {
+                        throw nex;
+                    }
+                    catch(Exception ex) {
+                        throw new NeoAIException(ex);
+                    }
+                }
+            });
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(standardExceptionMessage, ex);
+        }
+    }
+
+    @Override
+    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new ChatWithSpeechToTextExpertForUIImpl() {

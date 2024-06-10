@@ -16,8 +16,8 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
-import org.neo.servaaiagent.ifc.ChatAgentIFC;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
@@ -45,6 +45,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
 
                 @Override
                 public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+                    return null;
+                }
+
+                @Override
+                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
                     return null;
                 }
             });
@@ -84,6 +89,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
                 public String fetchResponse(String session, String userInput, List<String> attachFiles) {
                     return null;
                 }
+
+                @Override
+                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+                    return null;
+                }
             });
         }
         catch(NeoAIException nex) {
@@ -112,6 +122,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
 
                 @Override
                 public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+                    return null;
+                }
+
+                @Override
+                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
                     return null;
                 }
             });

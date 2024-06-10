@@ -16,6 +16,7 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
 public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
@@ -33,6 +34,25 @@ public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIImpl {
 
     public static ChatWithSpeechExpertForUIImpl getInstance(String inputAbsolutePath, String inputRelevantVisitPath) {
         return new ChatWithSpeechExpertForUIImpl(inputAbsolutePath, inputRelevantVisitPath);
+    }
+
+    @Override
+    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeSaveTask(new ChatWithSpeechExpertForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    return innerFetchResponse(dbConnection, session, userInput);
+                }
+            });
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(standardExceptionMessage, ex);
+        }
     }
 
     @Override

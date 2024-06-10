@@ -57,6 +57,9 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
             CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
             String declare = coderAgent.generateCode(dbConnection, coderSession, notifyCallback, requirement, backgroundDesc);
             System.out.println("Declare = " + declare);
+            if(notifyCallback != null) {
+                notifyCallback.notify(declare);
+            }
             return declare;
         }
         catch(NeoAIException nex) {
