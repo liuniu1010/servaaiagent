@@ -55,25 +55,32 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         for(int i = 0;i < retryTimes;i++) {
             try {
                 // init projectFolder, clean codesession
+                projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
                 CommonUtil.executeCommandInSandBox(command, "");
+                logger.info("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.clearChatRecords(session);
 
                 // begin to generate code
                 return innerGenerateCode(dbConnection, session, notifyCallback, requirement, requirement, backgroundDesc, iterateDeep);
             }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-                logger.info("try once more");
+            catch(NeoAIException nex) {
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED) {
+                    logger.error(nex.getMessage());
+                    continue;
+                }
+                else {
+                    throw nex;
+                }
             }
         }
-        throw new NeoAIException("failed to generate the code!");
+        throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
     }
 
     public String innerGenerateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
         if(iterateDeep <= 0) {
-            throw new NeoAIException("Arrive the max iterate deep");
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
 
         String information = "Request: " + newInput;
@@ -177,6 +184,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         // String model = GoogleAIImpl.gemini_1_5_pro_latest;
 
         int tryTime = 5;
+        int waitSeconds = 2; // first as 2 seconds
         for(int i = 0;i < tryTime;i++) {
             try {
                 return superAI.fetchChatResponse(model, promptStruct);
@@ -190,11 +198,11 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                     continue;
                 }
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
-                    // met ioexception with LLM, wait 5 seconds and try again
+                    // met ioexception with LLM, wait some seconds and try again
                     try {
-                        int waitSeconds = 2 * (i + 1);
                         logger.info("Meet IOException from LLM, wait " + waitSeconds + " seconds and try again...");
                         Thread.sleep(1000 * waitSeconds);
+                        waitSeconds = waitSeconds * 2;
                     }
                     catch(InterruptedException e) {
                         logger.error(e.getMessage(), e);
