@@ -52,7 +52,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     public String runProject(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
             String coder = chooseCoder(dbConnection, session, requirement);
-            String coderSession = CommonUtil.getRandomString(5);
+            String coderSession = "coder" + CommonUtil.getRandomString(5);
             String projectFolder = "/tmp/" + coderSession + "/myProject";
             String backgroundDesc = loadBackgroundDesc(coder);
             backgroundDesc = backgroundDesc.replace("<projectFolder>", projectFolder);
