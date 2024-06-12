@@ -12,6 +12,7 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.OpenAIImpl;
 import org.neo.servaaibase.impl.GoogleAIImpl;
@@ -36,23 +37,45 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateCode(String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc) {
+    public String generateCode(String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new CoderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCode(dbConnection, session, notifyCallback, requirement, backgroundDesc);
+                return generateCode(dbConnection, session, notifyCallback, requirement, backgroundDesc, projectFolder);
             }
         });
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc) {
-        return innerGenerateCode(dbConnection, session, notifyCallback, requirement, requirement, backgroundDesc);
+    public String generateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+        int retryTimes = 2;
+        int iterateDeep = 15;
+        for(int i = 0;i < retryTimes;i++) {
+            try {
+                // init projectFolder, clean codesession
+                String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
+                CommonUtil.executeCommandInSandBox(command, "");
+                StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+                storage.clearChatRecords(session);
+
+                // begin to generate code
+                return innerGenerateCode(dbConnection, session, notifyCallback, requirement, requirement, backgroundDesc, iterateDeep);
+            }
+            catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
+                logger.info("try once more");
+            }
+        }
+        throw new NeoAIException("failed to generate the code!");
     }
 
-    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc) {
+    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
+        if(iterateDeep <= 0) {
+            throw new NeoAIException("Arrive the max iterate deep");
+        }
+
         String information = "Request: " + newInput;
         System.out.println(information);
         if(notifyCallback != null) {
@@ -103,7 +126,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerGenerateCode(dbConnection, session, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc);
+                return innerGenerateCode(dbConnection, session, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
             }
             else {
                 if(hasCall) {
@@ -111,7 +134,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
-                    return innerGenerateCode(dbConnection, session, notifyCallback, newHint, requirement, backgroundDesc);
+                    return innerGenerateCode(dbConnection, session, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
                 }
             }
         }

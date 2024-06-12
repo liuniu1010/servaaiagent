@@ -94,8 +94,8 @@ public class AIAgentTest
         String requirement = "I have a java project under folder /home/liuniu/git/github/servaframe ";
         requirement += "\nThis is a maven project.";
         requirement += "\nPlease check all java files under main folder, in each java file, please check all import lines at the head of the file, adjust them in alphabet order";
-        String response = coderAgent.generateCode(coderTestSession, null, requirement, backgroundDesc);
-        System.out.println("response = " + response);
+        // String response = coderAgent.adjustCode(coderTestSession, null, requirement, backgroundDesc);
+        // System.out.println("response = " + response);
     }
 
     public void testManagerAgent() throws Exception {
