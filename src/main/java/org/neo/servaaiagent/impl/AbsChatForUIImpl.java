@@ -58,7 +58,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
             throw nex;
         }
         catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
+            throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 
@@ -100,7 +100,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
             throw nex;
         }
         catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
+            throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 
@@ -135,7 +135,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
             throw nex;
         }
         catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
+            throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 

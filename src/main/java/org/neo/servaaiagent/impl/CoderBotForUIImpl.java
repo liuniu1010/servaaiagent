@@ -39,7 +39,7 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
             throw nex;
         }
         catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
+            throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 
@@ -58,7 +58,7 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
             throw nex;
         }
         catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
+            throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 

@@ -51,7 +51,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     @Override
     public String generateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         int retryTimes = 2;
-        int iterateDeep = 15;
+        int iterateDeep = 20;
         for(int i = 0;i < retryTimes;i++) {
             try {
                 // init projectFolder, clean codesession
@@ -68,6 +68,13 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             catch(NeoAIException nex) {
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED) {
                     logger.error(nex.getMessage());
+                    if(i < retryTimes - 1) {
+                        String information = "System: Max iteration deep exceeded, maybe we started from a wrong direction, let's reset and try again from the start point.";
+                        System.out.println(information);
+                        if(notifyCallback != null) {
+                            notifyCallback.notify(information);
+                        }
+                    }
                     continue;
                 }
                 else {
