@@ -37,19 +37,20 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateCode(String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+    public String generateCode(String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new CoderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCode(dbConnection, session, notifyCallback, requirement, backgroundDesc, projectFolder);
+                return generateCode(dbConnection, session, coder, notifyCallback, requirement, backgroundDesc, projectFolder);
             }
         });
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+    public String generateCode(DBConnectionIFC dbConnection, String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+        String sandBoxUrl = getSandBoxUrl(dbConnection, coder);
         int retryTimes = 2;
         int iterateDeep = 20;
         for(int i = 0;i < retryTimes;i++) {
@@ -57,13 +58,13 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
-                CommonUtil.executeCommandInSandBox(command, "");
+                CommonUtil.executeCommandInSandBox(command, sandBoxUrl);
                 logger.info("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.clearChatRecords(session);
 
                 // begin to generate code
-                return innerGenerateCode(dbConnection, session, notifyCallback, requirement, requirement, backgroundDesc, iterateDeep);
+                return innerGenerateCode(dbConnection, session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterateDeep);
             }
             catch(NeoAIException nex) {
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED) {
@@ -85,7 +86,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
     }
 
-    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
+    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
         if(iterateDeep <= 0) {
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
@@ -100,7 +101,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(newInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, newInput, requirement, backgroundDesc);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, sandBoxUrl, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         information = "Response: " + chatResponse.getMessage();
         System.out.println(information);
@@ -140,7 +141,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerGenerateCode(dbConnection, session, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
+                return innerGenerateCode(dbConnection, session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
             }
             else {
                 if(hasCall) {
@@ -148,13 +149,18 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
-                    return innerGenerateCode(dbConnection, session, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
+                    return innerGenerateCode(dbConnection, session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
                 }
             }
         }
         else {
             throw new NeoAIException(chatResponse.getMessage());
         } 
+    }
+
+    private String getSandBoxUrl(DBConnectionIFC dbConnection, String coder) {
+        String configName = coder + "SandBoxUrl";
+        return CommonUtil.getConfigValue(dbConnection, configName);
     }
 
     private AIModel.Call extractFunctionCallFromChatResponse(AIModel.ChatResponse chatResponse) {
@@ -169,7 +175,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String newInput, String requirement, String backgroundDesc) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String sandBoxUrl, String newInput, String requirement, String backgroundDesc) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
@@ -179,7 +185,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\n\nNow, the requirement you need to implement is:";
         systemHint += "\n" + requirement;
         promptStruct.setSystemHint(systemHint);
-        promptStruct.setFunctionCall(CoderCallImpl.getInstance());
+        promptStruct.setFunctionCall(CoderCallImpl.getInstance(sandBoxUrl));
 
         return promptStruct;
     }

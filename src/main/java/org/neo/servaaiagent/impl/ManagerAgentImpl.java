@@ -57,7 +57,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
             String backgroundDesc = loadBackgroundDesc(coder);
             backgroundDesc = backgroundDesc.replace("<projectFolder>", projectFolder);
             CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
-            String declare = coderAgent.generateCode(dbConnection, coderSession, notifyCallback, requirement, backgroundDesc, projectFolder);
+            String declare = coderAgent.generateCode(dbConnection, coderSession, coder, notifyCallback, requirement, backgroundDesc, projectFolder);
             System.out.println("Declare = " + declare);
             if(notifyCallback != null) {
                 notifyCallback.notify(declare);
