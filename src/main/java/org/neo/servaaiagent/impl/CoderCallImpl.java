@@ -10,25 +10,19 @@ import org.neo.servaaibase.ifc.FunctionCallIFC;
 import org.neo.servaaibase.util.CommonUtil;
 
 public class CoderCallImpl implements FunctionCallIFC {
+    private String session;
     private String sandBoxUrl;
-    private static Map<String, CoderCallImpl> sandBoxUrlMap = new HashMap<String, CoderCallImpl>();
 
     private CoderCallImpl() {
     }
 
-    private CoderCallImpl(String inputSandBoxUrl) {
+    private CoderCallImpl(String inputSession, String inputSandBoxUrl) {
+        session = inputSession;
         sandBoxUrl = inputSandBoxUrl;
     }
 
-    public static CoderCallImpl getInstance(String inputSandBoxUrl) {
-        if(sandBoxUrlMap.containsKey(inputSandBoxUrl)) {
-            return sandBoxUrlMap.get(inputSandBoxUrl);
-        }
-        else {
-            CoderCallImpl coderCall = new CoderCallImpl(inputSandBoxUrl);
-            sandBoxUrlMap.put(inputSandBoxUrl, coderCall);
-            return coderCall;
-        }
+    public static CoderCallImpl getInstance(String inputSession, String inputSandBoxUrl) {
+        return new CoderCallImpl(inputSession, inputSandBoxUrl);
     }
 
     @Override
@@ -111,7 +105,7 @@ public class CoderCallImpl implements FunctionCallIFC {
     protected static String METHODNAME_EXECUTECOMMAND = "executeCommand";
     private static String EXECUTECOMMAND_PARAM_COMMAND = "command";
     private String executeCommand(String command) {
-        return CommonUtil.executeCommandSandBox(command, sandBoxUrl);
+        return CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
     }
 
     protected static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";

@@ -53,7 +53,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
         try {
             String coder = chooseCoder(dbConnection, session, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
-            String projectFolder = "/tmp/" + coderSession + "/myProject";
+            String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
             backgroundDesc = backgroundDesc.replace("<projectFolder>", projectFolder);
             CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
@@ -62,6 +62,9 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
             if(notifyCallback != null) {
                 notifyCallback.notify(declare);
             }
+
+            // code generated, download it
+
             return declare;
         }
         catch(NeoAIException nex) {
@@ -70,6 +73,10 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
         catch(Exception ex) {
             throw new NeoAIException(ex.getMessage(), ex);
         }
+    }
+
+    private String generateProjectFolderName(String coderSession) {
+        return "/tmp/" + coderSession + "/myProject";
     }
 
     private String chooseCoder(DBConnectionIFC dbConnection, String session, String requirement) throws Exception {

@@ -58,7 +58,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
-                CommonUtil.executeCommandSandBox(command, sandBoxUrl);
+                CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
                 logger.info("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.clearChatRecords(session);
@@ -185,7 +185,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         systemHint += "\n\nNow, the requirement you need to implement is:";
         systemHint += "\n" + requirement;
         promptStruct.setSystemHint(systemHint);
-        promptStruct.setFunctionCall(CoderCallImpl.getInstance(sandBoxUrl));
+        promptStruct.setFunctionCall(CoderCallImpl.getInstance(session, sandBoxUrl));
 
         return promptStruct;
     }
