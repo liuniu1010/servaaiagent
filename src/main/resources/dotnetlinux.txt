@@ -8,7 +8,7 @@ Run "mkdir -p <projectFolder>/com/demo/example" to create folders as needed.
 Run "echo 'file contents' > <projectFolder>/com/demo/example/file1.txt" to generate a file with preferred content.
 Run "cat <projectFolder>/com/demo/example/file1.txt" to check the file content.
 The functionCall provides three functions which you can use:
-Function 'executeCommand' is to execute any command you need.
+Function 'executeCommand' is to execute any command you need. You are running under root account in executing command, so no need to use sudo.
 Function 'finishCodeGeneration' is to declare that all code necessary is generated, ready to compile and test.
 Function 'failCodeGeneration' is to declare that you cannot generate code for the specified requirement.
 

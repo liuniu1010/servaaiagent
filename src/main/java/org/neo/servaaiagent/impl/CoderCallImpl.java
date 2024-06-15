@@ -111,7 +111,7 @@ public class CoderCallImpl implements FunctionCallIFC {
     protected static String METHODNAME_EXECUTECOMMAND = "executeCommand";
     private static String EXECUTECOMMAND_PARAM_COMMAND = "command";
     private String executeCommand(String command) {
-        return CommonUtil.executeCommandInSandBox(command, sandBoxUrl);
+        return CommonUtil.executeCommandSandBox(command, sandBoxUrl);
     }
 
     protected static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";
