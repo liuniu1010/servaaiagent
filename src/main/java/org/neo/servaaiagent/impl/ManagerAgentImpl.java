@@ -16,6 +16,7 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.impl.OpenAIImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
@@ -24,6 +25,8 @@ import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ManagerAgentImpl.class);
+
     private ManagerAgentImpl() {
     }
 
@@ -129,8 +132,42 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
+        // SuperAIIFC superAI = OpenAIImpl.getInstance(dbConnection);
+        // String model = OpenAIImpl.gpt_4o;
+
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
-        String[] models = superAI.getChatModels();
-        return superAI.fetchChatResponse(models[0], promptStruct);
+        String model = CommonUtil.getConfigValue(dbConnection, "codeModel");
+        int tryTime = 3;
+        int waitSeconds = 10; // first as 10 seconds
+        for(int i = 0;i < tryTime;i++) {
+            try {
+                return superAI.fetchChatResponse(model, promptStruct);
+            }
+            catch(NeoAIException nex) {
+                logger.error(nex.getMessage(), nex);
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
+                    // sometimes LLM might generate error json which cannot be handled
+                    // try once more in this case
+                    logger.info("Meet json syntax error from LLM, try again...");
+                    continue;
+                }
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
+                    // met ioexception with LLM, wait some seconds and try again
+                    try {
+                        logger.info("Meet IOException from LLM, wait " + waitSeconds + " seconds and try again...");
+                        Thread.sleep(1000 * waitSeconds);
+                        waitSeconds = waitSeconds * 2;
+                    }
+                    catch(InterruptedException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                    continue;
+                }
+                else {
+                    throw nex;
+                }
+            }
+        }
+        throw new NeoAIException("failed to generate code");
     }
 }

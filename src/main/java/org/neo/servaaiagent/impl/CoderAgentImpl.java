@@ -147,6 +147,10 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                     if(!call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
                         shouldStop = true;
                         declare = (String)promptStruct.getFunctionCall().callFunction(call);
+                        if(call.getMethodName().equals(CoderCallImpl.METHODNAME_FAILCODEGENERATION)) {
+                            // declare fail
+                            throw new NeoAIException(declare);
+                        }
                     }
                     else {
                         String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
@@ -226,13 +230,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
-        SuperAIIFC superAI = OpenAIImpl.getInstance(dbConnection);
-        String model = OpenAIImpl.gpt_4o;
+        // SuperAIIFC superAI = OpenAIImpl.getInstance(dbConnection);
+        // String model = OpenAIImpl.gpt_4o;
         // SuperAIIFC superAI = GoogleAIImpl.getInstance(dbConnection);
         // String model = GoogleAIImpl.gemini_1_5_pro_latest;
 
+        SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
+        String model = CommonUtil.getConfigValue(dbConnection, "codeModel");
+
         int tryTime = 3;
-        int waitSeconds = 10; // first as 2 seconds
+        int waitSeconds = 10; // first as 10 seconds
         for(int i = 0;i < tryTime;i++) {
             try {
                 return superAI.fetchChatResponse(model, promptStruct);
