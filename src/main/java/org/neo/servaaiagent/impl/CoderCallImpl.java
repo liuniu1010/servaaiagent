@@ -134,13 +134,19 @@ public class CoderCallImpl implements FunctionCallIFC {
         String runningResultDesc = null;
         try {
             String commandResult = executeCommand(command);
-            runningResultDesc = "You have run command \n" + command + "\n success with result: ";
-            runningResultDesc += "\n" + adjustInputText(commandResult, 50);
+            runningResultDesc = "You have run command\n```\n" + command + "\n```\nsuccess with result: ";
+            if(command.startsWith("cat ")
+                || command.startsWith("find ")) {
+                runningResultDesc += "\n" + commandResult;  // should not reduce the result for these command
+            }
+            else {
+                runningResultDesc += "\n" + adjustInputText(commandResult, 100); // try to reduce size 
+            }
             runningResultDesc += "\n";
         }
         catch(Exception ex) {
-            runningResultDesc = "You have run command \n" + command + "\n failed with result: ";
-            runningResultDesc += "\n" + adjustInputText(ex.getMessage(), 200);
+            runningResultDesc = "You have run command\n```\n" + command + "\n```\nfailed with result: ";
+            runningResultDesc += "\n" + adjustInputText(ex.getMessage(), 1500);
         }
 
         return runningResultDesc;
