@@ -64,7 +64,11 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
             }
 
             // code generated, download it
+            String base64OfProject = coderAgent.downloadCode(dbConnection, coderSession, coder, projectFolder);
+            String savePath = "/tmp/" + coderSession + ".tar.gz";
+            IOUtil.rawBase64ToFile(base64OfProject, savePath);
 
+            declare += "\nCode has been saved at " + savePath;
             return declare;
         }
         catch(NeoAIException nex) {

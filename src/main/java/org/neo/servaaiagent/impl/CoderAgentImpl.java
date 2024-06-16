@@ -50,7 +50,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
 
     @Override
     public String generateCode(DBConnectionIFC dbConnection, String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
-        String sandBoxUrl = getSandBoxUrl(dbConnection, coder);
+        String sandBoxUrl = getSandBoxUrl(dbConnection, coder, "executecommand");
         int retryTimes = 2;
         int iterateDeep = 20;
         for(int i = 0;i < retryTimes;i++) {
@@ -86,7 +86,34 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
     }
 
-    public String innerGenerateCode(DBConnectionIFC dbConnection, String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
+    @Override
+    public String downloadCode(String session, String coder, String projectFolder) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (String)dbService.executeSaveTask(new CoderAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                return downloadCode(dbConnection, session, coder, projectFolder);
+            }
+        });
+    }
+
+    @Override
+    public String downloadCode(DBConnectionIFC dbConnection, String session, String coder, String projectFolder) {
+        try {
+            String sandBoxUrl = getSandBoxUrl(dbConnection, coder, "download");
+            String base64OfCode = CommonUtil.downloadProjectSandBox(session, projectFolder, sandBoxUrl);
+            return base64OfCode;
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex);
+        }
+    }
+
+    private String innerGenerateCode(DBConnectionIFC dbConnection, String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
         if(iterateDeep <= 0) {
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
@@ -158,9 +185,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         } 
     }
 
-    private String getSandBoxUrl(DBConnectionIFC dbConnection, String coder) {
+    private String getSandBoxUrl(DBConnectionIFC dbConnection, String coder, String action) {
         String configName = coder + "SandBoxUrl";
-        return CommonUtil.getConfigValue(dbConnection, configName);
+        return CommonUtil.getConfigValue(dbConnection, configName) + "/" + action;
     }
 
     private AIModel.Call extractFunctionCallFromChatResponse(AIModel.ChatResponse chatResponse) {
@@ -196,8 +223,8 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         // SuperAIIFC superAI = GoogleAIImpl.getInstance(dbConnection);
         // String model = GoogleAIImpl.gemini_1_5_pro_latest;
 
-        int tryTime = 5;
-        int waitSeconds = 2; // first as 2 seconds
+        int tryTime = 3;
+        int waitSeconds = 10; // first as 2 seconds
         for(int i = 0;i < tryTime;i++) {
             try {
                 return superAI.fetchChatResponse(model, promptStruct);
