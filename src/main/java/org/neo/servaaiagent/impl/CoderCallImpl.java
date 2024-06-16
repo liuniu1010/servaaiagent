@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import java.nio.charset.StandardCharsets;
+
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.FunctionCallIFC;
 import org.neo.servaaibase.util.CommonUtil;
@@ -133,15 +135,29 @@ public class CoderCallImpl implements FunctionCallIFC {
         try {
             String commandResult = executeCommand(command);
             runningResultDesc = "You have run command \n" + command + "\n success with result: ";
-            runningResultDesc += "\n" + commandResult;
+            runningResultDesc += "\n" + adjustInputText(commandResult, 50);
             runningResultDesc += "\n";
         }
         catch(Exception ex) {
             runningResultDesc = "You have run command \n" + command + "\n failed with result: ";
-            runningResultDesc += "\n" + ex.getMessage();
+            runningResultDesc += "\n" + adjustInputText(ex.getMessage(), 200);
         }
 
         return runningResultDesc;
+    }
+
+    private String adjustInputText(String inputText, int maxByteLength) {
+        if(inputText == null) {
+            return null;
+        }
+        byte[] utf8Bytes = inputText.getBytes(StandardCharsets.UTF_8);
+        if (utf8Bytes.length <= maxByteLength * 2) {
+            return inputText;
+        }
+        String startPart = CommonUtil.truncateTextFromStart(inputText, maxByteLength);
+        String endPart = CommonUtil.truncateTextFromEnd(inputText, maxByteLength);
+        String adjustResult = startPart + "\n...\n" + endPart;
+        return adjustResult;
     }
 
     private String call_finishCodeGeneration(AIModel.Call call) {

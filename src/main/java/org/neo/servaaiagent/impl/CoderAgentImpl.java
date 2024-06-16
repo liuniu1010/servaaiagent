@@ -206,6 +206,14 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+
+        // reduce chatrecord's content
+        for(AIModel.ChatRecord chatRecord: chatRecords) {
+            if(!chatRecord.getIsRequest()) {
+                chatRecord.setContent("");  // reduce the content for it is useless
+            }
+        }
+
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(newInput);
         String systemHint = backgroundDesc;
