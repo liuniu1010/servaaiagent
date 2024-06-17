@@ -17,18 +17,25 @@ import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
 public class CoderBotForUIImpl extends AbsChatForUIImpl {
+    private String onlineFileAbsolutePath;
+    private String relevantVisitPath;
     private CoderBotForUIImpl() {
     }
 
-    public static CoderBotForUIImpl getInstance() {
-        return new CoderBotForUIImpl();
+    private CoderBotForUIImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        onlineFileAbsolutePath = inputOnlineFileAbsolutePath;
+        relevantVisitPath = inputRelevantVisitPath;
+    }
+
+    public static CoderBotForUIImpl getInstance(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        return new CoderBotForUIImpl(inputOnlineFileAbsolutePath, inputRelevantVisitPath);
     }
 
     @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new CoderBotForUIImpl() {
+            return (String)dbService.executeSaveTask(new CoderBotForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
                     return innerFetchResponse(dbConnection, session, null, userInput);
@@ -63,7 +70,7 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String userInput) {
-        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
+        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
         String declare = managerAgent.runProject(dbConnection, session, notifyCallback, userInput);
         return declare;
     }

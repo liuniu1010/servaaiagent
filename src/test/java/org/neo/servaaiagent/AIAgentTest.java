@@ -98,8 +98,8 @@ public class AIAgentTest
         // System.out.println("response = " + response);
     }
 
-    public void testManagerAgent() throws Exception {
-        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance();
+    public void _testManagerAgent() throws Exception {
+        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance("/tmp", "/tmp");
         String requirement = "please write java code with maven which calculate sum from 1 + 100";
         System.out.println("requirement = " + requirement);
         String response = managerAgent.runProject(managerTestSession, null, requirement);

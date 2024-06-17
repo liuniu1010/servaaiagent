@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Date;
 
 import java.io.InputStream;
+import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
@@ -27,11 +28,19 @@ import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ManagerAgentImpl.class);
 
+    private String onlineFileAbsolutePath;
+    private String relevantVisitPath;
+
     private ManagerAgentImpl() {
     }
 
-    public static ManagerAgentImpl getInstance() {
-        return new ManagerAgentImpl();
+    private ManagerAgentImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        onlineFileAbsolutePath = inputOnlineFileAbsolutePath;
+        relevantVisitPath = inputRelevantVisitPath;
+    }
+
+    public static ManagerAgentImpl getInstance(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        return new ManagerAgentImpl(inputOnlineFileAbsolutePath, inputRelevantVisitPath);
     }
 
     @Override
@@ -43,7 +52,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeSaveTask(new ManagerAgentImpl() {
+        return (String)dbService.executeSaveTask(new ManagerAgentImpl(onlineFileAbsolutePath, relevantVisitPath) {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
                 return runProject(dbConnection, session, notifyCallback, requirement);
@@ -68,10 +77,19 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
 
             // code generated, download it
             String base64OfProject = coderAgent.downloadCode(dbConnection, coderSession, coder, projectFolder);
-            String savePath = "/tmp/" + coderSession + ".tar.gz";
-            IOUtil.rawBase64ToFile(base64OfProject, savePath);
+            // String savePath = "/tmp/" + coderSession + ".tar.gz";
+            String fileName = coderSession + ".tar.gz";
+            String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
+            System.out.println("debug: filePath = " + filePath);
+            IOUtil.rawBase64ToFile(base64OfProject, filePath);
 
-            declare += "\nCode has been saved at " + savePath;
+            String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
+            System.out.println("debug: relevantFilePath = " + relevantFilePath);
+
+            declare += "\n<h3>Please click below link to download the source code</h3>";
+            declare += "\n<a href=\"";
+            declare += relevantFilePath; 
+            declare += "\" download>Source Code</a>";
             return declare;
         }
         catch(NeoAIException nex) {
