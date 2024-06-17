@@ -22,9 +22,10 @@ Follow these steps to write code:
 7. Run 'pip install -r <projectFolder>/requirements.txt' if a requirements file is present.
 8. Run 'pytest' to ensure all test cases pass.
 In case you encounter any exceptions in previous steps, please adjust the code and try again until the code passes the tests.
-9. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
+9. Remove folder venv to release disk space.
+10. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
    1) Function description
-   2) Environment requirements such as OS, Python version, and dependencies
+   2) Suggested environment requirements including OS, Python version, and dependencies
    3) Unit test steps
 To generate README.md, please execute the following commands:
 'uname -a'

@@ -23,9 +23,10 @@ Follow these steps to write code:
    Run 'npm install' to install necessary dependencies specified in the package.json file.
 5. Run 'npm test' to ensure all test cases pass.
 In case you encounter any exceptions in previous steps, please adjust the code and try again until the code passes the tests.
-6. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
+6. Remove folder node_modules to release disk space.
+7. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
    1) Function description
-   2) Environment requirements such as OS, Node.js version, npm version
+   2) Suggested environment requirements including OS, Node.js version, npm version
    3) Unit test steps
 To generate README.md, please execute the following commands:
    1) 'uname -a'

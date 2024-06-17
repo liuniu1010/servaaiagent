@@ -20,9 +20,10 @@ Follow these steps to write code:
 5. Run 'gradle compileJava' to ensure all code is compilable.
 6. Run 'gradle test' to ensure all test cases pass.
 In case you encounter any exceptions in previous steps, please adjust the code and try again until the code passes the tests.
-7. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
+7. Run 'gradle clean' to remove unnecessary files
+8. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
   1) Function description
-  2) Environment requirements such as OS, Java version, Gradle version
+  2) Suggested environment requirements including OS, Java version, Gradle version
   3) Unit test steps
   4) To generate README.md, please execute the following commands:
     'uname -a'

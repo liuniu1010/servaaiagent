@@ -24,9 +24,10 @@ Follow these steps to write code:
 9. Run 'dotnet build <projectFolder>/project1.sln' to ensure all code is compilable.
 10. Run 'dotnet test <projectFolder>/project1.sln' to ensure all test cases pass.
 In case you encounter any exceptions in previous steps, please adjust the code and try again until the code passes the tests.
-11. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
+11. Run 'dotnet clean' to remove unnecessary files
+12. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
    1) Function description
-   2) Environment requirements such as OS, .NET version
+   2) Suggestd environment requirements including OS, .NET version
    3) Unit test steps
    To generate README.md, please execute the following commands:
    'uname -a'

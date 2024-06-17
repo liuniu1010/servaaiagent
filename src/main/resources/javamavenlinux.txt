@@ -19,14 +19,15 @@ Follow these steps to write code:
 5. run 'mvn test-compile' to ensure all code are compilable
 6. run 'mvn test' to ensure all test cases passed
 in cases if you met any exception in previous steps, please ajust code and try again until the code pass test
-7. generate README.md file under <projectFolder>/ to summarize the source code, including:
-function description
-environment requirement such as OS, java version, maven version, unit test steps
-
-To generate README.md, Please execute command
-'uname -a'
-'java -version'
-'mvn -version'
+7. run 'mvn clean' to remove unnecessary files
+8. generate README.md file under <projectFolder>/ to summarize the source code, including:
+    1) function description
+    2) suggested environment requirement including OS, java version, maven version.
+    3) unit test steps
+    4) To generate README.md, Please execute command
+       'uname -a'
+       'java -version'
+       'mvn -version'
 to get information necessary. You also need to call function executeCommand to generate README.md
 
 Each previous step must be executed by calling function executeCommand to make sure they were really executed.
