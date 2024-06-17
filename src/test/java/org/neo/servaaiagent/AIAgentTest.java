@@ -106,6 +106,21 @@ public class AIAgentTest
         System.out.println("response = " + response);
     }
 
+    public void _testEmail() {
+        String to = "liuniu@tsinghua.org.cn";
+        String subject = "this is a test";
+        String body = "This email is only for test the api";
+
+        try {
+            EmailAgentImpl.getInstance().sendEmail(to, subject, body);
+            System.out.println("send success");
+        }
+        catch(Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
+    }
+
     public void testChatAgent() {
         ChatAgentIFC chatAgent = ChatAgentImpl.getInstance();
         String userInput = "Hello, I'm neo, nice to meet you!";
