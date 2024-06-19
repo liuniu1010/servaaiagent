@@ -5,6 +5,9 @@ import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.ServiceFactory;
 
+import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
+
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
 
 public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
@@ -35,6 +38,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void sendPassword(DBConnectionIFC dbConnection, String username) {
+        try {
+            innerSendPassword(dbConnection, username);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -120,5 +132,18 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     @Override
     public boolean checkCredits(DBConnectionIFC dbConnection, String session) {
         return false;
+    }
+
+    private void innerSendPassword(DBConnectionIFC dbConnection, String username) {
+        if(!CommonUtil.isValidEmail(username)){
+            throw new NeoAIException("not a valid email address!");
+        }
+
+        String standardEmailAddress = username.trim().toLowerCase();
+        String password = CommonUtil.getRandomString(6);
+        String encryptedPassword = CommonUtil.getSaltedHash(password);
+
+        // check if this account is already exist
+        String sql = "select id";
     }
 }
