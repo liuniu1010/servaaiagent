@@ -121,6 +121,22 @@ public class AIAgentTest
         }
     }
 
+    public void testLogin() {
+        String userName = "liuniu@tsinghua.org.cn";
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        String password = "tPvZzp";
+        String loginSession = accountAgent.login(userName, password);
+
+        System.out.println("passed, loginSession = " + loginSession);
+    }
+
+    public void testSendPassword() {
+        String userName = "liuniu@tsinghua.org.cn";
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.sendPassword(userName);
+        System.out.println("send success");
+    }
+
     public void testChatAgent() {
         ChatAgentIFC chatAgent = ChatAgentImpl.getInstance();
         String userInput = "Hello, I'm neo, nice to meet you!";
