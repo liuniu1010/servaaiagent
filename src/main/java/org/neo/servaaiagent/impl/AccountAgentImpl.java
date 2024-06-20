@@ -1,5 +1,6 @@
 package org.neo.servaaiagent.impl;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -80,6 +81,23 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         catch(Exception ex) {
             throw new NeoAIException(ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    public boolean updateLogin(String session) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (boolean)dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                return updateLogin(dbConnection, session);
+            }
+        });
+    }
+
+    @Override
+    public boolean updateLogin(DBConnectionIFC dbConnection, String session) {
+        return false;
     }
 
     @Override
@@ -224,7 +242,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
         AgentModel.LoginSession loginSession = new AgentModel.LoginSession(session);
         loginSession.setAccountId(userAccount.getId());
-        loginSession.setExpireTime(new Date());
+        loginSession.setExpireTime(CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30));
         dbConnection.insert(loginSession.getVersionEntity());
 
         return session;
