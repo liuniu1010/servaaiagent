@@ -121,7 +121,14 @@ public class AIAgentTest
         }
     }
 
-    public void testLogin() {
+    public void testGetLeftCredits() {
+        int accountId = 1;
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        int leftCredits = accountAgent.getLeftCredits(accountId);
+        System.out.println("leftCredits = " + leftCredits);
+    }
+
+    public void _testLogin() {
         String userName = "liuniu@tsinghua.org.cn";
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         String password = "mH9gbm";

@@ -367,7 +367,8 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
             dbConnection.insert(userAccount.getVersionEntity());
 
             // for new register user, auto topup some initial credits for trying
-            innerPurchaseCredits(dbConnection, userAccount.getId(), 1000);
+            int topupCredits = CommonUtil.getConfigValueAsInt(dbConnection, "topupOnRegister");
+            innerPurchaseCredits(dbConnection, userAccount.getId(), topupCredits);
         }
         else {
             long id = Long.parseLong(oId.toString());
@@ -415,7 +416,8 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
         // passed, generate login session
         String session = CommonUtil.getRandomString(8);
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30);
+        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
 
         AgentModel.LoginSession loginSession = new AgentModel.LoginSession(session);
         loginSession.setAccountId(userAccount.getId());
@@ -449,7 +451,8 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerUpdateLogin(DBConnectionIFC dbConnection, String session) throws Exception {
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30);
+        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
         String sql = "update loginsession";
         sql += " set expiretime = ?";
         sql += " where session = ?";
@@ -467,7 +470,8 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerPurchaseCredits(DBConnectionIFC dbConnection, long accountId, int credits) throws Exception {
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, 6);
+        int expireMonths = CommonUtil.getConfigValueAsInt(dbConnection, "creditsExpireMonths");
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, expireMonths);
         AgentModel.ChasedCredits chasedCredits = new AgentModel.ChasedCredits(accountId);
         chasedCredits.setCredits(credits);
         chasedCredits.setExpireTime(expireTime);
