@@ -18,12 +18,24 @@ public interface AccountAgentIFC {
     public void purchaseCredits(String session, int credits);
     public void purchaseCredits(DBConnectionIFC dbConnection, String session, int credits);
 
+    public void purchaseCredits(long accountId, int credits);
+    public void purchaseCredits(DBConnectionIFC dbConnection, long accountId, int credits);
+
     public void consumeCredits(String session, int credits);
     public void consumeCredits(DBConnectionIFC dbConnetion, String session, int credits);
+
+    public void consumeCredits(long accountId, int credits);
+    public void consumeCredits(DBConnectionIFC dbConnetion, long accountId, int credits);
 
     public int getLeftCredits(String session);
     public int getLeftCredits(DBConnectionIFC dbConnection, String session);
 
-    public boolean checkCredits(String session);
-    public boolean checkCredits(DBConnectionIFC dbConnection, String session);
+    public int getLeftCredits(long accountId);
+    public int getLeftCredits(DBConnectionIFC dbConnection, long accountId);
+
+    public void checkCredits(String session);
+    public void checkCredits(DBConnectionIFC dbConnection, String session);
+
+    public void checkCredits(long accountId);
+    public void checkCredits(DBConnectionIFC dbConnection, long accountId);
 }

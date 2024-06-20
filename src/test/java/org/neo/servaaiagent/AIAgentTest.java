@@ -127,8 +127,7 @@ public class AIAgentTest
         String password = "mH9gbm";
         String loginSession = accountAgent.login(userName, password);
 
-        boolean checkLogin = accountAgent.checkLogin(loginSession);
-        assertTrue(checkLogin);
+        accountAgent.checkLogin(loginSession);
 
         accountAgent.updateLogin(loginSession);
     }

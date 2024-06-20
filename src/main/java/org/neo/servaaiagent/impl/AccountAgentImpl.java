@@ -162,6 +162,32 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
+    public void purchaseCredits(long accountId, int credits) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                purchaseCredits(dbConnection, accountId, credits);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void purchaseCredits(DBConnectionIFC dbConnection, long accountId, int credits) {
+        try {
+            innerPurchaseCredits(dbConnection, accountId, credits);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public void consumeCredits(String session, int credits) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -188,6 +214,32 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
+    public void consumeCredits(long accountId, int credits) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                consumeCredits(dbConnection, accountId, credits);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void consumeCredits(DBConnectionIFC dbConnection, long accountId, int credits) {
+        try {
+            innerConsumeCredits(dbConnection, accountId, credits);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public int getLeftCredits(String session) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -201,24 +253,92 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public int getLeftCredits(DBConnectionIFC dbConnection, String session) {
-        return 0;
+        try {
+            return innerGetLeftCredits(dbConnection, session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     @Override
-    public boolean checkCredits(String session) {
+    public int getLeftCredits(long accountId) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (boolean)dbService.executeSaveTask(new AccountAgentImpl() {
+        return (int)dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return checkCredits(dbConnection, session);
+                return getLeftCredits(dbConnection, accountId);
             }
         });
     }
 
     @Override
-    public boolean checkCredits(DBConnectionIFC dbConnection, String session) {
-        return false;
+    public int getLeftCredits(DBConnectionIFC dbConnection, long accountId) {
+        try {
+            return innerGetLeftCredits(dbConnection, accountId);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void checkCredits(String session) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                checkCredits(dbConnection, session);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void checkCredits(DBConnectionIFC dbConnection, String session) {
+        try {
+            innerCheckCredits(dbConnection, session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void checkCredits(long accountId) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                checkCredits(dbConnection, accountId);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void checkCredits(DBConnectionIFC dbConnection, long accountId) {
+        try {
+            innerCheckCredits(dbConnection, accountId);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     private void innerSendPassword(DBConnectionIFC dbConnection, String username) throws Exception {
@@ -245,6 +365,9 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
             userAccount.setEncryptedPassword(encryptedPassword);
             userAccount.setRegistTime(new Date());
             dbConnection.insert(userAccount.getVersionEntity());
+
+            // for new register user, auto topup some initial credits for trying
+            innerPurchaseCredits(dbConnection, userAccount.getId(), 1000);
         }
         else {
             long id = Long.parseLong(oId.toString());
@@ -339,8 +462,12 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerPurchaseCredits(DBConnectionIFC dbConnection, String session, int credits) throws Exception {
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, 6);
         long accountId = getAccountId(dbConnection, session);
+        innerPurchaseCredits(dbConnection, accountId, credits);
+    }
+
+    private void innerPurchaseCredits(DBConnectionIFC dbConnection, long accountId, int credits) throws Exception {
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, 6);
         AgentModel.ChasedCredits chasedCredits = new AgentModel.ChasedCredits(accountId);
         chasedCredits.setCredits(credits);
         chasedCredits.setExpireTime(expireTime);
@@ -349,12 +476,80 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerConsumeCredits(DBConnectionIFC dbConnection, String session, int credits) throws Exception {
-        Date consumeTime = new Date();
         long accountId = getAccountId(dbConnection, session);
+        innerConsumeCredits(dbConnection, accountId, credits);
+    }
+
+    private void innerConsumeCredits(DBConnectionIFC dbConnection, long accountId, int credits) throws Exception {
+        Date consumeTime = new Date();
         AgentModel.ConsumedCredits consumedCredits = new AgentModel.ConsumedCredits(accountId);
         consumedCredits.setCredits(credits);
         consumedCredits.setConsumeTime(consumeTime);
 
         dbConnection.insert(consumedCredits.getVersionEntity());
+    }
+
+    private int innerGetLeftCredits(DBConnectionIFC dbConnection, String session) throws Exception {
+        long accountId = getAccountId(dbConnection, session);
+        return innerGetLeftCredits(dbConnection, accountId);
+    }
+
+    private int innerGetLeftCredits(DBConnectionIFC dbConnection, long accountId) throws Exception {
+        int chasedSum = getChasedCredits(dbConnection, accountId);
+        int consumedSum = getConsumedCredits(dbConnection, accountId);
+
+        return (chasedSum - consumedSum);
+    }
+
+    private int getChasedCredits(DBConnectionIFC dbConnection, long accountId) throws Exception {
+        String sql = "select sum(cc.credits) as sumofchasedcredits";
+        sql += " from chasedcredits cc";
+        sql += " where cc.accountid = ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params); 
+
+        Object oSum = dbConnection.queryScalar(sqlStruct);
+
+        int sum = 0;
+        if(oSum != null) {
+            sum = Integer.parseInt(oSum.toString());
+        }
+        return sum;
+    }
+
+    private int getConsumedCredits(DBConnectionIFC dbConnection, long accountId) throws Exception {
+        String sql = "select sum(cc.credits) as sumofconsumedcredits";
+        sql += " from consumedcredits cc";
+        sql += " where cc.accountId = ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params); 
+
+        Object oSum = dbConnection.queryScalar(sqlStruct);
+
+        int sum = 0;
+        if(oSum != null) {
+            sum = Integer.parseInt(oSum.toString());
+        }
+        return sum;
+    }
+
+    private void innerCheckCredits(DBConnectionIFC dbConnection, String session) throws Exception {
+        if(innerGetLeftCredits(dbConnection, session) > 0) {
+            return;
+        }
+        throw new NeoAIException("No left credits!");
+    }
+
+    private void innerCheckCredits(DBConnectionIFC dbConnection, long accountId) throws Exception {
+        if(innerGetLeftCredits(dbConnection, accountId) > 0) {
+            return;
+        }
+        throw new NeoAIException("No left credits!");
     }
 }
