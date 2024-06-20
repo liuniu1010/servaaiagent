@@ -124,10 +124,13 @@ public class AIAgentTest
     public void testLogin() {
         String userName = "liuniu@tsinghua.org.cn";
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        String password = "tPvZzp";
+        String password = "mH9gbm";
         String loginSession = accountAgent.login(userName, password);
 
-        System.out.println("passed, loginSession = " + loginSession);
+        boolean checkLogin = accountAgent.checkLogin(loginSession);
+        assertTrue(checkLogin);
+
+        accountAgent.updateLogin(loginSession);
     }
 
     public void testSendPassword() {

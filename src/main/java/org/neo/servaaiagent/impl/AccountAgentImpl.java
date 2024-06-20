@@ -84,37 +84,55 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public boolean updateLogin(String session) {
+    public void updateLogin(String session) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (boolean)dbService.executeSaveTask(new AccountAgentImpl() {
+        dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return updateLogin(dbConnection, session);
+                updateLogin(dbConnection, session);
+                return null;
             }
         });
     }
 
     @Override
-    public boolean updateLogin(DBConnectionIFC dbConnection, String session) {
-        return false;
+    public void updateLogin(DBConnectionIFC dbConnection, String session) {
+        try {
+            innerUpdateLogin(dbConnection, session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     @Override
-    public boolean checkLogin(String session) {
+    public void checkLogin(String session) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (boolean)dbService.executeSaveTask(new AccountAgentImpl() {
+        dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return checkLogin(dbConnection, session);
+                checkLogin(dbConnection, session);
+                return null;
             }
         });
     }
 
     @Override
-    public boolean checkLogin(DBConnectionIFC dbConnection, String session) {
-        return false;
+    public void checkLogin(DBConnectionIFC dbConnection, String session) {
+        try {
+            innerCheckLogin(dbConnection, session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -132,6 +150,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void purchaseCredits(DBConnectionIFC dbConnection, String session, int credits) {
+        try {
+            innerPurchaseCredits(dbConnection, session, credits);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -148,7 +175,33 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public void consumeCredits(DBConnectionIFC dbConnetion, String session, int credits) {
+    public void consumeCredits(DBConnectionIFC dbConnection, String session, int credits) {
+        try {
+            innerConsumeCredits(dbConnection, session, credits);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public int getLeftCredits(String session) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (int)dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                return getLeftCredits(dbConnection, session);
+            }
+        });
+    }
+
+    @Override
+    public int getLeftCredits(DBConnectionIFC dbConnection, String session) {
+        return 0;
     }
 
     @Override
@@ -239,12 +292,69 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
         // passed, generate login session
         String session = CommonUtil.getRandomString(8);
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30);
 
         AgentModel.LoginSession loginSession = new AgentModel.LoginSession(session);
         loginSession.setAccountId(userAccount.getId());
-        loginSession.setExpireTime(CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30));
+        loginSession.setExpireTime(expireTime);
         dbConnection.insert(loginSession.getVersionEntity());
 
         return session;
+    }
+
+    private long getAccountId(DBConnectionIFC dbConnection, String session) throws Exception {
+        String sql = "select accountid";
+        sql += " from loginsession";
+        sql += " where session = ?";
+        sql += " and expiretime > ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(session);
+        params.add(new Date());
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        
+        Object oResult = dbConnection.queryScalar(sqlStruct);
+        if(oResult == null) {
+            throw new NeoAIException("invalid session");
+        }
+        return Long.parseLong(oResult.toString());
+    }
+
+    private void innerCheckLogin(DBConnectionIFC dbConnection, String session) throws Exception {
+        getAccountId(dbConnection, session);
+    }
+
+    private void innerUpdateLogin(DBConnectionIFC dbConnection, String session) throws Exception {
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, 30);
+        String sql = "update loginsession";
+        sql += " set expiretime = ?";
+        sql += " where session = ?";
+        List<Object> params = new ArrayList<Object>();
+        params.add(expireTime);
+        params.add(session);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
+    }
+
+    private void innerPurchaseCredits(DBConnectionIFC dbConnection, String session, int credits) throws Exception {
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, 6);
+        long accountId = getAccountId(dbConnection, session);
+        AgentModel.ChasedCredits chasedCredits = new AgentModel.ChasedCredits(accountId);
+        chasedCredits.setCredits(credits);
+        chasedCredits.setExpireTime(expireTime);
+
+        dbConnection.insert(chasedCredits.getVersionEntity());
+    }
+
+    private void innerConsumeCredits(DBConnectionIFC dbConnection, String session, int credits) throws Exception {
+        Date consumeTime = new Date();
+        long accountId = getAccountId(dbConnection, session);
+        AgentModel.ConsumedCredits consumedCredits = new AgentModel.ConsumedCredits(accountId);
+        consumedCredits.setCredits(credits);
+        consumedCredits.setConsumeTime(consumeTime);
+
+        dbConnection.insert(consumedCredits.getVersionEntity());
     }
 }
