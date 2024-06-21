@@ -51,9 +51,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     @Override
     public String generateCode(DBConnectionIFC dbConnection, String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         String sandBoxUrl = getSandBoxUrl(dbConnection, coder, "executecommand");
-        int retryTimes = 2;
-        int iterateDeep = 20;
-        for(int i = 0;i < retryTimes;i++) {
+        int codeIterationRounds = CommonUtil.getConfigValueAsInt(dbConnection, "codeIterationRounds");
+        int codeIterationDeep = CommonUtil.getConfigValueAsInt(dbConnection, "codeInterationDeep");
+        for(int i = 0;i < codeIterationRounds;i++) {
             try {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
@@ -64,12 +64,12 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 storage.clearChatRecords(session);
 
                 // begin to generate code
-                return innerGenerateCode(dbConnection, session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterateDeep);
+                return innerGenerateCode(dbConnection, session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, codeIterationDeep);
             }
             catch(NeoAIException nex) {
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED) {
                     logger.error(nex.getMessage());
-                    if(i < retryTimes - 1) {
+                    if(i < codeIterationRounds - 1) {
                         String information = "System: Max iteration deep exceeded, maybe we started from a wrong direction, let's reset and try again from the start point.";
                         System.out.println(information);
                         if(notifyCallback != null) {
@@ -230,32 +230,22 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
-        // SuperAIIFC superAI = OpenAIImpl.getInstance(dbConnection);
-        // String model = OpenAIImpl.gpt_4o;
-        // SuperAIIFC superAI = GoogleAIImpl.getInstance(dbConnection);
-        // String model = GoogleAIImpl.gemini_1_5_pro_latest;
-
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String model = CommonUtil.getConfigValue(dbConnection, "codeModel");
 
-        int tryTime = 3;
-        int waitSeconds = 10; // first as 10 seconds
-        for(int i = 0;i < tryTime;i++) {
+        int retryTimesOnLLMException = CommonUtil.getConfigValueAsInt(dbConnection, "retryTimesOnLLMException");
+        int waitSeconds = CommonUtil.getConfigValueAsInt(dbConnection, "firstWaitSecondsOnLLMException");
+        for(int i = 0;i < retryTimesOnLLMException;i++) {
             try {
                 return superAI.fetchChatResponse(model, promptStruct);
             }
             catch(NeoAIException nex) {
                 logger.error(nex.getMessage(), nex);
-                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
-                    // sometimes LLM might generate error json which cannot be handled
-                    // try once more in this case
-                    logger.info("Meet json syntax error from LLM, try again...");
-                    continue;
-                }
-                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
-                    // met ioexception with LLM, wait some seconds and try again
+                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM 
+                    || nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR ) {
+                    // met ioexception or syntax exception with LLM, wait some seconds and try again
                     try {
-                        logger.info("Meet IOException from LLM, wait " + waitSeconds + " seconds and try again...");
+                        logger.info("Meet IOException or syntax exception from LLM, wait " + waitSeconds + " seconds and try again...");
                         Thread.sleep(1000 * waitSeconds);
                         waitSeconds = waitSeconds * 2;
                     }
@@ -269,6 +259,6 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
                 }
             }
         }
-        throw new NeoAIException("failed to generate code");
+        throw new NeoAIException("Max iteration deep exceeded!");
     }
 }
