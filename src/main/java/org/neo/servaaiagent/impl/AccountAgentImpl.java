@@ -441,7 +441,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         
         Object oResult = dbConnection.queryScalar(sqlStruct);
         if(oResult == null) {
-            throw new NeoAIException("invalid session");
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_SESSION_INVALID);
         }
         return Long.parseLong(oResult.toString());
     }
