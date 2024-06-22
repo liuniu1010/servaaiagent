@@ -402,16 +402,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
         SQLStruct sqlStruct = new SQLStruct(sql, params);
         
-        String standardExceptionMessage = "Your input username and password are not matched!";
         VersionEntity versionEntity = dbConnection.querySingleAsVersionEntity(AgentModel.UserAccount.ENTITYNAME, sqlStruct);
         if(versionEntity == null) {
-            throw new NeoAIException(standardExceptionMessage);
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL);
         }
 
         AgentModel.UserAccount userAccount = new AgentModel.UserAccount(versionEntity);
 
         if(!CommonUtil.checkPassword(password, userAccount.getEncryptedPassword())) {
-            throw new NeoAIException(standardExceptionMessage);
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL);
         }
 
         // passed, generate login session
