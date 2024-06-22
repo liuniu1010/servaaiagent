@@ -9,6 +9,9 @@ public interface AccountAgentIFC {
     public String login(String username, String password);
     public String login(DBConnectionIFC dbConnection, String username, String password);
 
+    public void logout(String session);
+    public void logout(DBConnectionIFC dbConnection, String session);
+
     public void updateLogin(String session);
     public void updateLogin(DBConnectionIFC dbConnection, String session);
 

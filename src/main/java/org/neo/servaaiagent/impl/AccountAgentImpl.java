@@ -84,6 +84,32 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
+    public void logout(String session) {
+        // no input dbConnection, start/commmit transaction itself
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                logout(dbConnection, session);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void logout(DBConnectionIFC dbConnection, String session) {
+        try {
+            innerLogout(dbConnection, session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public void updateLogin(String session) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -447,6 +473,16 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     private void innerCheckLogin(DBConnectionIFC dbConnection, String session) throws Exception {
         getAccountId(dbConnection, session);
+    }
+
+    private void innerLogout(DBConnectionIFC dbConnection, String session) throws Exception {
+        String sql = "delete from loginSession";
+        sql += " where session = ?";
+        List<Object> params = new ArrayList<Object>();
+        params.add(session);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
     }
 
     private void innerUpdateLogin(DBConnectionIFC dbConnection, String session) throws Exception {
