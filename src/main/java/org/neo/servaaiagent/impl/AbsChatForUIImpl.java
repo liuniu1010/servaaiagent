@@ -8,6 +8,7 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 
 import org.neo.servaaibase.ifc.StorageIFC;
@@ -19,7 +20,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
-abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC, DBAutoCommitSaveTaskIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
 
     @Override
@@ -30,6 +31,11 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
 
     @Override
     public Object save(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+    @Override
+    public Object autoCommitSave(DBConnectionIFC dbConnection) {
         return null;
     }
 

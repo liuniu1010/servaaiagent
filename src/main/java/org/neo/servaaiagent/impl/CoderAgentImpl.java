@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.model.AIModel;
@@ -21,7 +21,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
-public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
+public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(CoderAgentImpl.class);
 
     private CoderAgentImpl() {
@@ -32,7 +32,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public Object save(DBConnectionIFC dbConnection) {
+    public Object autoCommitSave(DBConnectionIFC dbConnection) {
         return null;
     }
 
@@ -40,9 +40,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     public String generateCode(String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeSaveTask(new CoderAgentImpl() {
+        return (String)dbService.executeAutoCommitSaveTask(new CoderAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object autoCommitSave(DBConnectionIFC dbConnection) {
                 return generateCode(dbConnection, session, coder, notifyCallback, requirement, backgroundDesc, projectFolder);
             }
         });
@@ -90,9 +90,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBSaveTaskIFC {
     public String downloadCode(String session, String coder, String projectFolder) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeSaveTask(new CoderAgentImpl() {
+        return (String)dbService.executeAutoCommitSaveTask(new CoderAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object autoCommitSave(DBConnectionIFC dbConnection) {
                 return downloadCode(dbConnection, session, coder, projectFolder);
             }
         });

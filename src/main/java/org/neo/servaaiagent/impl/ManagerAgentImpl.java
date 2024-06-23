@@ -8,7 +8,7 @@ import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 import org.neo.servaframe.util.IOUtil;
 import org.neo.servaframe.ServiceFactory;
 
@@ -25,7 +25,7 @@ import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
-public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
+public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIFC {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ManagerAgentImpl.class);
 
     private String onlineFileAbsolutePath;
@@ -44,7 +44,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public Object save(DBConnectionIFC dbConnection) {
+    public Object autoCommitSave(DBConnectionIFC dbConnection) {
         return null;
     }
 
@@ -52,9 +52,9 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBSaveTaskIFC {
     public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeSaveTask(new ManagerAgentImpl(onlineFileAbsolutePath, relevantVisitPath) {
+        return (String)dbService.executeAutoCommitSaveTask(new ManagerAgentImpl(onlineFileAbsolutePath, relevantVisitPath) {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object autoCommitSave(DBConnectionIFC dbConnection) {
                 return runProject(dbConnection, session, notifyCallback, requirement);
             }
         });

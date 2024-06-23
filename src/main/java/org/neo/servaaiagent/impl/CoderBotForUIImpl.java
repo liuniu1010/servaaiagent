@@ -5,7 +5,7 @@ import java.util.List;
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
@@ -35,9 +35,9 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new CoderBotForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
+            return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
-                public Object save(DBConnectionIFC dbConnection) {
+                public Object autoCommitSave(DBConnectionIFC dbConnection) {
                     return innerFetchResponse(dbConnection, session, null, userInput);
                 }
             });
@@ -54,9 +54,9 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new CoderBotForUIImpl() {
+            return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl() {
                 @Override
-                public Object save(DBConnectionIFC dbConnection) {
+                public Object autoCommitSave(DBConnectionIFC dbConnection) {
                     return innerFetchResponse(dbConnection, session, notifyCallback, userInput);
                 }
             });
