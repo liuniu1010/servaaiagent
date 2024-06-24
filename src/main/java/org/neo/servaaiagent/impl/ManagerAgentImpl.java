@@ -23,6 +23,7 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIFC {
@@ -49,21 +50,21 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
     }
 
     @Override
-    public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeAutoCommitSaveTask(new ManagerAgentImpl(onlineFileAbsolutePath, relevantVisitPath) {
             @Override
             public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                return runProject(dbConnection, session, notifyCallback, requirement);
+                return runProject(dbConnection, loginSession, notifyCallback, requirement);
             }
         });
     }
 
     @Override
-    public String runProject(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(DBConnectionIFC dbConnection, String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
-            String coder = chooseCoder(dbConnection, session, requirement);
+            String coder = chooseCoder(dbConnection, loginSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
             String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
@@ -90,6 +91,10 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
             declare += "\n<a href=\"";
             declare += relevantFilePath; 
             declare += "\" download>Source Code</a>";
+
+            int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
+            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+            accountAgent.consumeCredits(dbConnection, loginSession, consumedCreditsOnEach);
             return declare;
         }
         catch(NeoAIException nex) {
@@ -104,8 +109,8 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
         return "/tmp/" + coderSession + "/myProject";
     }
 
-    private String chooseCoder(DBConnectionIFC dbConnection, String session, String requirement) throws Exception {
-        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(dbConnection, session, requirement);
+    private String chooseCoder(DBConnectionIFC dbConnection, String loginSession, String requirement) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(dbConnection, loginSession, requirement);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -137,7 +142,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
         }
     }
 
-    private AIModel.PromptStruct constructPromptStructForAssign(DBConnectionIFC dbConnection, String session, String requirement) throws Exception {
+    private AIModel.PromptStruct constructPromptStructForAssign(DBConnectionIFC dbConnection, String loginSession, String requirement) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String userInput = "Please choose a suitable coder to implement requirement:";
         userInput += "\n" + requirement;

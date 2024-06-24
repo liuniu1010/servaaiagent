@@ -23,6 +23,7 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
@@ -44,9 +45,9 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     }
 
     @Override
-    public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
-            String coder = chooseCoder(session, requirement);
+            String coder = chooseCoder(loginSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
             String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
@@ -70,6 +71,10 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             declare += "\n<a href=\"";
             declare += relevantFilePath; 
             declare += "\" download>Source Code</a>";
+
+            int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt("consumedCreditsOnEach");
+            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+            accountAgent.consumeCredits(loginSession, consumedCreditsOnEach);
             return declare;
         }
         catch(NeoAIException nex) {
@@ -81,7 +86,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     }
 
     @Override
-    public String runProject(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(DBConnectionIFC dbConnection, String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         throw new NeoAIException("not supported");
     }
 
@@ -89,8 +94,8 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         return "/tmp/" + coderSession + "/myProject";
     }
 
-    private String chooseCoder(String session, String requirement) throws Exception {
-        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(session, requirement);
+    private String chooseCoder(String loginSession, String requirement) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(loginSession, requirement);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -122,7 +127,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStructForAssign(String session, String requirement) throws Exception {
+    private AIModel.PromptStruct constructPromptStructForAssign(String loginSession, String requirement) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String userInput = "Please choose a suitable coder to implement requirement:";
         userInput += "\n" + requirement;

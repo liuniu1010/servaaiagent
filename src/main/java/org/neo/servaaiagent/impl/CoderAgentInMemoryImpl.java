@@ -65,6 +65,10 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                     throw nex;
                 }
             }
+            finally {
+                StorageIFC storage = StorageInMemoryImpl.getInstance();
+                storage.clearChatRecords(session);
+            }
         }
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
     }

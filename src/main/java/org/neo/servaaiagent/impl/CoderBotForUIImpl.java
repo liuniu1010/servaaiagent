@@ -32,13 +32,13 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(String loginSession, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
                 public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, null, userInput);
+                    return innerFetchResponse(dbConnection, loginSession, null, userInput);
                 }
             });
         }
@@ -51,13 +51,13 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     }
 
     @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+    public String fetchResponse(String loginSession, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl() {
                 @Override
                 public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, notifyCallback, userInput);
+                    return innerFetchResponse(dbConnection, loginSession, notifyCallback, userInput);
                 }
             });
         }
@@ -69,9 +69,9 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String userInput) {
+    private String innerFetchResponse(DBConnectionIFC dbConnection, String loginSession, NotifyCallbackIFC notifyCallback, String userInput) {
         ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
-        String declare = managerAgent.runProject(dbConnection, session, notifyCallback, userInput);
+        String declare = managerAgent.runProject(dbConnection, loginSession, notifyCallback, userInput);
         return declare;
     }
 }

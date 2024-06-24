@@ -134,9 +134,9 @@ public class AIAgentTest
         String password = "mH9gbm";
         String loginSession = accountAgent.login(userName, password);
 
-        accountAgent.checkLogin(loginSession);
+        accountAgent.checkSessionValid(loginSession);
 
-        accountAgent.updateLogin(loginSession);
+        accountAgent.updateSession(loginSession);
     }
 
     public void testSendPassword() {
