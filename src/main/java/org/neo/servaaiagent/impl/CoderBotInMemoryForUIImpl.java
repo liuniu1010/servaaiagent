@@ -5,7 +5,6 @@ import java.util.List;
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
@@ -16,31 +15,25 @@ import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIImpl;
 
-public class CoderBotForUIImpl extends AbsChatForUIImpl {
+public class CoderBotInMemoryForUIImpl extends AbsChatForUIImpl {
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;
-    private CoderBotForUIImpl() {
+    private CoderBotInMemoryForUIImpl() {
     }
 
-    private CoderBotForUIImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+    private CoderBotInMemoryForUIImpl(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
         onlineFileAbsolutePath = inputOnlineFileAbsolutePath;
         relevantVisitPath = inputRelevantVisitPath;
     }
 
-    public static CoderBotForUIImpl getInstance(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
-        return new CoderBotForUIImpl(inputOnlineFileAbsolutePath, inputRelevantVisitPath);
+    public static CoderBotInMemoryForUIImpl getInstance(String inputOnlineFileAbsolutePath, String inputRelevantVisitPath) {
+        return new CoderBotInMemoryForUIImpl(inputOnlineFileAbsolutePath, inputRelevantVisitPath);
     }
 
     @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
-                @Override
-                public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, null, userInput);
-                }
-            });
+            return innerFetchResponse(session, null, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -53,13 +46,7 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
     @Override
     public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeAutoCommitSaveTask(new CoderBotForUIImpl() {
-                @Override
-                public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, notifyCallback, userInput);
-                }
-            });
+            return innerFetchResponse(session, notifyCallback, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -69,9 +56,9 @@ public class CoderBotForUIImpl extends AbsChatForUIImpl {
         }
     }
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String userInput) {
+    private String innerFetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput) {
         ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
-        String declare = managerAgent.runProject(dbConnection, session, notifyCallback, userInput);
+        String declare = managerAgent.runProject(session, notifyCallback, userInput);
         return declare;
     }
 }

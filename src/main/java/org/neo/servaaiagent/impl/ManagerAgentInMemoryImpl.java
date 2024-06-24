@@ -51,7 +51,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
             backgroundDesc = backgroundDesc.replace("<projectFolder>", projectFolder);
-            CoderAgentIFC coderAgent = CoderAgentImpl.getInstance();
+            CoderAgentIFC coderAgent = CoderAgentInMemoryImpl.getInstance();
             String declare = coderAgent.generateCode(coderSession, coder, notifyCallback, requirement, backgroundDesc, projectFolder);
             System.out.println("Declare = " + declare);
             if(notifyCallback != null) {
@@ -62,11 +62,9 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             String base64OfProject = coderAgent.downloadCode(coderSession, coder, projectFolder);
             String fileName = coderSession + ".tar.gz";
             String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
-            System.out.println("debug: filePath = " + filePath);
             IOUtil.rawBase64ToFile(base64OfProject, filePath);
 
             String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
-            System.out.println("debug: relevantFilePath = " + relevantFilePath);
 
             declare += "\n<h3>Please click below link to download the source code</h3>";
             declare += "\n<a href=\"";
