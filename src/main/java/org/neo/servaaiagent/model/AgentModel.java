@@ -79,6 +79,7 @@ public class AgentModel {
         public static final String ACCOUNTID = "accountid";
         public static final String EXPIRETIME = "expiretime";
         public static final String IP = "ip";
+        public static final String ISDELETED = "isdeleted";
 
         public LoginSession(VersionEntity inputVersionEntity) {
             versionEntity = inputVersionEntity;
@@ -131,6 +132,14 @@ public class AgentModel {
 
         public void setIP(String ip) {
             versionEntity.setAttribute(IP, ip);
+        }
+
+        public boolean getIsDeleted() {
+            return (boolean)versionEntity.getAttribute(ISDELETED);
+        }
+
+        public void setIsDeleted(boolean inputIsDeleted) {
+            versionEntity.setAttribute(ISDELETED, inputIsDeleted);
         }
     }
 

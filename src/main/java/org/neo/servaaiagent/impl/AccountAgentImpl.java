@@ -440,13 +440,14 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         }
 
         // passed, generate login loginSession
-        String loginSession = CommonUtil.getRandomString(8);
+        String loginSession = CommonUtil.getRandomString(10);
         int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "loginSessionExpireMinutes");
         Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
 
         AgentModel.LoginSession modelLoginSession = new AgentModel.LoginSession(loginSession);
         modelLoginSession.setAccountId(userAccount.getId());
         modelLoginSession.setExpireTime(expireTime);
+        modelLoginSession.setIsDeleted(false);
         dbConnection.insert(modelLoginSession.getVersionEntity());
 
         return loginSession;
@@ -454,9 +455,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     private long getAccountId(DBConnectionIFC dbConnection, String loginSession) throws Exception {
         String sql = "select accountid";
-        sql += " from loginloginSession";
-        sql += " where loginSession = ?";
+        sql += " from loginsession";
+        sql += " where session = ?";
         sql += " and expiretime > ?";
+        sql += " and isdeleted = 0";
 
         List<Object> params = new ArrayList<Object>();
         params.add(loginSession);
@@ -476,8 +478,9 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerLogout(DBConnectionIFC dbConnection, String loginSession) throws Exception {
-        String sql = "delete from loginSession";
-        sql += " where loginSession = ?";
+        String sql = "update loginsession";
+        sql += " set isdeleted = 1";
+        sql += " where session = ?";
         List<Object> params = new ArrayList<Object>();
         params.add(loginSession);
 
@@ -488,9 +491,9 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     private void innerUpdateSession(DBConnectionIFC dbConnection, String loginSession) throws Exception {
         int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "loginSessionExpireMinutes");
         Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
-        String sql = "update loginloginSession";
+        String sql = "update loginsession";
         sql += " set expiretime = ?";
-        sql += " where loginSession = ?";
+        sql += " where session = ?";
         List<Object> params = new ArrayList<Object>();
         params.add(expireTime);
         params.add(loginSession);

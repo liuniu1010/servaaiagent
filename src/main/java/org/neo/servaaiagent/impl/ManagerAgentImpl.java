@@ -64,6 +64,11 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
     @Override
     public String runProject(DBConnectionIFC dbConnection, String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
+            AIModel.CodeRecord codeRecord1 = new AIModel.CodeRecord(loginSession);
+            codeRecord1.setCreateTime(new Date());
+            codeRecord1.setRequirement(requirement);
+            saveCodeRecordInDB(dbConnection, codeRecord1);
+
             String coder = chooseCoder(dbConnection, loginSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
             String projectFolder = generateProjectFolderName(coderSession);
@@ -75,6 +80,11 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
             if(notifyCallback != null) {
                 notifyCallback.notify(declare);
             }
+
+            AIModel.CodeRecord codeRecord2 = new AIModel.CodeRecord(loginSession);
+            codeRecord2.setCreateTime(new Date());
+            codeRecord2.setContent(declare);
+            saveCodeRecordInDB(dbConnection, codeRecord2);
 
             // code generated, download it
             String base64OfProject = coderAgent.downloadCode(dbConnection, coderSession, coder, projectFolder);
@@ -192,5 +202,19 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
             }
         }
         throw new NeoAIException("failed to generate code");
+    }
+
+    private void saveCodeRecordInDB(DBConnectionIFC dbConnection, AIModel.CodeRecord codeRecord) {
+        try {
+            innerSaveCodeRecordInDB(dbConnection, codeRecord);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void innerSaveCodeRecordInDB(DBConnectionIFC dbConnection, AIModel.CodeRecord codeRecord) {
+        StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
+        storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
     }
 }
