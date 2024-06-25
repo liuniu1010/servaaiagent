@@ -8,7 +8,7 @@ import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.util.IOUtil;
 import org.neo.servaframe.ServiceFactory;
 
@@ -47,10 +47,10 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     @Override
     public String runProject(String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
-            AIModel.CodeRecord codeRecord1 = new AIModel.CodeRecord(loginSession);
-            codeRecord1.setCreateTime(new Date());
-            codeRecord1.setRequirement(requirement);
-            saveCodeRecordInDB(codeRecord1);
+            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(loginSession);
+            codeRecord.setCreateTime(new Date());
+            codeRecord.setRequirement(requirement);
+            saveCodeRecordInDB(codeRecord);
 
             String coder = chooseCoder(loginSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
@@ -63,11 +63,6 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             if(notifyCallback != null) {
                 notifyCallback.notify(declare);
             }
-
-            AIModel.CodeRecord codeRecord2 = new AIModel.CodeRecord(loginSession);
-            codeRecord2.setCreateTime(new Date());
-            codeRecord2.setContent(declare);
-            saveCodeRecordInDB(codeRecord2);
 
             // code generated, download it
             String base64OfProject = coderAgent.downloadCode(coderSession, coder, projectFolder);
@@ -82,9 +77,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             declare += relevantFilePath; 
             declare += "\" download>Source Code</a>";
 
-            int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt("consumedCreditsOnEach");
-            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-            accountAgent.consumeCredits(loginSession, consumedCreditsOnEach);
+            consumeAndRecord(loginSession, declare);
             return declare;
         }
         catch(NeoAIException nex) {
@@ -186,6 +179,36 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         throw new NeoAIException("failed to generate code");
     }
 
+    private void consumeAndRecord(String loginSession, String declare) {
+        try {
+            innerConsumeAndRecord(loginSession, declare);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void innerConsumeAndRecord(String loginSession, String declare) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(loginSession);
+                codeRecord.setCreateTime(new Date());
+                codeRecord.setContent(declare);
+                innerSaveCodeRecordInDB(dbConnection, codeRecord);
+
+                StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
+                storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
+
+                int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCredits(dbConnection, loginSession, consumedCreditsOnEach);
+                return null;
+            }
+        });
+    }
+
     private void saveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
         try {
             innerSaveCodeRecordInDB(codeRecord);
@@ -197,13 +220,18 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
 
     private void innerSaveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeAutoCommitSaveTask(new DBAutoCommitSaveTaskIFC() {
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
             @Override
-            public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
+            public Object save(DBConnectionIFC dbConnection) {
+                innerSaveCodeRecordInDB(dbConnection, codeRecord);
                 return null;
             }
         });
     }
+
+    private void innerSaveCodeRecordInDB(DBConnectionIFC dbConnection, AIModel.CodeRecord codeRecord) {
+        StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
+        storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
+    }
+
 }
