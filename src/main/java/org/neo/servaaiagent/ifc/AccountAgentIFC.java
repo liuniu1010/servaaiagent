@@ -3,11 +3,11 @@ package org.neo.servaaiagent.ifc;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 
 public interface AccountAgentIFC {
-    public void sendPassword(String username);
-    public void sendPassword(DBConnectionIFC dbConnection, String username);
+    public void sendPassword(String username, String sourceIP);
+    public void sendPassword(DBConnectionIFC dbConnection, String username, String sourceIP);
 
-    public String login(String username, String password);
-    public String login(DBConnectionIFC dbConnection, String username, String password);
+    public String login(String username, String password, String sourceIP);
+    public String login(DBConnectionIFC dbConnection, String username, String password, String sourceIP);
 
     public void logout(String loginSession);
     public void logout(DBConnectionIFC dbConnection, String loginSession);

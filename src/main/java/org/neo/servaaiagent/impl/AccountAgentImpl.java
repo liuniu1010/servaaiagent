@@ -33,22 +33,22 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public void sendPassword(String username) {
+    public void sendPassword(String username, String sourceIP) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                sendPassword(dbConnection, username);
+                sendPassword(dbConnection, username, sourceIP);
                 return null;
             }
         });
     }
 
     @Override
-    public void sendPassword(DBConnectionIFC dbConnection, String username) {
+    public void sendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) {
         try {
-            innerSendPassword(dbConnection, username);
+            innerSendPassword(dbConnection, username, sourceIP);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -59,21 +59,21 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String login(String username, String password) {
+    public String login(String username, String password, String sourceIP) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return login(dbConnection, username, password);
+                return login(dbConnection, username, password, sourceIP);
             }
         });
     }
 
     @Override
-    public String login(DBConnectionIFC dbConnection, String username, String password) {
+    public String login(DBConnectionIFC dbConnection, String username, String password, String sourceIP) {
         try {
-            return innerLogin(dbConnection, username, password);
+            return innerLogin(dbConnection, username, password, sourceIP);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -367,7 +367,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private void innerSendPassword(DBConnectionIFC dbConnection, String username) throws Exception {
+    private void innerSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
         if(!CommonUtil.isValidEmail(username)){
             throw new NeoAIException("not a valid email address!");
         }
@@ -390,6 +390,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
             AgentModel.UserAccount userAccount = new AgentModel.UserAccount(standardEmailAddress);
             userAccount.setEncryptedPassword(encryptedPassword);
             userAccount.setRegistTime(new Date());
+            userAccount.setIP(sourceIP);
             dbConnection.insert(userAccount.getVersionEntity());
 
             // for new register user, auto topup some initial credits for trying
@@ -412,7 +413,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         emailAgent.sendEmail(dbConnection, standardEmailAddress, subject, body);
     }
 
-    private String innerLogin(DBConnectionIFC dbConnection, String username, String password) throws Exception {
+    private String innerLogin(DBConnectionIFC dbConnection, String username, String password, String sourceIP) throws Exception {
         if(!CommonUtil.isValidEmail(username)){
             throw new NeoAIException("not a valid email address!");
         }
@@ -441,12 +442,13 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
         // passed, generate login loginSession
         String loginSession = CommonUtil.getRandomString(10);
-        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "loginSessionExpireMinutes");
+        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
         Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
 
         AgentModel.LoginSession modelLoginSession = new AgentModel.LoginSession(loginSession);
         modelLoginSession.setAccountId(userAccount.getId());
         modelLoginSession.setExpireTime(expireTime);
+        modelLoginSession.setIP(sourceIP);
         modelLoginSession.setIsDeleted(false);
         dbConnection.insert(modelLoginSession.getVersionEntity());
 
@@ -489,7 +491,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     private void innerUpdateSession(DBConnectionIFC dbConnection, String loginSession) throws Exception {
-        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "loginSessionExpireMinutes");
+        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
         Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
         String sql = "update loginsession";
         sql += " set expiretime = ?";

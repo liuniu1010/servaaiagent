@@ -132,7 +132,7 @@ public class AIAgentTest
         String userName = "liuniu@tsinghua.org.cn";
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         String password = "mH9gbm";
-        String loginSession = accountAgent.login(userName, password);
+        String loginSession = accountAgent.login(userName, password, "127.0.0.1");
 
         accountAgent.checkSessionValid(loginSession);
 
@@ -142,7 +142,7 @@ public class AIAgentTest
     public void testSendPassword() {
         String userName = "liuniu@tsinghua.org.cn";
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.sendPassword(userName);
+        accountAgent.sendPassword(userName, "127.0.0.1");
         System.out.println("send success");
     }
 
