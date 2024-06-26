@@ -587,13 +587,13 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
         if(innerGetLeftCredits(dbConnection, loginSession) > 0) {
             return;
         }
-        throw new NeoAIException("No left credits!");
+        throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT);
     }
 
     private void innerCheckCredits(DBConnectionIFC dbConnection, long accountId) throws Exception {
         if(innerGetLeftCredits(dbConnection, accountId) > 0) {
             return;
         }
-        throw new NeoAIException("No left credits!");
+        throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT);
     }
 }
