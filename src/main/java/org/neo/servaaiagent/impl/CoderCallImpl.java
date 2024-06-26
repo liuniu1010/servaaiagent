@@ -59,7 +59,7 @@ public class CoderCallImpl implements FunctionCallIFC {
     private AIModel.Function generateFunctionForExecuteCommand() {
         AIModel.FunctionParam param = new AIModel.FunctionParam();
         param.setName(EXECUTECOMMAND_PARAM_COMMAND);
-        param.setDescription("the linux command to be executed");
+        param.setDescription("the linux command to be executed directly, no adding any comments in this param");
 
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
         params.add(param);

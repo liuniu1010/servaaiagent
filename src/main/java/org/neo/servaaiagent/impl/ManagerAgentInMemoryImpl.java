@@ -47,10 +47,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     @Override
     public String runProject(String loginSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
-            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(loginSession);
-            codeRecord.setCreateTime(new Date());
-            codeRecord.setRequirement(requirement);
-            saveCodeRecordInDB(codeRecord);
+            beginProjectAndRecord(loginSession, requirement);
 
             String coder = chooseCoder(loginSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(5);
@@ -81,9 +78,11 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             return declare;
         }
         catch(NeoAIException nex) {
+            exceptionRecord(loginSession, nex);
             throw nex;
         }
         catch(Exception ex) {
+            exceptionRecord(loginSession, ex);
             throw new NeoAIException(ex.getMessage(), ex);
         }
     }
@@ -179,6 +178,20 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         throw new NeoAIException("failed to generate code");
     }
 
+    private void beginProjectAndRecord(String loginSession, String requirement) {
+        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(loginSession);
+        codeRecord.setCreateTime(new Date());
+        codeRecord.setRequirement(requirement);
+        saveCodeRecordInDB(codeRecord);
+    }
+
+    private void exceptionRecord(String loginSession, Exception ex) {
+        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(loginSession);
+        codeRecord.setCreateTime(new Date());
+        codeRecord.setContent(ex.getMessage());
+        saveCodeRecordInDB(codeRecord);
+    }
+
     private void consumeAndRecord(String loginSession, String declare) {
         try {
             innerConsumeAndRecord(loginSession, declare);
@@ -197,9 +210,6 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
                 codeRecord.setCreateTime(new Date());
                 codeRecord.setContent(declare);
                 innerSaveCodeRecordInDB(dbConnection, codeRecord);
-
-                StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
 
                 int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
                 AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
