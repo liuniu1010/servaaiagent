@@ -126,7 +126,8 @@ public class CoderCallImpl implements FunctionCallIFC {
         List<AIModel.CallParam> params = call.getParams();
         String command = null;
         for(AIModel.CallParam param: params) {
-            if(param.getName().equals(EXECUTECOMMAND_PARAM_COMMAND)) {
+            if(param.getName().equals(EXECUTECOMMAND_PARAM_COMMAND)
+                || param.getName().equals(AIModel.CallParam.UNKNOWN)) {
                 command = param.getValue();
             }
         }
