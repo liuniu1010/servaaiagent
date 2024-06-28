@@ -127,8 +127,12 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
             boolean shouldStop = false;
             boolean hasCall = false;
             if(calls != null && calls.size() > 0) {
-                hasCall = true;
                 for(AIModel.Call call: calls) {
+                    if(!CoderCallImpl.isDefinedFunction(call.getMethodName())) {
+                        continue;
+                    }
+
+                    hasCall = true;
                     if(!call.getMethodName().equals(CoderCallImpl.METHODNAME_EXECUTECOMMAND)) {
                         shouldStop = true;
                         declare = (String)promptStruct.getFunctionCall().callFunction(call);

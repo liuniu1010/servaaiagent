@@ -41,6 +41,19 @@ public class CoderCallImpl implements FunctionCallIFC {
         return functions;
     }
 
+    public static boolean isDefinedFunction(String functionName) {
+        if(METHODNAME_EXECUTECOMMAND.equals(functionName)) {
+            return true;
+        }
+        if(METHODNAME_FINISHCODEGENERATION.equals(functionName)) {
+            return true;
+        }
+        if(METHODNAME_FAILCODEGENERATION.equals(functionName)) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public Object callFunction(AIModel.Call call) {
         if(call.getMethodName().equals(METHODNAME_EXECUTECOMMAND)) {
