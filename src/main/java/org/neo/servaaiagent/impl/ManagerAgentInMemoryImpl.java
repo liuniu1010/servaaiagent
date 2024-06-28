@@ -109,11 +109,8 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     }
 
     private String loadBackgroundDesc(String worker) throws Exception {
-        ClassLoader classLoader = this.getClass().getClassLoader();
         String fileName = worker + ".txt";
-        InputStream inputStream = classLoader.getResourceAsStream(fileName);
-        String backgroundDesc = IOUtil.inputStreamToString(inputStream);
-        return backgroundDesc;
+        return IOUtil.resourceFileToString(fileName);
     }
 
     private String extractCoderFromChatResponse(AIModel.ChatResponse chatResponse) {
