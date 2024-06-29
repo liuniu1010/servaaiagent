@@ -654,8 +654,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     private int innerGetOnlineNumber(DBConnectionIFC dbConnection) throws Exception {
         String sql = "select count(*) as number";
         sql += " from loginsession";
+        sql += " where expiretime > ?";
+        sql += " and isdeleted = 0";
 
-        Object oValue = dbConnection.queryScalar(sql);
+        List<Object> params = new ArrayList<Object>();
+        params.add(new Date());
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+
+        Object oValue = dbConnection.queryScalar(sqlStruct);
         if(oValue == null) {
             return 0;
         }
