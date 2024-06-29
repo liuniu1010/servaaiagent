@@ -1,4 +1,4 @@
-package org.neo.servaaiagent.ifc;
+package org.neo.servaaiagent.impl;
 
 import java.util.List;
 
