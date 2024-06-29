@@ -41,4 +41,10 @@ public interface AccountAgentIFC {
 
     public void checkCredits(long accountId);
     public void checkCredits(DBConnectionIFC dbConnection, long accountId);
+
+    public int getRegisterNumber();
+    public int getRegisterNumber(DBConnectionIFC dbConnection);
+
+    public int getOnlineNumber();
+    public int getOnlineNumber(DBConnectionIFC dbConnection);
 }

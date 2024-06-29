@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.model.SQLStruct;
 import org.neo.servaframe.model.VersionEntity;
@@ -19,7 +20,7 @@ import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.EmailAgentIFC;
 import org.neo.servaaiagent.model.AgentModel;
 
-public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
+public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     private AccountAgentImpl() {
     }
 
@@ -33,8 +34,12 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+    @Override
     public void sendPassword(String username, String sourceIP) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -60,7 +65,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public String login(String username, String password, String sourceIP) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -85,7 +89,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void logout(String loginSession) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -111,7 +114,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void updateSession(String loginSession) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -137,11 +139,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void checkSessionValid(String loginSession) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new AccountAgentImpl() {
+        dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object query(DBConnectionIFC dbConnection) {
                 checkSessionValid(dbConnection, loginSession);
                 return null;
             }
@@ -163,7 +164,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void purchaseCredits(String loginSession, int credits) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -189,7 +189,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void purchaseCredits(long accountId, int credits) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -215,7 +214,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void consumeCredits(String loginSession, int credits) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -241,7 +239,6 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void consumeCredits(long accountId, int credits) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
@@ -267,11 +264,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public int getLeftCredits(String loginSession) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (int)dbService.executeSaveTask(new AccountAgentImpl() {
+        return (int)dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object query(DBConnectionIFC dbConnection) {
                 return getLeftCredits(dbConnection, loginSession);
             }
         });
@@ -292,11 +288,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public int getLeftCredits(long accountId) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (int)dbService.executeSaveTask(new AccountAgentImpl() {
+        return (int)dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object query(DBConnectionIFC dbConnection) {
                 return getLeftCredits(dbConnection, accountId);
             }
         });
@@ -317,11 +312,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void checkCredits(String loginSession) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new AccountAgentImpl() {
+        dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object query(DBConnectionIFC dbConnection) {
                 checkCredits(dbConnection, loginSession);
                 return null;
             }
@@ -343,11 +337,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
 
     @Override
     public void checkCredits(long accountId) {
-        // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new AccountAgentImpl() {
+        dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
-            public Object save(DBConnectionIFC dbConnection) {
+            public Object query(DBConnectionIFC dbConnection) {
                 checkCredits(dbConnection, accountId);
                 return null;
             }
@@ -358,6 +351,54 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
     public void checkCredits(DBConnectionIFC dbConnection, long accountId) {
         try {
             innerCheckCredits(dbConnection, accountId);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public int getRegisterNumber() {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (int)dbService.executeQueryTask(new AccountAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return getRegisterNumber(dbConnection);
+            }
+        });
+    }
+
+    @Override
+    public int getRegisterNumber(DBConnectionIFC dbConnection) {
+        try {
+            return innerGetRegisterNumber(dbConnection);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public int getOnlineNumber() {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (int)dbService.executeQueryTask(new AccountAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return getOnlineNumber(dbConnection);
+            }
+        });
+    }
+
+    @Override
+    public int getOnlineNumber(DBConnectionIFC dbConnection) {
+        try {
+            return innerGetOnlineNumber(dbConnection);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -595,5 +636,31 @@ public class AccountAgentImpl implements AccountAgentIFC, DBSaveTaskIFC {
             return;
         }
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT);
+    }
+
+    private int innerGetRegisterNumber(DBConnectionIFC dbConnection) throws Exception {
+        String sql = "select count(*) as number";
+        sql += " from useraccount";
+
+        Object oValue = dbConnection.queryScalar(sql);
+        if(oValue == null) {
+            return 0;
+        }
+        else {
+            return Integer.parseInt(oValue.toString());
+        }
+    }
+
+    private int innerGetOnlineNumber(DBConnectionIFC dbConnection) throws Exception {
+        String sql = "select count(*) as number";
+        sql += " from loginsession";
+
+        Object oValue = dbConnection.queryScalar(sql);
+        if(oValue == null) {
+            return 0;
+        }
+        else {
+            return Integer.parseInt(oValue.toString());
+        }
     }
 }
