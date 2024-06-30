@@ -428,6 +428,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         Object oId = dbConnection.queryScalar(sqlStruct);
 
         if(oId == null) {
+            int iValue = CommonUtil.getConfigValueAsInt(dbConnection, "verifyMaxRegisterNumber");
+            if(iValue != 0) {
+                int maxRegisterNumber = CommonUtil.getConfigValueAsInt(dbConnection, "maxRegisterNumber");
+                int registerNumber = getRegisterNumber(dbConnection);
+                if(registerNumber >= maxRegisterNumber) {
+                    throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXREGISTERNUMBER_EXCEED);
+                }
+            }
+
             AgentModel.UserAccount userAccount = new AgentModel.UserAccount(standardEmailAddress);
             userAccount.setEncryptedPassword(encryptedPassword);
             userAccount.setRegistTime(new Date());
@@ -460,6 +469,15 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         }
 
         String standardEmailAddress = username.trim().toLowerCase();
+
+        int iValue = CommonUtil.getConfigValueAsInt(dbConnection, "verifyMaxOnlineNumber");
+        if(iValue != 0) {
+            int maxOnlineNumber = CommonUtil.getConfigValueAsInt(dbConnection, "maxOnlineNumber");
+            int onlineNumber = getOnlineNumber(dbConnection);
+            if(onlineNumber >= maxOnlineNumber) {
+                throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXONLINENUMBER_EXCEED);
+            }
+        }
 
         // read encyrpted password from DB
         String sql = "select *";
