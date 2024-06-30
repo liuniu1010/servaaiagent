@@ -59,7 +59,7 @@ public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
                 CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
-                logger.info("command:\n" + command + "\nexecuted success in sandbox");
+                logger.debug("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.clearChatRecords(session);
 

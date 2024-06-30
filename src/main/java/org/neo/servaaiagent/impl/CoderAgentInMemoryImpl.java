@@ -42,7 +42,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
                 CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
-                logger.info("command:\n" + command + "\nexecuted success in sandbox");
+                logger.debug("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInMemoryImpl.getInstance();
                 storage.clearChatRecords(session);
 
