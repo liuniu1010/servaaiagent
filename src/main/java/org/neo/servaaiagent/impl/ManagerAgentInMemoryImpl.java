@@ -50,7 +50,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             beginProjectAndRecord(loginSession, requirement);
 
             String coder = chooseCoder(loginSession, requirement);
-            String coderSession = "coder" + CommonUtil.getRandomString(5);
+            String coderSession = "coder" + CommonUtil.getRandomString(8);
             String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
             backgroundDesc = backgroundDesc.replace("<projectFolder>", projectFolder);
