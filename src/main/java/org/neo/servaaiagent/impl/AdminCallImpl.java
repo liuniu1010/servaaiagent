@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.FunctionCallIFC;
 
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
+
 public class AdminCallImpl implements FunctionCallIFC {
     private AdminCallImpl() {
     }
@@ -61,22 +63,46 @@ public class AdminCallImpl implements FunctionCallIFC {
     }
 
     private static String METHODNAME_GETREGISTERNUMBER = "getRegisterNumber";
-    private int getRegisterNumber() {
-        // to be implemented
-        return -1;
+    private String getRegisterNumber() {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        int registerNumber = accountAgent.getRegisterNumber();
+
+        String response;
+        if(registerNumber <= 0) {
+            response = "None user registered";
+        }
+        else if(registerNumber == 1) {
+            response = "There is only 1 user registered";
+        }
+        else {
+            return "there are " + registerNumber + " registered users";
+        }
+        return response;
     }
 
-    private int call_getRegisterNumber(AIModel.Call call) {
+    private String call_getRegisterNumber(AIModel.Call call) {
         return getRegisterNumber();
     }
 
     private static String METHODNAME_GETONLINENUMBER = "getOnlineNumber";
-    private int getOnlineNumber() {
-        // to be implemented
-        return -1;
+    private String getOnlineNumber() {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        int onlineNumber = accountAgent.getOnlineNumber();
+
+        String response;
+        if(onlineNumber <= 0) {
+            response = "No user online just now";
+        }
+        else if(onlineNumber == 1) {
+            response = "There is only 1 user online now";
+        }
+        else {
+            return "there are " + onlineNumber + " online users currently";
+        }
+        return response;
     }
 
-    private int call_getOnlineNumber(AIModel.Call call) {
+    private String call_getOnlineNumber(AIModel.Call call) {
         return getOnlineNumber();
     }
 }
