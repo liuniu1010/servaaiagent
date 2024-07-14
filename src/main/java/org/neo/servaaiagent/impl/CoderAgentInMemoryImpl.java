@@ -168,7 +168,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                     return declare;
                 }
                 else {
-                    String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration";
+                    String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration, DONOT use multi_tool_use.parallel";
                     return innerGenerateCode(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
                 }
             }
