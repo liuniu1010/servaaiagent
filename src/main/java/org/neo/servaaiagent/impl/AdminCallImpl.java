@@ -18,6 +18,10 @@ public class AdminCallImpl implements FunctionCallIFC {
 
     @Override
     public List<AIModel.Function> getFunctions() {
+        return innerGetFunctions();
+    }
+
+    private static List<AIModel.Function> innerGetFunctions() {
         AIModel.Function getRegisterNumber = generateFunctionForGetRegisterNumber();
         AIModel.Function getOnlineNumber = generateFunctionForGetOnlineNumber();
 
@@ -40,7 +44,18 @@ public class AdminCallImpl implements FunctionCallIFC {
         return null;
     }
 
-    private AIModel.Function generateFunctionForGetRegisterNumber() {
+    public static boolean isDefinedFunction(String functionName) {
+        boolean isInDefined = false;
+        List<AIModel.Function> functions = innerGetFunctions();
+        for(AIModel.Function function: functions) {
+            if(function.getMethodName().equals(functionName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static AIModel.Function generateFunctionForGetRegisterNumber() {
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
 
         AIModel.Function function = new AIModel.Function();
@@ -51,7 +66,7 @@ public class AdminCallImpl implements FunctionCallIFC {
         return function;
     }
 
-    private AIModel.Function generateFunctionForGetOnlineNumber() {
+    private static AIModel.Function generateFunctionForGetOnlineNumber() {
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
 
         AIModel.Function function = new AIModel.Function();
