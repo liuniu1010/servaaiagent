@@ -60,7 +60,7 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
             String summarizeResult = "";
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
-                    if(!CoderCallImpl.isDefinedFunction(call.getMethodName())) {
+                    if(!AdminCallImpl.isDefinedFunction(call.getMethodName())) {
                         continue;
                     }
 
@@ -72,7 +72,7 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
 
             if(hasCall) {
                 // summarize call results
-                summarizeResult = summarizeCallResults(totalFunctionCallResultDesc); 
+                summarizeResult = summarizeCallResults(totalFunctionCallResultDesc);
             }
             else {
                 summarizeResult = chatResponse.getMessage();
