@@ -18,9 +18,9 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.ifc.TranslateAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
 
-public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIImpl {
+public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIInDBImpl {
     private String outputFormat = "mp3";
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;

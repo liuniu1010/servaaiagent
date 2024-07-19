@@ -14,9 +14,9 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ImageAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
 
-public class ChatWithImageExpertForUIImpl extends AbsChatForUIImpl {
+public class ChatWithImageExpertForUIImpl extends AbsChatForUIInDBImpl {
     private ChatWithImageExpertForUIImpl() {
     }
 

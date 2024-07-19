@@ -6,16 +6,14 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 
-import org.neo.servaaibase.ifc.StorageIFC;
-import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
 
-public class CoderBotInMemoryForUIImpl extends AbsChatForUIImpl {
+public class CoderBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;
     private CoderBotInMemoryForUIImpl() {

@@ -14,9 +14,9 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
 
-public class CoderBotForUIImpl extends AbsChatForUIImpl {
+public class CoderBotForUIImpl extends AbsChatForUIInDBImpl {
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;
     private CoderBotForUIImpl() {

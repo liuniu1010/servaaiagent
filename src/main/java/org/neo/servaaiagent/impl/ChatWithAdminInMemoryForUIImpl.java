@@ -9,9 +9,9 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.AdminAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
 
-public class ChatWithAdminInMemoryForUIImpl extends AbsChatForUIImpl {
+public class ChatWithAdminInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private ChatWithAdminInMemoryForUIImpl() {
     }
 

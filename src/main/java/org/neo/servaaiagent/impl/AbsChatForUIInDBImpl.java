@@ -20,7 +20,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
-abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC, DBAutoCommitSaveTaskIFC {
+abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC, DBAutoCommitSaveTaskIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
 
     @Override
@@ -43,7 +43,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
     public String initNewChat(String session) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new AbsChatForUIImpl() {
+            return (String)dbService.executeSaveTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
                     return innerInitNewChat(dbConnection, session);
@@ -85,7 +85,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
     public String refresh(String session) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeQueryTask(new AbsChatForUIImpl() {
+            return (String)dbService.executeQueryTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object query(DBConnectionIFC dbConnection) {
                     return innerRefresh(dbConnection, session);
@@ -120,7 +120,7 @@ abstract public class AbsChatForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, 
     public String echo(String session, String userInput) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeQueryTask(new AbsChatForUIImpl() {
+            return (String)dbService.executeQueryTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object query(DBConnectionIFC dbConnection) {
                     return innerEcho(dbConnection, session, userInput);

@@ -14,9 +14,9 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.LinuxCommanderAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
-import org.neo.servaaiagent.impl.AbsChatForUIImpl;
+import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
 
-public class ChatWithCommandExpertForUIImpl extends AbsChatForUIImpl {
+public class ChatWithCommandExpertForUIImpl extends AbsChatForUIInDBImpl {
     private ChatWithCommandExpertForUIImpl() {
     }
 
