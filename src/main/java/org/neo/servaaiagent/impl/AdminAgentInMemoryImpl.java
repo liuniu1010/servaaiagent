@@ -1,10 +1,14 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.List;
+import java.util.Date;
+
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.util.IOUtil;
 
 import org.neo.servaaibase.ifc.SuperAIIFC;
+import org.neo.servaaibase.ifc.StorageIFC;
+import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.NeoAIException;
@@ -40,15 +44,20 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
     }
 
     private String innerChat(String session, String userInput) throws Exception {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        newRequestRecord.setChatTime(new Date());
+        newRequestRecord.setIsRequest(true);
+        newRequestRecord.setContent(userInput);
+
         String adminDesc = loadAdminDesc();
-        AIModel.PromptStruct promptStruct = constructPromptStructForAdmin(adminDesc, userInput);
+        AIModel.PromptStruct promptStruct = constructPromptStructForAdmin(session, adminDesc, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
             List<AIModel.Call> calls = chatResponse.getCalls();
-            boolean shouldStop = false;
             boolean hasCall = false;
-            String totalRunningResultDesc = "";
+            String totalFunctionCallResultDesc = "";
+            String summarizeResult = "";
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
                     if(!CoderCallImpl.isDefinedFunction(call.getMethodName())) {
@@ -56,20 +65,33 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
                     }
 
                     hasCall = true;
-                    String runningResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
-                    totalRunningResultDesc += "\n" + runningResultDesc;
-                }
-                if(!shouldStop) {
-                    totalRunningResultDesc += "\nPlease continue to adjust code to implement the requirement.";
+                    String functionCallResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
+                    totalFunctionCallResultDesc += "\n" + functionCallResultDesc;
                 }
             }
 
-            // add code here
+            if(hasCall) {
+                // summarize call results
+                summarizeResult = summarizeCallResults(totalFunctionCallResultDesc); 
+            }
+            else {
+                summarizeResult = chatResponse.getMessage();
+            }
+
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            newResponseRecord.setChatTime(new Date());
+            newResponseRecord.setIsRequest(false);
+            newResponseRecord.setContent(summarizeResult);
+
+            StorageIFC storage = StorageInMemoryImpl.getInstance();
+            storage.addChatRecord(session, newRequestRecord);
+            storage.addChatRecord(session, newResponseRecord);
+
+            return summarizeResult;
         }
         else {
             throw new NeoAIException(chatResponse.getMessage());
         }
-        return null;
     }
 
     private String loadAdminDesc() throws Exception {
@@ -77,8 +99,32 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
         return IOUtil.resourceFileToString(fileName);
     }
 
-    private AIModel.PromptStruct constructPromptStructForAdmin(String adminDesc, String userInput) throws Exception {
+    private String summarizeCallResults(String totalFunctionCallResultDesc) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForSummarize(totalFunctionCallResultDesc);
+        AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
+        if(chatResponse.getIsSuccess()) {
+            return chatResponse.getMessage();
+        }
+        else {
+            logger.error("error occurred in summarize, return original text");
+            return totalFunctionCallResultDesc;
+        }
+    }
+
+    private AIModel.PromptStruct constructPromptStructForSummarize(String totalFunctionCallResultDesc) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        promptStruct.setUserInput(totalFunctionCallResultDesc);
+        promptStruct.setSystemHint("Please always summarize input prompt in a reasonable and clear sentence, DONOT provide any extra feedback");
+
+        return promptStruct;
+    }
+
+    private AIModel.PromptStruct constructPromptStructForAdmin(String session, String adminDesc, String userInput) throws Exception {
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        promptStruct.setChatRecords(chatRecords);
+
         promptStruct.setUserInput(userInput);
         promptStruct.setSystemHint(adminDesc);
         promptStruct.setFunctionCall(AdminCallImpl.getInstance());
