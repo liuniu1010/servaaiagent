@@ -166,7 +166,7 @@ public class AdminCallImpl implements FunctionCallIFC {
         else {
             response = "register users:";
             for(String username: userList) {
-                response += "\t" + username;
+                response += "\n\t" + username;
             }
         }
         return response;
@@ -188,7 +188,7 @@ public class AdminCallImpl implements FunctionCallIFC {
         else {
             response = "online users:";
             for(String username: userList) {
-                response += "\t" + username;
+                response += "\n\t" + username;
             }
         }
         return response;

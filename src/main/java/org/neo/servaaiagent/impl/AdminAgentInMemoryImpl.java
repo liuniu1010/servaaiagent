@@ -72,7 +72,7 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
 
             if(hasCall) {
                 // summarize call results
-                summarizeResult = summarizeCallResults(totalFunctionCallResultDesc);
+                summarizeResult = summarizeCallResults(session, userInput, totalFunctionCallResultDesc);
             }
             else {
                 summarizeResult = chatResponse.getMessage();
@@ -99,8 +99,8 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
         return IOUtil.resourceFileToString(fileName);
     }
 
-    private String summarizeCallResults(String totalFunctionCallResultDesc) throws Exception {
-        AIModel.PromptStruct promptStruct = constructPromptStructForSummarize(totalFunctionCallResultDesc);
+    private String summarizeCallResults(String session, String userInput, String totalFunctionCallResultDesc) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForSummarize(session, userInput, totalFunctionCallResultDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
         if(chatResponse.getIsSuccess()) {
             return chatResponse.getMessage();
@@ -111,10 +111,14 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStructForSummarize(String totalFunctionCallResultDesc) throws Exception {
+    private AIModel.PromptStruct constructPromptStructForSummarize(String session, String userInput, String totalFunctionCallResultDesc) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
-        promptStruct.setUserInput(totalFunctionCallResultDesc);
-        promptStruct.setSystemHint("Please always summarize input prompt in a reasonable and clear sentence, DONOT provide any extra feedback");
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        promptStruct.setChatRecords(chatRecords);
+
+        promptStruct.setUserInput(userInput);
+        promptStruct.setSystemHint("Please answer user's question according to below Information:\n" + totalFunctionCallResultDesc);
 
         return promptStruct;
     }
