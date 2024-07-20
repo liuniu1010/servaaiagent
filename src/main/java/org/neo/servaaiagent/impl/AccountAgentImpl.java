@@ -2,6 +2,7 @@ package org.neo.servaaiagent.impl;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -385,6 +386,54 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     }
 
     @Override
+    public List<String> getRegisterUsers() {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (List<String>)dbService.executeQueryTask(new AccountAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return getRegisterUsers(dbConnection);
+            }
+        });
+    }
+
+    @Override
+    public List<String> getRegisterUsers(DBConnectionIFC dbConnection) {
+        try {
+            return innerGetRegisterUsers(dbConnection);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public List<String> getOnlineUsers() {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (List<String>)dbService.executeQueryTask(new AccountAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return getOnlineUsers(dbConnection);
+            }
+        });
+    }
+
+    @Override
+    public List<String> getOnlineUsers(DBConnectionIFC dbConnection) {
+        try {
+            return innerGetOnlineUsers(dbConnection);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public int getOnlineNumber() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (int)dbService.executeQueryTask(new AccountAgentImpl() {
@@ -669,6 +718,22 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         }
     }
 
+    private List<String> innerGetRegisterUsers(DBConnectionIFC dbConnection) throws Exception {
+        String sql = "select username";
+        sql += " from useraccount";
+
+        List<Map<String, Object>> lResult = dbConnection.query(sql);
+        List<String> userList = new ArrayList<String>();
+        if(lResult == null) {
+            return userList;
+        }
+
+        for(Map<String, Object> map: lResult) {
+            userList.add(map.get("username").toString());
+        }
+        return userList;
+    }
+
     private int innerGetOnlineNumber(DBConnectionIFC dbConnection) throws Exception {
         String sql = "select count(*) as number";
         sql += " from loginsession";
@@ -687,5 +752,29 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         else {
             return Integer.parseInt(oValue.toString());
         }
+    }
+
+    private List<String> innerGetOnlineUsers(DBConnectionIFC dbConnection) throws Exception {
+        String sql = "select distinct ua.username as username";
+        sql += " from useraccount ua";
+        sql += " join loginsession ls on ls.accountid = ua.id";
+        sql += " where expiretime > ?";
+        sql += " and isdeleted = 0";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(new Date());
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+
+        List<Map<String, Object>> lResult = dbConnection.query(sqlStruct);
+        List<String> userList = new ArrayList<String>();
+        if(lResult == null) {
+            return userList;
+        }
+
+        for(Map<String, Object> map: lResult) {
+            userList.add(map.get("username").toString());
+        }
+        return userList;
     }
 }

@@ -1,5 +1,7 @@
 package org.neo.servaaiagent.ifc;
 
+import java.util.List;
+
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 
 public interface AccountAgentIFC {
@@ -45,6 +47,12 @@ public interface AccountAgentIFC {
     public int getRegisterNumber();
     public int getRegisterNumber(DBConnectionIFC dbConnection);
 
+    public List<String> getRegisterUsers();
+    public List<String> getRegisterUsers(DBConnectionIFC dbConnection);
+
     public int getOnlineNumber();
     public int getOnlineNumber(DBConnectionIFC dbConnection);
+
+    public List<String> getOnlineUsers();
+    public List<String> getOnlineUsers(DBConnectionIFC dbConnection);
 }

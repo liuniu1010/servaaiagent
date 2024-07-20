@@ -24,10 +24,14 @@ public class AdminCallImpl implements FunctionCallIFC {
     private static List<AIModel.Function> innerGetFunctions() {
         AIModel.Function getRegisterNumber = generateFunctionForGetRegisterNumber();
         AIModel.Function getOnlineNumber = generateFunctionForGetOnlineNumber();
+        AIModel.Function getRegisterUsers = generateFunctionForGetRegisterUsers();
+        AIModel.Function getOnlineUsers = generateFunctionForGetOnlineUsers();
 
         List<AIModel.Function> functions = new ArrayList<AIModel.Function>();
         functions.add(getRegisterNumber);
         functions.add(getOnlineNumber);
+        functions.add(getRegisterUsers);
+        functions.add(getOnlineUsers);
         return functions;
     }
 
@@ -41,6 +45,13 @@ public class AdminCallImpl implements FunctionCallIFC {
             return call_getOnlineNumber(call);
         }
 
+        if(call.getMethodName().equals(METHODNAME_GETREGISTERUSERS)) {
+            return call_getRegisterUsers(call);
+        }
+
+        if(call.getMethodName().equals(METHODNAME_GETONLINEUSERS)) {
+            return call_getOnlineUsers(call);
+        }
         return null;
     }
 
@@ -66,6 +77,17 @@ public class AdminCallImpl implements FunctionCallIFC {
         return function;
     }
 
+    private static AIModel.Function generateFunctionForGetRegisterUsers() {
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_GETREGISTERUSERS);
+        function.setParams(params);
+        function.setDescription("get all registered usernames");
+
+        return function;
+    }
+
     private static AIModel.Function generateFunctionForGetOnlineNumber() {
         List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
 
@@ -73,6 +95,17 @@ public class AdminCallImpl implements FunctionCallIFC {
         function.setMethodName(METHODNAME_GETONLINENUMBER);
         function.setParams(params);
         function.setDescription("get online user number");
+
+        return function;
+    }
+
+    private static AIModel.Function generateFunctionForGetOnlineUsers() {
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_GETONLINEUSERS);
+        function.setParams(params);
+        function.setDescription("get all online usernames");
 
         return function;
     }
@@ -119,5 +152,49 @@ public class AdminCallImpl implements FunctionCallIFC {
 
     private String call_getOnlineNumber(AIModel.Call call) {
         return getOnlineNumber();
+    }
+
+    private static String METHODNAME_GETREGISTERUSERS = "getRegisterUsers";
+    private String getRegisterUsers() {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        List<String> userList = accountAgent.getRegisterUsers();
+
+        String response;
+        if(userList == null || userList.size() == 0) {
+            response = "no register users";
+        }
+        else {
+            response = "register users:";
+            for(String username: userList) {
+                response += "\t" + username;
+            }
+        }
+        return response;
+    }
+
+    private String call_getRegisterUsers(AIModel.Call call) {
+        return getRegisterUsers();
+    }
+
+    private static String METHODNAME_GETONLINEUSERS = "getOnlineUsers";
+    private String getOnlineUsers() {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        List<String> userList = accountAgent.getOnlineUsers();
+
+        String response;
+        if(userList == null || userList.size() == 0) {
+            response = "no online users";
+        }
+        else {
+            response = "online users:";
+            for(String username: userList) {
+                response += "\t" + username;
+            }
+        }
+        return response;
+    }
+
+    private String call_getOnlineUsers(AIModel.Call call) {
+        return getOnlineUsers();
     }
 }
