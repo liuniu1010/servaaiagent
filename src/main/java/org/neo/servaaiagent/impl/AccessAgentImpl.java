@@ -76,6 +76,30 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
     }
 
     @Override
+    public boolean verifyAdmin(String username) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (boolean)dbService.executeQueryTask(new AccessAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return verifyAdmin(dbConnection, username);
+            }
+        });
+    }
+
+    @Override
+    public boolean verifyAdmin(DBConnectionIFC dbConnection, String username) {
+        try {
+            return innerVerifyAdmin(dbConnection, username);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public boolean verifyIP(String IP) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (boolean)dbService.executeQueryTask(new AccessAgentImpl() {
@@ -158,6 +182,23 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
             }
         }
         return false;
+    }
+
+    private boolean innerVerifyAdmin(DBConnectionIFC dbConnection, String username) throws Exception {
+        if(!CommonUtil.isValidEmail(username)){
+            throw new NeoAIException("not a valid email address!");
+        }
+
+        String standardEmailAddress = username.trim().toLowerCase();
+
+        String whiteListAdmin = "WhiteListAdmin.txt";
+        List<String> whiteList = ConfigUtil.getTextFileInLines(whiteListAdmin);
+        boolean isInWhileList = whiteList.contains(standardEmailAddress);
+        if(isInWhileList) {
+            return true;
+        }
+
+        throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
     }
 
     private boolean innerVerifyIP(DBConnectionIFC dbConnection, String IP) throws Exception {

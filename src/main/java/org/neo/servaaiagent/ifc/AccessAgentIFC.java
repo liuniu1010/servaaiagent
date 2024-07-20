@@ -9,6 +9,9 @@ public interface AccessAgentIFC {
     public boolean verifyUsername(String username); 
     public boolean verifyUsername(DBConnectionIFC dbConnection, String username);
 
+    public boolean verifyAdmin(String username); 
+    public boolean verifyAdmin(DBConnectionIFC dbConnection, String username);
+
     public boolean verifyIP(String IP);
     public boolean verifyIP(DBConnectionIFC dbConnection, String IP);
 

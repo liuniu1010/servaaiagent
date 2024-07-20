@@ -140,6 +140,11 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
     @Override
     public void checkSessionValid(String loginSession) {
+        if(loginSession == null
+            || loginSession.trim().equals("")) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_SESSION_INVALID);
+        }
+
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new AccountAgentImpl() {
             @Override
@@ -152,6 +157,11 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
     @Override
     public void checkSessionValid(DBConnectionIFC dbConnection, String loginSession) {
+        if(loginSession == null
+            || loginSession.trim().equals("")) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_SESSION_INVALID);
+        }
+
         try {
             innerCheckSessionValid(dbConnection, loginSession);
         }
