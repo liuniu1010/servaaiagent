@@ -1,11 +1,13 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.ServiceFactory;
+import org.neo.servaframe.model.SQLStruct;
 import org.neo.servaframe.util.IOUtil;
 import org.neo.servaframe.util.ConfigUtil;
 
@@ -76,20 +78,44 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
     }
 
     @Override
-    public boolean verifyAdmin(String username) {
+    public boolean verifyAdminByUsername(String username) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (boolean)dbService.executeQueryTask(new AccessAgentImpl() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
-                return verifyAdmin(dbConnection, username);
+                return verifyAdminByUsername(dbConnection, username);
             }
         });
     }
 
     @Override
-    public boolean verifyAdmin(DBConnectionIFC dbConnection, String username) {
+    public boolean verifyAdminByUsername(DBConnectionIFC dbConnection, String username) {
         try {
-            return innerVerifyAdmin(dbConnection, username);
+            return innerVerifyAdminByUsername(dbConnection, username);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public boolean verifyAdminByLoginSession(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (boolean)dbService.executeQueryTask(new AccessAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return verifyAdminByLoginSession(dbConnection, loginSession);
+            }
+        });
+    }
+
+    @Override
+    public boolean verifyAdminByLoginSession(DBConnectionIFC dbConnection, String loginSession) {
+        try {
+            return innerVerifyAdminByLoginSession(dbConnection, loginSession);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -184,7 +210,7 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         return false;
     }
 
-    private boolean innerVerifyAdmin(DBConnectionIFC dbConnection, String username) throws Exception {
+    private boolean innerVerifyAdminByUsername(DBConnectionIFC dbConnection, String username) throws Exception {
         if(!CommonUtil.isValidEmail(username)){
             throw new NeoAIException("not a valid email address!");
         }
@@ -195,10 +221,34 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         List<String> whiteList = ConfigUtil.getTextFileInLines(whiteListAdmin);
         boolean isInWhileList = whiteList.contains(standardEmailAddress);
         if(isInWhileList) {
-            return true;
+            return false;
         }
 
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
+    }
+
+    private boolean innerVerifyAdminByLoginSession(DBConnectionIFC dbConnection, String loginSession) throws Exception {
+        if(loginSession == null
+            || loginSession.trim().equals("")) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_SESSION_INVALID);
+        }
+
+        String sql = "select ua.username as username";
+        sql += " from useraccount ua";
+        sql += " join loginsession ls on ls.accountid = ua.id";
+        sql += " where ls.session = ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(loginSession);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        Object oUsername = dbConnection.queryScalar(sqlStruct);
+
+        if(oUsername == null) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
+        }
+
+        return innerVerifyAdminByUsername(dbConnection, oUsername.toString());
     }
 
     private boolean innerVerifyIP(DBConnectionIFC dbConnection, String IP) throws Exception {
