@@ -10,6 +10,7 @@ import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.model.AIModel;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.NeoAIException;
 
@@ -138,7 +139,7 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(AIModel.PromptStruct promptStruct) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance();
-        String model = superAI.getChatModels()[0];
+        String model = CommonUtil.getConfigValue("adminModel");
 
         return superAI.fetchChatResponse(model, promptStruct);
     }
