@@ -1,10 +1,19 @@
 package org.neo.servaaiagent.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.interfaces.DBQueryTaskIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.ServiceFactory;
+import org.neo.servaframe.model.SQLStruct;
 
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.FunctionCallIFC;
+import org.neo.servaaibase.util.CommonUtil;
 
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
 
@@ -196,5 +205,137 @@ public class AdminCallImpl implements FunctionCallIFC {
 
     private String call_getOnlineUsers(AIModel.Call call) {
         return getOnlineUsers();
+    }
+
+    private static String METHODNAME_GETCONFIGVARIABLES = "getConfigVariables";
+    private String getConfigVariables() {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeQueryTask(new DBQueryTaskIFC() {
+                @Override
+                public Object query(DBConnectionIFC dbConnection) {
+                    try {
+                        return getConfigVariables(dbConnection);
+                    }
+                    catch(RuntimeException rex) {
+                        throw rex;
+                    }
+                    catch(Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                }
+            });
+        }
+        catch(Exception ex) {
+            return "meet exception in getting config variables, the exception message is: " + ex.getMessage();
+        }
+    }
+
+    private String getConfigVariables(DBConnectionIFC dbConnection) throws Exception {
+        String sql = "select configname";
+        sql += " from configs";
+        sql += " order by id";
+
+        List<Map<String, Object>> variables = dbConnection.query(sql);
+        if(variables == null
+            || variables.isEmpty()) {
+            return "There is none of any variables";
+        }
+
+        String result = "The system contains such variables:";
+        for(Map<String, Object> map: variables) {
+            String configname = map.get("configname").toString();
+            result += "\n" + configname;
+        }
+
+        return result;
+    }
+
+    private String call_getConfigVariables(AIModel.Call call) {
+        return getConfigVariables();
+    }
+
+    private static String METHODNAME_GETVARIABLEVALUE = "getVariableValue";
+    private static String GETVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
+    private String getVariableValue(String configName) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeQueryTask(new DBQueryTaskIFC() {
+                @Override
+                public Object query(DBConnectionIFC dbConnection) {
+                    try {
+                        return getVariableValue(dbConnection, configName);
+                    }
+                    catch(RuntimeException rex) {
+                        throw rex;
+                    }
+                    catch(Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                }
+            });
+        }
+        catch(Exception ex) {
+            return "meet exception in getting variable value of " + configName + ", the exception message is: " + ex.getMessage();
+        }
+    }
+
+    private String getVariableValue(DBConnectionIFC dbConnection, String configName) throws Exception {
+        String configValue = CommonUtil.getConfigValue(dbConnection, configName);
+
+        if(configValue == null) {
+            return "No such variable: " + configName;
+        }
+
+        String result = "The value of " + configName + " is: " + configValue;
+        return result;
+    }
+
+    private static String METHODNAME_SETVARIABLEVALUE = "setVariableValue";
+    private static String SETVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
+    private static String SETVARIABLEVALUE_PARAM_CONFIGVALUE = "configValue";
+    private String setVariableValue(String configName, String configValue) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeSaveTask(new DBSaveTaskIFC() {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    try {
+                        return setVariableValue(dbConnection, configName, configValue);
+                    }
+                    catch(RuntimeException rex) {
+                        throw rex;
+                    }
+                    catch(Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                }
+            });
+        }
+        catch(Exception ex) {
+            return "meet exception in setting variable value of " + configName + ", the exception message is: " + ex.getMessage();
+        }
+    }
+
+    private String setVariableValue(DBConnectionIFC dbConnection, String configName, String configValue) throws Exception {
+        String configValueInDB = CommonUtil.getConfigValue(dbConnection, configName);
+
+        if(configValueInDB == null) {
+            return "No such variable: " + configName;
+        }
+
+        String sql = "update configs";
+        sql += " set configvalue = ?";
+        sql += " where configname = ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(configValue);
+        params.add(configName);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct);
+
+        String result = "change it success";
+        return result;
     }
 }
