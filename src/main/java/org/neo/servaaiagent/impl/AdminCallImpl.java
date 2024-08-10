@@ -35,12 +35,18 @@ public class AdminCallImpl implements FunctionCallIFC {
         AIModel.Function getOnlineNumber = generateFunctionForGetOnlineNumber();
         AIModel.Function getRegisterUsers = generateFunctionForGetRegisterUsers();
         AIModel.Function getOnlineUsers = generateFunctionForGetOnlineUsers();
+        AIModel.Function getConfigVariables = generateFunctionForGetConfigVariables();
+        AIModel.Function getConfigVariableValue = generateFunctionForGetConfigVariableValue();
+        AIModel.Function setConfigVariableValue = generateFunctionForSetConfigVariableValue();
 
         List<AIModel.Function> functions = new ArrayList<AIModel.Function>();
         functions.add(getRegisterNumber);
         functions.add(getOnlineNumber);
         functions.add(getRegisterUsers);
         functions.add(getOnlineUsers);
+        functions.add(getConfigVariables);
+        functions.add(getConfigVariableValue);
+        functions.add(setConfigVariableValue);
         return functions;
     }
 
@@ -61,6 +67,19 @@ public class AdminCallImpl implements FunctionCallIFC {
         if(call.getMethodName().equals(METHODNAME_GETONLINEUSERS)) {
             return call_getOnlineUsers(call);
         }
+
+        if(call.getMethodName().equals(METHODNAME_GETCONFIGVARIABLES)) {
+            return call_getConfigVariables(call);
+        }
+
+        if(call.getMethodName().equals(METHODNAME_GETCONFIGVARIABLEVALUE)) {
+            return call_getConfigVariableValue(call);
+        }
+
+        if(call.getMethodName().equals(METHODNAME_SETCONFIGVARIABLEVALUE)) {
+            return call_setConfigVariableValue(call);
+        }
+
         return null;
     }
 
@@ -115,6 +134,54 @@ public class AdminCallImpl implements FunctionCallIFC {
         function.setMethodName(METHODNAME_GETONLINEUSERS);
         function.setParams(params);
         function.setDescription("get all online usernames");
+
+        return function;
+    }
+
+    private static AIModel.Function generateFunctionForGetConfigVariables() {
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_GETCONFIGVARIABLES);
+        function.setParams(params);
+        function.setDescription("get all config variables");
+
+        return function;
+    }
+
+    private static AIModel.Function generateFunctionForGetConfigVariableValue() {
+        AIModel.FunctionParam param = new AIModel.FunctionParam();
+        param.setName(GETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME);
+        param.setDescription("the name of the config variable");
+
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+        params.add(param);
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_GETCONFIGVARIABLEVALUE);
+        function.setParams(params);
+        function.setDescription("get the config value of the preferred config name");
+
+        return function;
+    }
+
+    private static AIModel.Function generateFunctionForSetConfigVariableValue() {
+        AIModel.FunctionParam param1 = new AIModel.FunctionParam();
+        param1.setName(SETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME);
+        param1.setDescription("the name of the config variable");
+
+        AIModel.FunctionParam param2 = new AIModel.FunctionParam();
+        param2.setName(SETCONFIGVARIABLEVALUE_PARAM_CONFIGVALUE);
+        param2.setDescription("the value to be set to the config variable");
+
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+        params.add(param1);
+        params.add(param2);
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_SETCONFIGVARIABLEVALUE);
+        function.setParams(params);
+        function.setDescription("set the value to the preferred config name");
 
         return function;
     }
@@ -255,16 +322,16 @@ public class AdminCallImpl implements FunctionCallIFC {
         return getConfigVariables();
     }
 
-    private static String METHODNAME_GETVARIABLEVALUE = "getVariableValue";
-    private static String GETVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
-    private String getVariableValue(String configName) {
+    private static String METHODNAME_GETCONFIGVARIABLEVALUE = "getConfigVariableValue";
+    private static String GETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
+    private String getConfigVariableValue(String configName) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeQueryTask(new DBQueryTaskIFC() {
                 @Override
                 public Object query(DBConnectionIFC dbConnection) {
                     try {
-                        return getVariableValue(dbConnection, configName);
+                        return getConfigVariableValue(dbConnection, configName);
                     }
                     catch(RuntimeException rex) {
                         throw rex;
@@ -276,32 +343,44 @@ public class AdminCallImpl implements FunctionCallIFC {
             });
         }
         catch(Exception ex) {
-            return "meet exception in getting variable value of " + configName + ", the exception message is: " + ex.getMessage();
+            return "meet exception in getting config variable value of " + configName + ", the exception message is: " + ex.getMessage();
         }
     }
 
-    private String getVariableValue(DBConnectionIFC dbConnection, String configName) throws Exception {
+    private String getConfigVariableValue(DBConnectionIFC dbConnection, String configName) throws Exception {
         String configValue = CommonUtil.getConfigValue(dbConnection, configName);
 
         if(configValue == null) {
-            return "No such variable: " + configName;
+            return "No such config variable: " + configName;
         }
 
-        String result = "The value of " + configName + " is: " + configValue;
+        String result = "The config value of " + configName + " is: " + configValue;
         return result;
     }
 
-    private static String METHODNAME_SETVARIABLEVALUE = "setVariableValue";
-    private static String SETVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
-    private static String SETVARIABLEVALUE_PARAM_CONFIGVALUE = "configValue";
-    private String setVariableValue(String configName, String configValue) {
+    private String call_getConfigVariableValue(AIModel.Call call) {
+        List<AIModel.CallParam> params = call.getParams();
+        String configName = "";
+        for(AIModel.CallParam param: params) {
+            if(param.getName().equals(GETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME)) {
+                configName = param.getValue();
+            }
+        }
+
+        return getConfigVariableValue(configName);
+    }
+
+    private static String METHODNAME_SETCONFIGVARIABLEVALUE = "setConfigVariableValue";
+    private static String SETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
+    private static String SETCONFIGVARIABLEVALUE_PARAM_CONFIGVALUE = "configValue";
+    private String setConfigVariableValue(String configName, String configValue) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new DBSaveTaskIFC() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
                     try {
-                        return setVariableValue(dbConnection, configName, configValue);
+                        return setConfigVariableValue(dbConnection, configName, configValue);
                     }
                     catch(RuntimeException rex) {
                         throw rex;
@@ -313,15 +392,15 @@ public class AdminCallImpl implements FunctionCallIFC {
             });
         }
         catch(Exception ex) {
-            return "meet exception in setting variable value of " + configName + ", the exception message is: " + ex.getMessage();
+            return "meet exception in setting config variable value of " + configName + ", the exception message is: " + ex.getMessage();
         }
     }
 
-    private String setVariableValue(DBConnectionIFC dbConnection, String configName, String configValue) throws Exception {
+    private String setConfigVariableValue(DBConnectionIFC dbConnection, String configName, String configValue) throws Exception {
         String configValueInDB = CommonUtil.getConfigValue(dbConnection, configName);
 
         if(configValueInDB == null) {
-            return "No such variable: " + configName;
+            return "No such config variable: " + configName;
         }
 
         String sql = "update configs";
@@ -335,7 +414,23 @@ public class AdminCallImpl implements FunctionCallIFC {
         SQLStruct sqlStruct = new SQLStruct(sql, params);
         dbConnection.execute(sqlStruct);
 
-        String result = "change it success";
+        String result = "change config variable of " + configName + " to " + configValue + " success";
         return result;
+    }
+
+    private String call_setConfigVariableValue(AIModel.Call call) {
+        List<AIModel.CallParam> params = call.getParams();
+        String configName = "";
+        String configValue = "";
+        for(AIModel.CallParam param: params) {
+            if(param.getName().equals(SETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME)) {
+                configName = param.getValue();
+            }
+            if(param.getName().equals(SETCONFIGVARIABLEVALUE_PARAM_CONFIGVALUE)) {
+                configValue = param.getValue();
+            }
+        }
+
+        return setConfigVariableValue(configName, configValue);
     }
 }
