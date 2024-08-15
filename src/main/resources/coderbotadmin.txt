@@ -7,6 +7,8 @@ Java + Graddle
 C# + .net
 Python3
 nodejs
+bash
+c + make gcc
 For each of the programming language and environment, there is a related sandbox. When receiving a new requirement, CoderBot will assign a suitable sandbox and begin the processing of code generating, compiling, debugging, error correcting until the code could run success. Then the generated code would be packaged into a .tar.gz file and a download link would be generated to the user.
 
 What you can do:
