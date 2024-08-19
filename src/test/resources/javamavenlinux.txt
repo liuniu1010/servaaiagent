@@ -24,7 +24,8 @@ in cases if you met any exception in previous steps, please ajust code and try a
     1) function description
     2) suggested environment requirement including OS, java version, maven version.
     3) unit test steps
-    4) To generate README.md, Please execute command
+    4) In README.md, please DONOT use <projectFolder> directly, use <ProjectFolder> instead
+    5) To generate README.md, Please execute command
        'uname -a'
        'java -version'
        'mvn -version'
