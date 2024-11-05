@@ -59,8 +59,8 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         throw new NeoAIException("not supported");
     }
 
-    private String innerExecuteTask(String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
-        if(iterateDeep <= 0) {
+    private String innerExecuteTask(String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterationDeep) {
+        if(iterationDeep <= 0) {
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
 
@@ -108,7 +108,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
                     }
                 }
                 if(!shouldStop) {
-                    totalRunningResultDesc += "\nPlease continue to execute command to implement the requirement.";
+                    totalRunningResultDesc += "\nPlease continue to execute command to implement the task requirement.";
                 }
             }
 
@@ -122,7 +122,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerExecuteTask(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
+                return innerExecuteTask(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterationDeep - 1);
             }
             else {
                 if(hasCall) {
@@ -130,7 +130,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishTask/failTask, DONOT use multi_tool_use.parallel";
-                    return innerExecuteTask(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
+                    return innerExecuteTask(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterationDeep - 1);
                 }
             }
         }
