@@ -30,11 +30,11 @@ public class AgentModel {
             return versionEntity;
         }
 
-        public long getId() {
-            return (long)versionEntity.getId();
+        public String getId() {
+            return versionEntity.getId();
         }
 
-        public void setId(long id) {
+        public void setId(String id) {
             versionEntity.setId(id);
         }
 
@@ -94,11 +94,11 @@ public class AgentModel {
             return versionEntity;
         }
 
-        public long getId() {
-            return (long)versionEntity.getId();
+        public String getId() {
+            return versionEntity.getId();
         }
 
-        public void setId(long id) {
+        public void setId(String id) {
             versionEntity.setId(id);
         }
 
@@ -110,11 +110,11 @@ public class AgentModel {
             versionEntity.setAttribute(SESSION, session);
         }
 
-        public long getAccountId() {
-            return (long)versionEntity.getAttribute(ACCOUNTID);
+        public String getAccountId() {
+            return (String)versionEntity.getAttribute(ACCOUNTID);
         }
 
-        public void setAccountId(long accountId) {
+        public void setAccountId(String accountId) {
             versionEntity.setAttribute(ACCOUNTID, accountId);
         }
 
@@ -155,7 +155,7 @@ public class AgentModel {
             versionEntity = inputVersionEntity;
         }
 
-        public ChasedCredits(long accountId) {
+        public ChasedCredits(String accountId) {
             versionEntity = new VersionEntity(ENTITYNAME);
             versionEntity.setAttribute(ACCOUNTID, accountId);
         }
@@ -164,19 +164,19 @@ public class AgentModel {
             return versionEntity;
         }
 
-        public long getId() {
-            return (long)versionEntity.getId();
+        public String getId() {
+            return versionEntity.getId();
         }
 
-        public void setId(long id) {
+        public void setId(String id) {
             versionEntity.setId(id);
         }
 
-        public long getAccountId() {
-            return (long)versionEntity.getAttribute(ACCOUNTID);
+        public String getAccountId() {
+            return (String)versionEntity.getAttribute(ACCOUNTID);
         }
 
-        public void setAccountId(long accountId) {
+        public void setAccountId(String accountId) {
             versionEntity.setAttribute(ACCOUNTID, accountId);
         }
 
@@ -209,7 +209,7 @@ public class AgentModel {
             versionEntity = inputVersionEntity;
         }
 
-        public ConsumedCredits(long accountId) {
+        public ConsumedCredits(String accountId) {
             versionEntity = new VersionEntity(ENTITYNAME);
             versionEntity.setAttribute(ACCOUNTID, accountId);
         }
@@ -218,19 +218,19 @@ public class AgentModel {
             return versionEntity;
         }
 
-        public long getId() {
-            return (long)versionEntity.getId();
+        public String getId() {
+            return versionEntity.getId();
         }
 
-        public void setId(long id) {
+        public void setId(String id) {
             versionEntity.setId(id);
         }
 
-        public long getAccountId() {
-            return (long)versionEntity.getAttribute(ACCOUNTID);
+        public String getAccountId() {
+            return (String)versionEntity.getAttribute(ACCOUNTID);
         }
 
-        public void setAccountId(long accountId) {
+        public void setAccountId(String accountId) {
             versionEntity.setAttribute(ACCOUNTID, accountId);
         }
 

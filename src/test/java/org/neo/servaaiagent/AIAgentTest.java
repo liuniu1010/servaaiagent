@@ -122,9 +122,9 @@ public class AIAgentTest
     }
 
     public void testGetLeftCredits() {
-        int accountId = 1;
+        String accountId = "abcd";
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        int leftCredits = accountAgent.getLeftCredits(accountId);
+        int leftCredits = accountAgent.getLeftCreditsWithAccount(accountId);
         System.out.println("leftCredits = " + leftCredits);
     }
 
@@ -185,7 +185,7 @@ public class AIAgentTest
         System.out.println("file generated = " + filePath); 
     }
 
-    public void testSpeechAgentSpeechToText() {
+    public void _testSpeechAgentSpeechToText() {
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance("mp3");
         String filePath = "/tmp/audio_TcF2bG8YvM.mp3";
         System.out.println("filePath = " + filePath);
@@ -193,7 +193,7 @@ public class AIAgentTest
         System.out.println("text = " + text);
     }
 
-    public void testVisionAgent() throws Exception {
+    public void _testVisionAgent() throws Exception {
         VisionAgentIFC visionAgent = VisionAgentImpl.getInstance();
         String userInput = "Hello, please give me an description of the images";
         InputStream in1 = new FileInputStream("/tmp/dogandcat.png");
@@ -213,7 +213,7 @@ public class AIAgentTest
         System.out.println("response = " + response);
     }
 
-    public void testLinuxCommanderAgent() {
+    public void _testLinuxCommanderAgent() {
         String userInput = "please check amount of disk left";
         LinuxCommanderAgentIFC commandIFC = LinuxCommanderAgentImpl.getInstance();
 

@@ -210,7 +210,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
 
                 int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
                 AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-                accountAgent.consumeCredits(dbConnection, loginSession, consumedCreditsOnEach);
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnEach);
                 return null;
             }
         });

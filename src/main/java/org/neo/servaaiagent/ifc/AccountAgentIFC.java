@@ -20,29 +20,29 @@ public interface AccountAgentIFC {
     public void checkSessionValid(String loginSession);
     public void checkSessionValid(DBConnectionIFC dbConnection, String loginSession);
 
-    public void purchaseCredits(String loginSession, int credits);
-    public void purchaseCredits(DBConnectionIFC dbConnection, String loginSession, int credits);
+    public void purchaseCreditsWithSession(String loginSession, int credits);
+    public void purchaseCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits);
 
-    public void purchaseCredits(long accountId, int credits);
-    public void purchaseCredits(DBConnectionIFC dbConnection, long accountId, int credits);
+    public void purchaseCreditsWithAccount(String accountId, int credits);
+    public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits);
 
-    public void consumeCredits(String loginSession, int credits);
-    public void consumeCredits(DBConnectionIFC dbConnetion, String loginSession, int credits);
+    public void consumeCreditsWithSession(String loginSession, int credits);
+    public void consumeCreditsWithSession(DBConnectionIFC dbConnetion, String loginSession, int credits);
 
-    public void consumeCredits(long accountId, int credits);
-    public void consumeCredits(DBConnectionIFC dbConnetion, long accountId, int credits);
+    public void consumeCreditsWithAccount(String accountId, int credits);
+    public void consumeCreditsWithAccount(DBConnectionIFC dbConnetion, String accountId, int credits);
 
-    public int getLeftCredits(String loginSession);
-    public int getLeftCredits(DBConnectionIFC dbConnection, String loginSession);
+    public int getLeftCreditsWithSession(String loginSession);
+    public int getLeftCreditsWithSession(DBConnectionIFC dbConnection, String loginSession);
 
-    public int getLeftCredits(long accountId);
-    public int getLeftCredits(DBConnectionIFC dbConnection, long accountId);
+    public int getLeftCreditsWithAccount(String accountId);
+    public int getLeftCreditsWithAccount(DBConnectionIFC dbConnection, String accountId);
 
-    public void checkCredits(String loginSession);
-    public void checkCredits(DBConnectionIFC dbConnection, String loginSession);
+    public void checkCreditsWithSession(String loginSession);
+    public void checkCreditsWithSession(DBConnectionIFC dbConnection, String loginSession);
 
-    public void checkCredits(long accountId);
-    public void checkCredits(DBConnectionIFC dbConnection, long accountId);
+    public void checkCreditsWithAccount(String accountId);
+    public void checkCreditsWithAccount(DBConnectionIFC dbConnection, String accountId);
 
     public int getRegisterNumber();
     public int getRegisterNumber(DBConnectionIFC dbConnection);

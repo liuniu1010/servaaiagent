@@ -104,7 +104,7 @@ public class ManagerAgentImpl implements ManagerAgentIFC, DBAutoCommitSaveTaskIF
 
             int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
             AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-            accountAgent.consumeCredits(dbConnection, loginSession, consumedCreditsOnEach);
+            accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnEach);
             return declare;
         }
         catch(NeoAIException nex) {
