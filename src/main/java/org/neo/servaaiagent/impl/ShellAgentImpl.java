@@ -11,16 +11,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
-import org.neo.servaaiagent.ifc.PersistentShellAgentIFC;
+import org.neo.servaaiagent.ifc.ShellAgentIFC;
 
-public class PersistentShellAgentImpl implements PersistentShellAgentIFC {
-    Map<String, PersistentShell> shellCache = new ConcurrentHashMap<String, PersistentShell>();
+public class ShellAgentImpl implements ShellAgentIFC {
+    private static ShellAgentIFC instance = new ShellAgentImpl();
+
+    private ShellAgentImpl() {
+    }
+
+    public static ShellAgentIFC getInstance() {
+        return instance;
+    }
+
+    Map<String, Shell> shellCache = new ConcurrentHashMap<String, Shell>();
 
     @Override
-    public String execute(String session, String input) {
+    public String execute(String session, String command) {
         try {
-            PersistentShell shell = getShell(session);
-            return shell.executeCommand(input);
+            Shell shell = getOrCreateShell(session);
+            return shell.executeCommand(command);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -31,39 +40,43 @@ public class PersistentShellAgentImpl implements PersistentShellAgentIFC {
     }
 
     @Override
-    public String execute(DBConnectionIFC dbConnection, String session, String input) {
-        // to be implemented
-        return null;
+    public String execute(DBConnectionIFC dbConnection, String session, String command) {
+        throw new NeoAIException("not supported");
     }
 
     @Override 
     public void terminateShell(String session) {
-        // to be implemented
+        if(shellCache.containsKey(session)) {
+            Shell shell = shellCache.get(session);
+            shellCache.remove(session);
+            shell.close();
+        }
     }
 
     @Override 
     public void terminateShell(DBConnectionIFC dbConnection, String session) {
-        // to be implemented
+        throw new NeoAIException("not supported");
     }
 
-    private PersistentShell getShell(String session) throws Exception {
+    private Shell getOrCreateShell(String session) throws Exception {
         if(shellCache.containsKey(session)) {
             return shellCache.get(session);
         }
 
-        PersistentShell shell = new PersistentShell();
+        Shell shell = new Shell();
         shellCache.put(session, shell);
         return shell;
     }
 }
 
-class PersistentShell {
+class Shell {
     private Process shellProcess;
     private BufferedWriter shellWriter;
     private BufferedReader shellReader;
 
-    public PersistentShell() throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(new String[]{"/bin/sh", "-c", ""});
+    public Shell() throws IOException {
+        String commander = CommonUtil.isUnix()?"sh":"cmd";
+        ProcessBuilder pb = new ProcessBuilder(commander);
         pb.redirectErrorStream(true);
         shellProcess = pb.start();
 
@@ -71,12 +84,12 @@ class PersistentShell {
         shellReader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
     }
 
-    public String executeCommand(String input) throws IOException {
-        shellWriter.write(input);
+    public String executeCommand(String command) throws IOException {
+        shellWriter.write(command);
         shellWriter.newLine();
         shellWriter.flush();
 
-        // Add a unique marker to identify when the input output ends
+        // Add a unique marker to identify when the command output ends
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
         shellWriter.write("echo " + marker);
         shellWriter.newLine();
@@ -94,29 +107,18 @@ class PersistentShell {
         return output.toString();
     }
 
-    public void close() throws IOException, InterruptedException {
-        shellWriter.write("exit");
-        shellWriter.newLine();
-        shellWriter.flush();
-        shellProcess.waitFor();
-        shellWriter.close();
-        shellReader.close();
-    }
-
-    public void test() {
+    public void close() {
         try {
-            PersistentShell shell = new PersistentShell();
-
-            String output1 = shell.executeCommand("pwd");
-            System.out.println("Current Directory:\n" + output1);
-
-            shell.executeCommand("cd /tmp");
-            String output2 = shell.executeCommand("pwd");
-            System.out.println("Changed Directory:\n" + output2);
-
-            shell.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            shellWriter.write("exit");
+            shellWriter.newLine();
+            shellWriter.flush();
+            shellProcess.waitFor();
+            shellWriter.close();
+            shellReader.close();
+        }
+        catch(IOException iex) {
+        }
+        catch(InterruptedException itex) {
         }
     }
 }

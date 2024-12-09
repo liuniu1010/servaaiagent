@@ -53,6 +53,7 @@ public class AIAgentTest
     private String translateTestSession = "translateTestSession";
     private String coderTestSession = "coderTestSession";
     private String managerTestSession = "managerTestSession";
+    private String shellAgentSession = "shellAgentSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -211,6 +212,30 @@ public class AIAgentTest
 
         System.out.println("userInput = " + userInput);
         System.out.println("response = " + response);
+    }
+
+    public void testShellAgent() {
+        ShellAgentIFC shellAgent = ShellAgentImpl.getInstance();
+
+        String command = "cd /tmp/";
+        String output = "";
+        System.out.println("command: " + command);
+        output = shellAgent.execute(shellAgentSession, command);
+        System.out.println("result: " + output);
+        
+        command = "ls -l";
+        System.out.println("command: " + command);
+        output = shellAgent.execute(shellAgentSession, command);
+        System.out.println("result: " + output);
+
+        shellAgent.terminateShell(shellAgentSession);
+        System.out.println("after terminated");
+        command = "ls -l";
+        System.out.println("command: " + command);
+        output = shellAgent.execute(shellAgentSession, command);
+        System.out.println("result: " + output);
+
+        shellAgent.terminateShell(shellAgentSession);
     }
 
     public void _testLinuxCommanderAgent() {
