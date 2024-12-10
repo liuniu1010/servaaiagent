@@ -1,4 +1,4 @@
-package org.neo.servaaiagent.ifc;
+package org.neo.servaaiagent.impl;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,10 +13,10 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ShellAgentIFC;
 
-public class ShellAgentImpl implements ShellAgentIFC {
-    private static ShellAgentIFC instance = new ShellAgentImpl();
+public class ShellAgentInMemoryImpl implements ShellAgentIFC {
+    private static ShellAgentIFC instance = new ShellAgentInMemoryImpl();
 
-    private ShellAgentImpl() {
+    private ShellAgentInMemoryImpl() {
     }
 
     public static ShellAgentIFC getInstance() {
@@ -28,8 +28,8 @@ public class ShellAgentImpl implements ShellAgentIFC {
     @Override
     public String execute(String session, String command) {
         try {
-            Shell shell = getOrCreateShell(session);
-            return shell.executeCommand(command);
+            int repeatDeep = 2;
+            return innerExecute(session, command, repeatDeep);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -56,6 +56,21 @@ public class ShellAgentImpl implements ShellAgentIFC {
     @Override 
     public void terminateShell(DBConnectionIFC dbConnection, String session) {
         throw new NeoAIException("not supported");
+    }
+
+    private String innerExecute(String session, String command, int repeatDeep) throws Exception {
+        if(repeatDeep <= 0) {
+            throw new RuntimeException("Shell crashed!");
+        }
+
+        Shell shell = getOrCreateShell(session);
+        try {
+            return shell.executeCommand(command);
+        }
+        catch(IOException iex) {
+            terminateShell(session);
+            return innerExecute(session, command, repeatDeep - 1);
+        }
     }
 
     private Shell getOrCreateShell(String session) throws Exception {

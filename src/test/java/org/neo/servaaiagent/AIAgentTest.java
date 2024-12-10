@@ -215,7 +215,7 @@ public class AIAgentTest
     }
 
     public void testShellAgent() {
-        ShellAgentIFC shellAgent = ShellAgentImpl.getInstance();
+        ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
 
         String command = "cd /tmp/";
         String output = "";
