@@ -19,6 +19,7 @@ import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
+import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class CoderAgentInMemoryImpl implements CoderAgentIFC {
@@ -33,7 +34,8 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
 
     @Override
     public String generateCode(String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
-        String sandBoxUrl = getSandBoxUrl(coder, "executecommand");
+        SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
+        String sandBoxUrl = getSandBoxUrl(coder);
         int codeIterationRounds = CommonUtil.getConfigValueAsInt("codeIterationRounds");
         int codeIterationDeep = CommonUtil.getConfigValueAsInt("codeInterationDeep");
         for(int i = 0;i < codeIterationRounds;i++) {
@@ -41,7 +43,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
-                CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
+                sandBoxAgent.executeCommand(session, command, sandBoxUrl);
                 logger.debug("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInMemoryImpl.getInstance();
                 storage.clearChatRecords(session);
@@ -81,8 +83,10 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
     @Override
     public String downloadCode(String session, String coder, String projectFolder) {
         try {
-            String sandBoxUrl = getSandBoxUrl(coder, "download");
-            String base64OfCode = CommonUtil.downloadProjectSandBox(session, projectFolder, sandBoxUrl);
+            SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
+            String sandBoxUrl = getSandBoxUrl(coder);
+            String base64OfCode = sandBoxAgent.downloadProject(session, projectFolder, sandBoxUrl);
+            sandBoxAgent.terminateShell(session, sandBoxUrl);
             return base64OfCode;
         }
         catch(NeoAIException nex) {
@@ -178,9 +182,9 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         } 
     }
 
-    private String getSandBoxUrl(String coder, String action) {
+    private String getSandBoxUrl(String coder) {
         String configName = coder + "SandBoxUrl";
-        return CommonUtil.getConfigValue(configName) + "/" + action;
+        return CommonUtil.getConfigValue(configName);
     }
 
     private AIModel.Call extractFunctionCallFromChatResponse(AIModel.ChatResponse chatResponse) {

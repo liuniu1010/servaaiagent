@@ -269,19 +269,19 @@ public class AIAgentTest
         String command = "cd /tmp/";
         String output = "";
         System.out.println("command: " + command);
-        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        output = sandBoxAgent.executeCommand(sandBoxTestSession, command, sUrl);
         System.out.println("result: " + output);
         
         command = "pwd";
         System.out.println("command: " + command);
-        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        output = sandBoxAgent.executeCommand(sandBoxTestSession, command, sUrl);
         System.out.println("result: " + output);
 
         sandBoxAgent.terminateShell(sandBoxTestSession, sUrl);
         System.out.println("after terminated");
-        command = "netstat -an|grep 3306";
+        command = "netstat -an|grep 3306 && pwd";
         System.out.println("command: " + command);
-        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        output = sandBoxAgent.executeCommand(sandBoxTestSession, command, sUrl);
         System.out.println("result: " + output);
 
         sandBoxAgent.terminateShell(shellTestSession, sUrl);

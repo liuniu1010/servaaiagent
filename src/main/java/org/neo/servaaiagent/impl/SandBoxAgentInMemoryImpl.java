@@ -28,7 +28,8 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
         return new SandBoxAgentInMemoryImpl();
     }
 
-    public String execute(String session, String commandSandBox, String sUrl) {
+    @Override
+    public String executeCommand(String session, String commandSandBox, String sUrl) {
         try {
             String jsonCommandSandBox = generateJsonBodyForSandBox(session, commandSandBox);
             String jsonResultSandBox = sendCommandToSandBox(jsonCommandSandBox, sUrl);
@@ -48,10 +49,38 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
         }
     }
 
-    public String execute(DBConnectionIFC dbConnection, String session, String command, String sUrl) {
+    @Override
+    public String executeCommand(DBConnectionIFC dbConnection, String session, String command, String sUrl) {
         throw new NeoAIException("not supported");
     }
 
+    @Override
+    public String downloadProject(String session, String projectFolder, String sUrl) {
+        try {
+            String jsonDownloadSandBox = generateJsonBodyForSandBox(session, projectFolder);
+            String jsonResultSandBox = sendDownloadToSandBox(jsonDownloadSandBox, sUrl);
+            ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
+            if(resultSandBox.getIsSuccess()) {
+                return resultSandBox.getMessage();
+            }
+            else {
+                throw new NeoAIException(resultSandBox.getMessage());
+            }
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex);
+        }
+    }
+
+    @Override
+    public String downloadProject(DBConnectionIFC dbConnection, String session, String projectFolder, String sUrl) {
+        throw new NeoAIException("not supported");
+    }
+
+    @Override
     public void terminateShell(String session, String sUrl) {
         try {
             String jsonTerminationSandBox = generateJsonBodyForSandBox(session, "");
@@ -72,12 +101,9 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
         }
     }
 
+    @Override
     public void terminateShell(DBConnectionIFC dbConnection, String session, String sUrl) {
         throw new NeoAIException("not supported");
-    }
-
-    private String generateJsonBodyForCommandSandBox(String session, String commandSandBox) {
-        return generateJsonBodyForSandBox(session, commandSandBox);
     }
 
     private String generateJsonBodyForSandBox(String session, String input) {
@@ -93,6 +119,11 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     private String sendCommandToSandBox(String jsonCommandSandBox, String sUrl) throws Exception {
         String urlWithAction = sUrl + "/" + "executecommand";
         return sendInputToSandBox(jsonCommandSandBox, urlWithAction);
+    }
+
+    private String sendDownloadToSandBox(String jsonDownloadSandBox, String sUrl) throws Exception {
+        String urlWithAction = sUrl + "/" + "downloadproject";
+        return sendInputToSandBox(jsonDownloadSandBox, urlWithAction);
     }
 
     private String sendTerminationToSandBox(String jsonTerminationSandBox, String sUrl) throws Exception {
