@@ -30,7 +30,7 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
 
     public String execute(String session, String commandSandBox, String sUrl) {
         try {
-            String jsonCommandSandBox = generateJsonBodyForCommandSandBox(session, commandSandBox);
+            String jsonCommandSandBox = generateJsonBodyForSandBox(session, commandSandBox);
             String jsonResultSandBox = sendCommandToSandBox(jsonCommandSandBox, sUrl);
             ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
             if(resultSandBox.getIsSuccess()) {
@@ -53,7 +53,23 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     public void terminateShell(String session, String sUrl) {
-        throw new NeoAIException("not supported");
+        try {
+            String jsonTerminationSandBox = generateJsonBodyForSandBox(session, "");
+            String jsonResultSandBox = sendTerminationToSandBox(jsonTerminationSandBox, sUrl);
+            ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
+            if(resultSandBox.getIsSuccess()) {
+                return;
+            }
+            else {
+                throw new NeoAIException(resultSandBox.getMessage());
+            }
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex);
+        }
     }
 
     public void terminateShell(DBConnectionIFC dbConnection, String session, String sUrl) {
@@ -75,7 +91,13 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     private String sendCommandToSandBox(String jsonCommandSandBox, String sUrl) throws Exception {
-        return sendInputToSandBox(jsonCommandSandBox, sUrl);
+        String urlWithAction = sUrl + "/" + "executecommand";
+        return sendInputToSandBox(jsonCommandSandBox, urlWithAction);
+    }
+
+    private String sendTerminationToSandBox(String jsonTerminationSandBox, String sUrl) throws Exception {
+        String urlWithAction = sUrl + "/" + "terminateshell";
+        return sendInputToSandBox(jsonTerminationSandBox, urlWithAction);
     }
 
     private String sendInputToSandBox(String jsonInput, String sUrl) throws Exception {

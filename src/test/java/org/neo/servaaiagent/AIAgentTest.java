@@ -53,7 +53,8 @@ public class AIAgentTest
     private String translateTestSession = "translateTestSession";
     private String coderTestSession = "coderTestSession";
     private String managerTestSession = "managerTestSession";
-    private String shellAgentSession = "shellAgentSession";
+    private String shellTestSession = "shellTestSession";
+    private String sandBoxTestSession = "sandBoxTestSession";
 
     private void cleanDatabase() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -69,6 +70,8 @@ public class AIAgentTest
                 storage.clearChatRecords(translateTestSession);
                 storage.clearChatRecords(coderTestSession);
                 storage.clearChatRecords(managerTestSession);
+                storage.clearChatRecords(shellTestSession);
+                storage.clearChatRecords(sandBoxTestSession);
                 return null;
             }
         });
@@ -220,22 +223,22 @@ public class AIAgentTest
         String command = "cd /tmp/";
         String output = "";
         System.out.println("command: " + command);
-        output = shellAgent.execute(shellAgentSession, command);
+        output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
         
         command = "ls -l";
         System.out.println("command: " + command);
-        output = shellAgent.execute(shellAgentSession, command);
+        output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
 
-        shellAgent.terminateShell(shellAgentSession);
+        shellAgent.terminateShell(shellTestSession);
         System.out.println("after terminated");
         command = "ls -l";
         System.out.println("command: " + command);
-        output = shellAgent.execute(shellAgentSession, command);
+        output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
 
-        shellAgent.terminateShell(shellAgentSession);
+        shellAgent.terminateShell(shellTestSession);
     }
 
     public void _testLinuxCommanderAgent() {
@@ -257,6 +260,31 @@ public class AIAgentTest
         response = commandIFC.generateAndExecute(commandTestSession, userInput);
         System.out.println("userInput = " + userInput);
         System.out.println("response = " + response);
+    }
+
+    public void testSandBoxAgent() throws Exception {
+        SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
+        String sUrl = "http://localhost:9011/ServaWeb/api/aisandbox";
+ 
+        String command = "cd /tmp/";
+        String output = "";
+        System.out.println("command: " + command);
+        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        System.out.println("result: " + output);
+        
+        command = "pwd";
+        System.out.println("command: " + command);
+        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        System.out.println("result: " + output);
+
+        sandBoxAgent.terminateShell(sandBoxTestSession, sUrl);
+        System.out.println("after terminated");
+        command = "netstat -an|grep 3306";
+        System.out.println("command: " + command);
+        output = sandBoxAgent.execute(sandBoxTestSession, command, sUrl);
+        System.out.println("result: " + output);
+
+        sandBoxAgent.terminateShell(shellTestSession, sUrl);
     }
 }
 
