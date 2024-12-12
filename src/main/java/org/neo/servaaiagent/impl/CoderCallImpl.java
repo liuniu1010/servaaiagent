@@ -157,7 +157,7 @@ public class CoderCallImpl implements FunctionCallIFC {
                 runningResultDesc += "\n" + commandResult;  // should not reduce the result for these command
             }
             else {
-                runningResultDesc += "\n" + adjustInputText(commandResult, 100); // try to reduce size 
+                runningResultDesc += "\n" + adjustInputText(commandResult, 200); // try to reduce size 
             }
             runningResultDesc += "\n";
         }

@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaaibase.util.CommonUtil;
@@ -99,27 +101,58 @@ class Shell {
         shellReader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
     }
 
-    public String executeCommand(String command) throws IOException {
+    private void flushCommand(String command) throws IOException {
         shellWriter.write(command);
         shellWriter.newLine();
         shellWriter.flush();
+    }
+
+    public String executeCommand(String command) throws IOException {
+        // flush the input command
+        flushCommand(command);
+
+        // Now get the exit code of the last command
+        String exitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %ERRORLEVEL%";
+        flushCommand(exitCodeCommand);
 
         // Add a unique marker to identify when the command output ends
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
-        shellWriter.write("echo " + marker);
-        shellWriter.newLine();
-        shellWriter.flush();
+        flushCommand("echo " + marker);
 
-        StringBuilder output = new StringBuilder();
+        List<String> listOutput = new ArrayList<String>();
         String line;
         while ((line = shellReader.readLine()) != null) {
             if (line.contains(marker)) {
                 break;
             }
-            output.append(line).append("\n");
+            listOutput.add(line);
         }
 
-        return output.toString();
+        int exitCode = -1;
+        String lastLine = listOutput.get(listOutput.size() - 1);
+        String exitCodeStr = lastLine.toString().trim();
+        if (!exitCodeStr.isEmpty()) {
+            try {
+                exitCode = Integer.parseInt(exitCodeStr);
+            } catch (NumberFormatException e) {
+                exitCode = 1; 
+            }
+        }
+
+        // the last line only indicates command success or fail, remove it from the result
+        listOutput.remove(listOutput.size() - 1);
+
+        String result = "";
+        for(String output: listOutput) {
+            result += output + "\n";
+        }
+
+        if(exitCode == 0) {
+            return result;
+        }
+        else {
+            throw new NeoAIException(result);
+        }
     }
 
     public void close() {
