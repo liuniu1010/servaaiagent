@@ -19,6 +19,7 @@ import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.TaskAgentIFC;
+import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class TaskAgentInMemoryImpl implements TaskAgentIFC {
@@ -33,14 +34,17 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
 
     @Override
     public String executeTask(String session, NotifyCallbackIFC notifyCallback, String requirement) {
-        String sandBoxUrl = getSandBoxUrl("task", "executecommand");
+        String sandBoxUrl = getSandBoxUrl("task");
         int iterationDeep = 100;
         try {
+            SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
             StorageIFC storage = StorageInMemoryImpl.getInstance();
             storage.clearChatRecords(session);
             String backgroundDesc = loadBackgroundDesc();
             // begin to executeTask
-            return innerExecuteTask(session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterationDeep);
+            String result = innerExecuteTask(session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterationDeep);
+            sandBoxAgent.terminateShell(session, sandBoxUrl);
+            return result;
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -139,9 +143,9 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         } 
     }
 
-    private String getSandBoxUrl(String executor, String action) {
+    private String getSandBoxUrl(String executor) {
         String configName = executor + "SandBoxUrl";
-        return CommonUtil.getConfigValue(configName) + "/" + action;
+        return CommonUtil.getConfigValue(configName);
     }
 
     private AIModel.Call extractFunctionCallFromChatResponse(AIModel.ChatResponse chatResponse) {
