@@ -19,6 +19,7 @@ import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
+import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
@@ -50,15 +51,16 @@ public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
 
     @Override
     public String generateCode(DBConnectionIFC dbConnection, String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
-        String sandBoxUrl = getSandBoxUrl(dbConnection, coder, "executecommand");
+        String sandBoxUrl = getSandBoxUrl(dbConnection, coder);
         int codeIterationRounds = CommonUtil.getConfigValueAsInt(dbConnection, "codeIterationRounds");
         int codeIterationDeep = CommonUtil.getConfigValueAsInt(dbConnection, "codeInterationDeep");
+        SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
         for(int i = 0;i < codeIterationRounds;i++) {
             try {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
-                CommonUtil.executeCommandSandBox(session, command, sandBoxUrl);
+                sandBoxAgent.executeCommand(session, command, sandBoxUrl);
                 logger.debug("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
                 storage.clearChatRecords(session);
@@ -101,8 +103,10 @@ public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
     @Override
     public String downloadCode(DBConnectionIFC dbConnection, String session, String coder, String projectFolder) {
         try {
-            String sandBoxUrl = getSandBoxUrl(dbConnection, coder, "download");
-            String base64OfCode = CommonUtil.downloadProjectSandBox(session, projectFolder, sandBoxUrl);
+            SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
+            String sandBoxUrl = getSandBoxUrl(dbConnection, coder);
+            String base64OfCode = sandBoxAgent.downloadProject(session, projectFolder, sandBoxUrl);
+            sandBoxAgent.terminateShell(session, sandBoxUrl);
             return base64OfCode;
         }
         catch(NeoAIException nex) {
@@ -189,9 +193,9 @@ public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
         } 
     }
 
-    private String getSandBoxUrl(DBConnectionIFC dbConnection, String coder, String action) {
+    private String getSandBoxUrl(DBConnectionIFC dbConnection, String coder) {
         String configName = coder + "SandBoxUrl";
-        return CommonUtil.getConfigValue(dbConnection, configName) + "/" + action;
+        return CommonUtil.getConfigValue(dbConnection, configName);
     }
 
     private AIModel.Call extractFunctionCallFromChatResponse(AIModel.ChatResponse chatResponse) {
