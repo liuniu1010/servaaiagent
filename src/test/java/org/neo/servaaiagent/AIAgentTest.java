@@ -103,7 +103,7 @@ public class AIAgentTest
     }
 
     public void _testManagerAgent() throws Exception {
-        ManagerAgentIFC managerAgent = ManagerAgentImpl.getInstance("/tmp", "/tmp");
+        ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance("/tmp", "/tmp");
         String requirement = "please write java code with maven which calculate sum from 1 + 100";
         System.out.println("requirement = " + requirement);
         String response = managerAgent.runProject(managerTestSession, null, requirement);
