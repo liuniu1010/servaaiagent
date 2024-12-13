@@ -220,25 +220,27 @@ public class AIAgentTest
     public void testShellAgent() {
         ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
 
-        String command = "cd /tmp/";
+        String command = "cd /tmp/code";
         String output = "";
         System.out.println("command: " + command);
         output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
         
-        command = "ls -l";
+        command = "pwd";
         System.out.println("command: " + command);
         output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
 
-        shellAgent.terminateShell(shellTestSession);
-        System.out.println("after terminated");
-        command = "ls -l";
+        command = "source venv/bin/activate";
         System.out.println("command: " + command);
         output = shellAgent.execute(shellTestSession, command);
         System.out.println("result: " + output);
 
-        shellAgent.terminateShell(shellTestSession);
+        command = "env";
+        System.out.println("command: " + command);
+        output = shellAgent.execute(shellTestSession, command);
+        System.out.println("result: " + output);
+
     }
 
     public void _testLinuxCommanderAgent() {

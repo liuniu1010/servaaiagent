@@ -92,7 +92,7 @@ class Shell {
     private BufferedReader shellReader;
 
     public Shell() throws IOException {
-        String commander = CommonUtil.isUnix()?"sh":"cmd";
+        String commander = CommonUtil.isUnix()?"bash":"cmd";
         ProcessBuilder pb = new ProcessBuilder(commander);
         pb.redirectErrorStream(true);
         shellProcess = pb.start();

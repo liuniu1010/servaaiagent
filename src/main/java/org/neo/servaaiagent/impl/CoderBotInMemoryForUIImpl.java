@@ -29,9 +29,9 @@ public class CoderBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String fetchResponse(String loginSession, String userInput, List<String> attachFiles) {
+    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
-            return innerFetchResponse(loginSession, null, userInput);
+            return innerFetchResponse(session, null, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -42,9 +42,9 @@ public class CoderBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String fetchResponse(String loginSession, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
-            return innerFetchResponse(loginSession, notifyCallback, userInput);
+            return innerFetchResponse(session, notifyCallback, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -54,9 +54,9 @@ public class CoderBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         }
     }
 
-    private String innerFetchResponse(String loginSession, NotifyCallbackIFC notifyCallback, String userInput) {
+    private String innerFetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput) {
         ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
-        String declare = managerAgent.runProject(loginSession, notifyCallback, userInput);
+        String declare = managerAgent.runProject(session, notifyCallback, userInput);
         return declare;
     }
 }
