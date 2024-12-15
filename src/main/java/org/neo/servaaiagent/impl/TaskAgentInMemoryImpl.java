@@ -40,7 +40,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
             SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
             StorageIFC storage = StorageInMemoryImpl.getInstance();
             storage.clearChatRecords(session);
-            String backgroundDesc = loadBackgroundDesc();
+            String backgroundDesc = loadBackgroundDesc(session, sandBoxUrl);
             // begin to executeTask
             String result = innerExecuteTask(session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterationDeep);
             sandBoxAgent.terminateShell(session, sandBoxUrl);
@@ -216,8 +216,10 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         throw new NeoAIException("Max iteration deep exceeded!");
     }
 
-    private String loadBackgroundDesc() throws Exception {
-        String fileName = "linuxcommanderfortask.txt";
+    private String loadBackgroundDesc(String session, String sandBoxUrl) throws Exception {
+        SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
+        boolean isUnix = sandBoxAgent.isUnix(session, sandBoxUrl);
+        String fileName = isUnix?"linuxcommanderfortask.txt":"windowscommanderfortask.txt";
         return IOUtil.resourceFileToString(fileName);
     }
 }

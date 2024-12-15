@@ -11,4 +11,7 @@ public interface SandBoxAgentIFC {
 
     public void terminateShell(String session, String sUrl);
     public void terminateShell(DBConnectionIFC dbConnection, String session, String sUrl);
+
+    public boolean isUnix(String sessioni, String sUrl);
+    public boolean isUnix(DBConnectionIFC dbConnection, String session, String sUrl);
 }

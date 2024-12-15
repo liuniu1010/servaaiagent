@@ -106,6 +106,32 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
         throw new NeoAIException("not supported");
     }
 
+    @Override
+    public boolean isUnix(String session, String sUrl) {
+        try {
+            String jsonIsUnixSandBox = generateJsonBodyForSandBox(session, "");
+            String jsonResultSandBox = sendIsUnixToSandBox(jsonIsUnixSandBox, sUrl);
+            ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
+            if(resultSandBox.getIsSuccess()) {
+                return resultSandBox.getMessage().trim().toLowerCase().equals("yes")?true:false;
+            }
+            else {
+                throw new NeoAIException(resultSandBox.getMessage());
+            }
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex);
+        }
+    }
+
+    @Override
+    public boolean isUnix(DBConnectionIFC dbConnection, String session, String sUrl) {
+        throw new NeoAIException("not supported");
+    }
+
     private String generateJsonBodyForSandBox(String session, String input) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
@@ -129,6 +155,11 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     private String sendTerminationToSandBox(String jsonTerminationSandBox, String sUrl) throws Exception {
         String urlWithAction = sUrl + "/" + "terminateshell";
         return sendInputToSandBox(jsonTerminationSandBox, urlWithAction);
+    }
+
+    private String sendIsUnixToSandBox(String jsonIsUnixSandBox, String sUrl) throws Exception {
+        String urlWithAction = sUrl + "/" + "isunix";
+        return sendInputToSandBox(jsonIsUnixSandBox, urlWithAction);
     }
 
     private String sendInputToSandBox(String jsonInput, String sUrl) throws Exception {

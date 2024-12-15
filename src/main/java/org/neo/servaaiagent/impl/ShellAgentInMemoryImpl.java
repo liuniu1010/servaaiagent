@@ -60,6 +60,15 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
         throw new NeoAIException("not supported");
     }
 
+    @Override
+    public boolean isUnix(String session) {
+        return CommonUtil.isUnix();
+    }
+
+    public boolean isUnix(DBConnectionIFC dbConnection, String session) {
+        throw new NeoAIException("not supported");
+    }
+
     private String innerExecute(String session, String command, int repeatDeep) throws Exception {
         if(repeatDeep <= 0) {
             throw new RuntimeException("Shell crashed!");

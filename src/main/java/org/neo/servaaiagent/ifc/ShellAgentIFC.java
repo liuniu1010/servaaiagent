@@ -8,4 +8,7 @@ public interface ShellAgentIFC {
 
     public void terminateShell(String session);
     public void terminateShell(DBConnectionIFC dbConnection, String session);
+
+    public boolean isUnix(String session);
+    public boolean isUnix(DBConnectionIFC dbConnection, String session);
 }
