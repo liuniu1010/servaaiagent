@@ -130,6 +130,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
             }
             else {
                 if(hasCall) {
+                    declare = "\n<b>" + declare + "</b>";
                     return declare;
                 }
                 else {
