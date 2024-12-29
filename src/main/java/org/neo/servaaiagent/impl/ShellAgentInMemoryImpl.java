@@ -103,8 +103,13 @@ class Shell {
     private BufferedReader shellReader;
 
     public Shell() throws IOException {
-        String commander = CommonUtil.isUnix()?"bash":"cmd";
-        ProcessBuilder pb = new ProcessBuilder(commander);
+        ProcessBuilder pb = null;
+        if(CommonUtil.isUnix()) {
+            pb = new ProcessBuilder("bash");
+        }
+        else {
+            pb = new ProcessBuilder("cmd", "/q");
+        }
         pb.redirectErrorStream(true);
         shellProcess = pb.start();
 
@@ -120,8 +125,15 @@ class Shell {
     }
 
     public String executeCommand(String command) throws IOException {
+        // command = sanitizeCommand(command);
+
+        // Validate the command
+        if (!isCommandValid(command)) {
+            throw new IllegalArgumentException("Invalid or incomplete command: " + command);
+        }
+
         // append command with extra tail
-        String echoExitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %ERRORLEVEL%";
+        String echoExitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %%ERRORLEVEL%%";
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
         String echoMarker = "echo " + marker;
 
@@ -150,6 +162,9 @@ class Shell {
         int exitCode = -1;
         String lastLine = listOutput.get(listOutput.size() - 1);
         String exitCodeStr = lastLine.toString().trim();
+        if(!CommonUtil.isUnix()) {
+            exitCodeStr = stripPercent(exitCodeStr);
+        }
         if (!exitCodeStr.isEmpty()) {
             try {
                 exitCode = Integer.parseInt(exitCodeStr);
@@ -187,6 +202,39 @@ class Shell {
         }
         catch(InterruptedException itex) {
         }
+    }
+
+    private boolean isCommandValid(String command) {
+        // Check for unbalanced quotes
+        int singleQuotes = command.length() - command.replace("'", "").length();
+        int doubleQuotes = command.length() - command.replace("\"", "").length();
+        if (singleQuotes % 2 != 0 || doubleQuotes % 2 != 0) {
+            return false;
+        }
+
+        // Check for truncation (basic heuristic)
+        if (command.endsWith("\\") || command.endsWith("{") || command.endsWith(",")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private String sanitizeCommand(String command) {
+        // Remove unexpected newlines
+        command = command.replace("\n", "").replace("\r", "");
+
+        // Trim whitespace
+        command = command.trim();
+
+        return command;
+    }
+
+    public static String stripPercent(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input.replaceAll("^%|%$", "");
     }
 }
 
