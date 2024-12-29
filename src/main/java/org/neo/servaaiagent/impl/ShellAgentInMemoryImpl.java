@@ -121,15 +121,16 @@ class Shell {
 
     public String executeCommand(String command) throws IOException {
         // append command with extra tail
-        String exitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %ERRORLEVEL%";
+        String echoExitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %ERRORLEVEL%";
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
+        String echoMarker = "echo " + marker;
 
         String commandWithTail;
         if(CommonUtil.isUnix()) {
-            commandWithTail = command + " ; " + exitCodeCommand + " ; " + marker;
+            commandWithTail = command + " ; " + echoExitCodeCommand + " ; " + echoMarker;
         }
         else {
-            commandWithTail = command + " & " + exitCodeCommand + " & " + marker;
+            commandWithTail = command + " & " + echoExitCodeCommand + " & " + echoMarker;
         }
 
         // flush the input command with tail
