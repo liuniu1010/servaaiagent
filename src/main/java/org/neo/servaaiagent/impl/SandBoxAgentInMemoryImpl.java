@@ -31,8 +31,12 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     @Override
     public String executeCommand(String session, String commandSandBox, String sUrl) {
         try {
+            logger.debug("prepare to send command to sandbox, command: " + commandSandBox);
+            logger.debug("url: " + sUrl);
             String jsonCommandSandBox = generateJsonBodyForSandBox(session, commandSandBox);
+            logger.debug("jsonCommandSandBox = " + jsonCommandSandBox);
             String jsonResultSandBox = sendCommandToSandBox(jsonCommandSandBox, sUrl);
+            logger.debug("sandbox result: " + jsonResultSandBox);
             ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
             if(resultSandBox.getIsSuccess()) {
                 return resultSandBox.getMessage();

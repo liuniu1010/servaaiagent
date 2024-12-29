@@ -16,6 +16,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ShellAgentIFC;
 
 public class ShellAgentInMemoryImpl implements ShellAgentIFC {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ShellAgentInMemoryImpl.class);
     private static ShellAgentIFC instance = new ShellAgentInMemoryImpl();
 
     private ShellAgentInMemoryImpl() {
@@ -96,6 +97,7 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
 }
 
 class Shell {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Shell.class);
     private Process shellProcess;
     private BufferedWriter shellWriter;
     private BufferedReader shellReader;
@@ -114,24 +116,31 @@ class Shell {
         shellWriter.write(command);
         shellWriter.newLine();
         shellWriter.flush();
+        logger.debug("command flushed: " + command);
     }
 
     public String executeCommand(String command) throws IOException {
-        // flush the input command
-        flushCommand(command);
-
-        // Now get the exit code of the last command
+        // append command with extra tail
         String exitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %ERRORLEVEL%";
-        flushCommand(exitCodeCommand);
-
-        // Add a unique marker to identify when the command output ends
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
-        flushCommand("echo " + marker);
+
+        String commandWithTail;
+        if(CommonUtil.isUnix()) {
+            commandWithTail = command + " ; " + exitCodeCommand + " ; " + marker;
+        }
+        else {
+            commandWithTail = command + " & " + exitCodeCommand + " & " + marker;
+        }
+
+        // flush the input command with tail
+        flushCommand(commandWithTail);
 
         List<String> listOutput = new ArrayList<String>();
         String line;
         while ((line = shellReader.readLine()) != null) {
+            logger.debug("read line: " + line);
             if (line.contains(marker)) {
+                logger.debug("break out loop to return");
                 break;
             }
             listOutput.add(line);
