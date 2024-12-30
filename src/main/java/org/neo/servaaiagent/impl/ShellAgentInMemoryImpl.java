@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.ArrayList;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
@@ -79,6 +81,10 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
         try {
             return shell.executeCommand(command);
         }
+        catch(TimeoutException tex) {
+            terminateShell(session);
+            throw tex;
+        }
         catch(IOException iex) {
             terminateShell(session);
             return innerExecute(session, command, repeatDeep - 1);
@@ -124,14 +130,7 @@ class Shell {
         logger.debug("command flushed: " + command);
     }
 
-    public String executeCommand(String command) throws IOException {
-        // command = sanitizeCommand(command);
-
-        // Validate the command
-        if (!isCommandValid(command)) {
-            throw new IllegalArgumentException("Invalid or incomplete command: " + command);
-        }
-
+    public String executeCommand(String command) throws IOException, TimeoutException {
         // append command with extra tail
         String echoExitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %%ERRORLEVEL%%";
         String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
@@ -149,14 +148,33 @@ class Shell {
         flushCommand(commandWithTail);
 
         List<String> listOutput = new ArrayList<String>();
+        long startTime = System.currentTimeMillis();
+        long timeoutMillis = 1000*30;  // 30 seconds as timeout
         String line;
-        while ((line = shellReader.readLine()) != null) {
-            logger.debug("read line: " + line);
-            if (line.contains(marker)) {
-                logger.debug("break out loop to return");
-                break;
+        while(true) {
+            if (System.currentTimeMillis() - startTime > timeoutMillis) {
+                throw new TimeoutException("Command execution timed out.");
             }
-            listOutput.add(line);
+
+            if(shellReader.ready()) {
+                line = shellReader.readLine();
+                logger.debug("read line: " + line);
+                if (line.contains(marker)) {
+                    logger.debug("break out loop to return");
+                    break;
+                }
+                listOutput.add(line);
+                startTime = System.currentTimeMillis();  // reset start time
+            }
+            else {
+                try {
+                    Thread.sleep(100); // Sleep for 100 milliseconds
+                } 
+                catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // Restore interrupt status
+                    throw new IOException("Thread was interrupted while waiting for shell output.", ie);
+                }
+            }
         }
 
         int exitCode = -1;
@@ -191,46 +209,40 @@ class Shell {
 
     public void close() {
         try {
-            shellWriter.write("exit");
-            shellWriter.newLine();
-            shellWriter.flush();
-            shellProcess.waitFor();
-            shellWriter.close();
-            shellReader.close();
-        }
-        catch(IOException iex) {
-        }
-        catch(InterruptedException itex) {
+            // Try to gracefully terminate the process
+            if (shellProcess.isAlive()) {
+                shellWriter.write("exit");
+                shellWriter.newLine();
+                shellWriter.flush();
+            }
+
+            // Give the process a moment to terminate gracefully
+            if (!shellProcess.waitFor(1, TimeUnit.SECONDS)) {
+                // Forcefully terminate the process if it didn't exit
+                shellProcess.destroyForcibly();
+            }
+        } 
+        catch (IOException | InterruptedException e) {
+            logger.error("Error while closing shell process: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Restore interrupt status if interrupted
+        } 
+        finally {
+            // Ensure resources are cleaned up
+            try {
+                if (shellWriter != null) {
+                    shellWriter.close();
+                }
+                if (shellReader != null) {
+                    shellReader.close();
+                }
+            } 
+            catch (IOException e) {
+                logger.error("Error while closing shell I/O streams: " + e.getMessage());
+            }
         }
     }
 
-    private boolean isCommandValid(String command) {
-        // Check for unbalanced quotes
-        int singleQuotes = command.length() - command.replace("'", "").length();
-        int doubleQuotes = command.length() - command.replace("\"", "").length();
-        if (singleQuotes % 2 != 0 || doubleQuotes % 2 != 0) {
-            return false;
-        }
-
-        // Check for truncation (basic heuristic)
-        if (command.endsWith("\\") || command.endsWith("{") || command.endsWith(",")) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private String sanitizeCommand(String command) {
-        // Remove unexpected newlines
-        command = command.replace("\n", "").replace("\r", "");
-
-        // Trim whitespace
-        command = command.trim();
-
-        return command;
-    }
-
-    public static String stripPercent(String input) {
+    private String stripPercent(String input) {
         if (input == null) {
             return null;
         }
