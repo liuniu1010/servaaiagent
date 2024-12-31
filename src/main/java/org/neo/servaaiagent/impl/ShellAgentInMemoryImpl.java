@@ -2,6 +2,7 @@ package org.neo.servaaiagent.impl;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
         return instance;
     }
 
-    Map<String, Shell> shellCache = new ConcurrentHashMap<String, Shell>();
+    Map<String, ShellIFC> shellCache = new ConcurrentHashMap<String, ShellIFC>();
 
     @Override
     public String execute(String session, String command) {
@@ -52,7 +53,7 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
     @Override 
     public void terminateShell(String session) {
         if(shellCache.containsKey(session)) {
-            Shell shell = shellCache.get(session);
+            ShellIFC shell = shellCache.get(session);
             shellCache.remove(session);
             shell.close();
         }
@@ -77,7 +78,7 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
             throw new RuntimeException("Shell crashed!");
         }
 
-        Shell shell = getOrCreateShell(session);
+        ShellIFC shell = getOrCreateShell(session);
         try {
             return shell.executeCommand(command);
         }
@@ -91,122 +92,42 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
         }
     }
 
-    private Shell getOrCreateShell(String session) throws Exception {
+    private ShellIFC getOrCreateShell(String session) throws Exception {
         if(shellCache.containsKey(session)) {
             return shellCache.get(session);
         }
 
-        Shell shell = new Shell();
+        ShellIFC shell = null;
+        if(CommonUtil.isUnix()) {
+            shell = new LinuxBashShell();
+        }
+        else {
+            shell = new WindowsShell();
+        }
         shellCache.put(session, shell);
         return shell;
     }
 }
 
-class Shell {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Shell.class);
-    private Process shellProcess;
-    private BufferedWriter shellWriter;
-    private BufferedReader shellReader;
+interface ShellIFC {
+    public String executeCommand(String command) throws IOException, TimeoutException;
+    public void close();
+}
 
-    public Shell() throws IOException {
-        ProcessBuilder pb = null;
-        if(CommonUtil.isUnix()) {
-            pb = new ProcessBuilder("bash");
-        }
-        else {
-            pb = new ProcessBuilder("cmd", "/q");
-        }
-        pb.redirectErrorStream(true);
-        shellProcess = pb.start();
+abstract class AbsShell implements ShellIFC {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsShell.class);
+    protected Process shellProcess;
+    protected BufferedWriter shellWriter;
+    protected BufferedReader shellReader;
 
-        shellWriter = new BufferedWriter(new OutputStreamWriter(shellProcess.getOutputStream()));
-        shellReader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
-    }
-
-    private void flushCommand(String command) throws IOException {
+    protected void flushCommand(String command) throws IOException {
         shellWriter.write(command);
         shellWriter.newLine();
         shellWriter.flush();
         logger.debug("command flushed: " + command);
     }
 
-    public String executeCommand(String command) throws IOException, TimeoutException {
-        // append command with extra tail
-        String echoExitCodeCommand = CommonUtil.isUnix() ? "echo $?" : "echo %%ERRORLEVEL%%";
-        String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
-        String echoMarker = "echo " + marker;
-
-        String commandWithTail;
-        if(CommonUtil.isUnix()) {
-            commandWithTail = command + " ; " + echoExitCodeCommand + " ; " + echoMarker;
-        }
-        else {
-            commandWithTail = command + " & " + echoExitCodeCommand + " & " + echoMarker;
-        }
-
-        // flush the input command with tail
-        flushCommand(commandWithTail);
-
-        List<String> listOutput = new ArrayList<String>();
-        long startTime = System.currentTimeMillis();
-        long timeoutMillis = 1000*30;  // 30 seconds as timeout
-        String line;
-        while(true) {
-            if (System.currentTimeMillis() - startTime > timeoutMillis) {
-                throw new TimeoutException("Command execution timed out.");
-            }
-
-            if(shellReader.ready()) {
-                line = shellReader.readLine();
-                logger.debug("read line: " + line);
-                if (line.contains(marker)) {
-                    logger.debug("break out loop to return");
-                    break;
-                }
-                listOutput.add(line);
-                startTime = System.currentTimeMillis();  // reset start time
-            }
-            else {
-                try {
-                    Thread.sleep(100); // Sleep for 100 milliseconds
-                } 
-                catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt(); // Restore interrupt status
-                    throw new IOException("Thread was interrupted while waiting for shell output.", ie);
-                }
-            }
-        }
-
-        int exitCode = -1;
-        String lastLine = listOutput.get(listOutput.size() - 1);
-        String exitCodeStr = lastLine.toString().trim();
-        if(!CommonUtil.isUnix()) {
-            exitCodeStr = stripPercent(exitCodeStr);
-        }
-        if (!exitCodeStr.isEmpty()) {
-            try {
-                exitCode = Integer.parseInt(exitCodeStr);
-            } catch (NumberFormatException e) {
-                exitCode = 1; 
-            }
-        }
-
-        // the last line only indicates command success or fail, remove it from the result
-        listOutput.remove(listOutput.size() - 1);
-
-        String result = "";
-        for(String output: listOutput) {
-            result += output + "\n";
-        }
-
-        if(exitCode == 0) {
-            return result;
-        }
-        else {
-            throw new NeoAIException(result);
-        }
-    }
-
+    @Override
     public void close() {
         try {
             // Try to gracefully terminate the process
@@ -242,11 +163,201 @@ class Shell {
         }
     }
 
-    private String stripPercent(String input) {
+    protected String stripPercent(String input) {
         if (input == null) {
             return null;
         }
         return input.replaceAll("^%|%$", "");
     }
+
+    protected String stringListToString(List<String> stringList) {
+        String result = "";
+        for(String output: stringList) {
+            result += output + "\n";
+        }
+
+        return result;
+    }
 }
 
+class LinuxBashShell extends AbsShell {
+    public LinuxBashShell() throws IOException {
+        ProcessBuilder pb = new ProcessBuilder("bash");
+        pb.redirectErrorStream(true);
+        shellProcess = pb.start();
+
+        shellWriter = new BufferedWriter(new OutputStreamWriter(shellProcess.getOutputStream()));
+        shellReader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
+    }
+
+    @Override
+    public String executeCommand(String command) throws IOException, TimeoutException {
+        // append command with extra tail
+        String echoExitCodeCommand = "echo $?";
+        String marker = "END_OF_COMMAND_OUTPUT_" + System.currentTimeMillis();
+        String echoMarker = "echo " + marker;
+
+        String commandWithTail = command + " ; " + echoExitCodeCommand + " ; " + echoMarker;
+
+        // flush the input command with tail
+        flushCommand(commandWithTail);
+
+        List<String> listOutput = new ArrayList<String>();
+        long startTime = System.currentTimeMillis();
+        long timeoutMillis = 1000*30;  // 30 seconds as timeout
+        String line;
+        while(true) {
+            if (System.currentTimeMillis() - startTime > timeoutMillis) {
+                throw new TimeoutException("Timed out with output:\n " + stringListToString(listOutput));
+            }
+
+            if(shellReader.ready()) {
+                line = shellReader.readLine();
+                logger.debug("read line: " + line);
+                if (line.contains(marker)) {
+                    logger.debug("break out loop to return");
+                    break;
+                }
+                listOutput.add(line);
+                startTime = System.currentTimeMillis();  // reset start time
+            }
+            else {
+                try {
+                    Thread.sleep(100); // Sleep for 100 milliseconds
+                } 
+                catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // Restore interrupt status
+                    throw new IOException("Thread was interrupted while waiting for shell output.", ie);
+                }
+            }
+        }
+
+        int exitCode = -1;
+        String lastLine = listOutput.get(listOutput.size() - 1);
+        String exitCodeStr = lastLine.toString().trim();
+        if (!exitCodeStr.isEmpty()) {
+            try {
+                exitCode = Integer.parseInt(exitCodeStr);
+            } catch (NumberFormatException e) {
+                exitCode = 1; 
+            }
+        }
+
+        // the last line only indicates command success or fail, remove it from the result
+        listOutput.remove(listOutput.size() - 1);
+
+        String result = stringListToString(listOutput);
+
+        if(exitCode == 0) {
+            return result;
+        }
+        else {
+            throw new NeoAIException(result);
+        }
+    }
+}
+
+class WindowsShell extends AbsShell {
+    public WindowsShell() throws IOException {
+        ProcessBuilder pb = new ProcessBuilder("cmd", "/q");
+        pb.redirectErrorStream(true);
+        shellProcess = pb.start();
+
+        shellWriter = new BufferedWriter(new OutputStreamWriter(shellProcess.getOutputStream()));
+        shellReader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
+    }
+
+    @Override
+    public String executeCommand(String command) throws IOException, TimeoutException {
+        // append command with extra tail
+        String echoExitCodeCommand = "echo %%ERRORLEVEL%%";
+        String marker = "END_OF_COMMAND_OUTPUT_" + System.nanoTime();
+        String echoMarker = "echo " + marker;
+
+        String commandWithTail = command + " & " + echoExitCodeCommand + " & " + echoMarker;
+
+        // flush the input command with tail
+        flushCommand(commandWithTail);
+
+        List<String> listOutput = new ArrayList<String>();
+        long startTime = System.nanoTime();
+        long timeoutInMillis = 30*1000;  // 30 seconds as timeout
+        InputStream inputStream = shellProcess.getInputStream();
+        while(true) {
+            long currentTimeNano = System.nanoTime();
+            if ((currentTimeNano - startTime)/(1000*1000.0) > timeoutInMillis) {
+                throw new TimeoutException("Timed out with output:\n " + stringListToString(listOutput));
+            }
+
+            // if(shellReader.ready()) {
+            if (inputStream.available() > 0) {
+                byte[] byteBuffer = new byte[inputStream.available()];
+                int bytesRead = inputStream.read(byteBuffer);
+                String inputString = new String(byteBuffer, 0, bytesRead);
+
+                List<String> lines = splitByNewline(inputString);
+                boolean shouldBreak = false;
+                for(String line: lines) {
+                    logger.debug("read line: " + line);
+                    if (line.contains(marker)) {
+                        logger.debug("break out loop to return");
+                        shouldBreak = true;
+                        break;
+                    }
+                    listOutput.add(line);
+                    startTime = System.nanoTime();  // reset start time
+                }
+                if(shouldBreak) {
+                    break;
+                }
+            }
+            else {
+                try {
+                    Thread.sleep(100); // Sleep for 100 milliseconds
+                } 
+                catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // Restore interrupt status
+                    throw new IOException("Thread was interrupted while waiting for shell output.", ie);
+                }
+            }
+        }
+
+        int exitCode = -1;
+        String lastLine = listOutput.get(listOutput.size() - 1);
+        String exitCodeStr = lastLine.toString().trim();
+        exitCodeStr = stripPercent(exitCodeStr);
+        if (!exitCodeStr.isEmpty()) {
+            try {
+                exitCode = Integer.parseInt(exitCodeStr);
+            } catch (NumberFormatException e) {
+                exitCode = 1; 
+            }
+        }
+
+        // the last line only indicates command success or fail, remove it from the result
+        listOutput.remove(listOutput.size() - 1);
+
+        String result = stringListToString(listOutput);
+
+        if(exitCode == 0) {
+            return result;
+        }
+        else {
+            throw new NeoAIException(result);
+        }
+    }
+
+    private List<String> splitByNewline(String input) {
+        List<String> lines = new ArrayList<>();
+        if (input == null || input.isEmpty()) {
+            return lines; // Return an empty list for null or empty input
+        }
+
+        String[] splitLines = input.split("\n");
+        for (String line : splitLines) {
+            lines.add(line); // Add each line to the list
+        }
+
+        return lines;
+    }
+}
