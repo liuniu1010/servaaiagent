@@ -163,18 +163,18 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
             StorageIFC storage = StorageInMemoryImpl.getInstance();
             storage.addChatRecord(session, newRequestRecord);
             storage.addChatRecord(session, newResponseRecord);
-
+ 
             if(!shouldStop) {
-                return innerGenerateCode(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
-            }
-            else {
                 if(hasCall) {
-                    return declare;
+                    return innerGenerateCode(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration, DONOT use multi_tool_use.parallel";
                     return innerGenerateCode(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
                 }
+            }
+            else {
+                return declare;
             }
         }
         else {
