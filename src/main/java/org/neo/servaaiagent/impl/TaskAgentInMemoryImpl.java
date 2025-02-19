@@ -126,17 +126,17 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
             storage.addChatRecord(session, newResponseRecord);
 
             if(!shouldStop) {
-                return innerExecuteTask(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterationDeep - 1);
-            }
-            else {
                 if(hasCall) {
-                    declare = "\n<b>" + declare + "</b>";
-                    return declare;
+                    return innerExecuteTask(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterationDeep - 1);
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishTask/failTask, DONOT use multi_tool_use.parallel";
                     return innerExecuteTask(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterationDeep - 1);
                 }
+            }
+            else {
+                declare = "\n<b>" + declare + "</b>";
+                return declare;
             }
         }
         else {
