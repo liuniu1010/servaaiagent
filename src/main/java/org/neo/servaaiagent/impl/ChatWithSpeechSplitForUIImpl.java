@@ -105,11 +105,13 @@ public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
         // original text 
         String text = speechAgent.speechToText(dbConnection, session, filePath);
 
-        String content = "<b>" + text + "</b>";
-        content += "<br><audio controls>";
-        content += "<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
+        String content = "\n<div class=\"hover-container\">";
+        content += "\n<span class=\"hidden-text\">" + "<b>" + text + "</b>" + "</span>";
+        content += "\n</div>";
+        content += "\n<br><audio controls>";
+        content += "\n<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
         content += "Your browser does not support the audio element";
-        content += "</audio>";
+        content += "\n</audio>";
 
         // split text into sentence by sentence
         List<String> sentences = CommonUtil.splitIntoSentences(text);
@@ -120,7 +122,9 @@ public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
 
             String splitFileName = speechAgent.generateSpeech(dbConnection, session, sentence, onlineFileAbsolutePath);
             String relevantSplitFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + splitFileName;
-            content += "<br><b>" + sentence + "</b>";
+            content += "\n<div class=\"hover-container\">";
+            content += "\n<span class=\"hidden-text\">" + "<b>" + sentence + "</b>" + "</span>";
+            content += "\n</div>";
             content += "<br><audio controls>";
             content += "<source src=\"" + relevantSplitFilePath + "\" type=\"audio/" + outputFormat + "\">";
             content += "Your browser does not support the audio element";
