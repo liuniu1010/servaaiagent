@@ -204,6 +204,7 @@ public class AgentModel {
         public static final String ACCOUNTID = "accountid";
         public static final String CREDITS = "credits";
         public static final String CONSUMETIME = "consumetime";
+        public static final String CONSUMEFUNCTION = "consumefunction";
 
         public ConsumedCredits(VersionEntity inputVersionEntity) {
             versionEntity = inputVersionEntity;
@@ -248,6 +249,14 @@ public class AgentModel {
 
         public void setConsumeTime(Date consumeTime) {
             versionEntity.setAttribute(CONSUMETIME, consumeTime);
+        }
+
+        public String getConsumeFunction() {
+            return (String)versionEntity.getAttribute(CONSUMEFUNCTION);
+        }
+
+        public void setConsumeFunction(String consumeFunction) {
+            versionEntity.setAttribute(CONSUMEFUNCTION, consumeFunction);
         }
     }
 }

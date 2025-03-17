@@ -20,17 +20,20 @@ public interface AccountAgentIFC {
     public void checkSessionValid(String loginSession);
     public void checkSessionValid(DBConnectionIFC dbConnection, String loginSession);
 
+    public String getUserNameWithSession(String loginSession);
+    public String getUserNameWithSession(DBConnectionIFC dbConnection, String loginSession);
+
     public void purchaseCreditsWithSession(String loginSession, int credits);
     public void purchaseCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits);
 
     public void purchaseCreditsWithAccount(String accountId, int credits);
     public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits);
 
-    public void consumeCreditsWithSession(String loginSession, int credits);
-    public void consumeCreditsWithSession(DBConnectionIFC dbConnetion, String loginSession, int credits);
+    public void consumeCreditsWithSession(String loginSession, int credits, String consumeFunction);
+    public void consumeCreditsWithSession(DBConnectionIFC dbConnetion, String loginSession, int credits, String consumeFunction);
 
-    public void consumeCreditsWithAccount(String accountId, int credits);
-    public void consumeCreditsWithAccount(DBConnectionIFC dbConnetion, String accountId, int credits);
+    public void consumeCreditsWithAccount(String accountId, int credits, String consumeFunction);
+    public void consumeCreditsWithAccount(DBConnectionIFC dbConnetion, String accountId, int credits, String consumeFunction);
 
     public int getLeftCreditsWithSession(String loginSession);
     public int getLeftCreditsWithSession(DBConnectionIFC dbConnection, String loginSession);
