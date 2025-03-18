@@ -550,7 +550,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
         // send password to user
         String subject = "Your Password";
-        String body = "Your new password to login to Neo CoderBot is: <br><b>" + password + "</b>";
+        String body = "Your new password to login to Neo AI is: <br><b>" + password + "</b>";
 
         EmailAgentIFC emailAgent = EmailAgentImpl.getInstance();
         emailAgent.sendEmail(dbConnection, standardEmailAddress, subject, body);
@@ -628,11 +628,12 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     }
 
     private String getUserName(DBConnectionIFC dbConnection, String loginSession) throws Exception {
-        String sql = "select username";
-        sql += " from loginsession";
-        sql += " where session = ?";
-        sql += " and expiretime > ?";
-        sql += " and isdeleted = 0";
+        String sql = "select ua.username as username";
+        sql += " from useraccount ua";
+        sql += " join loginsession ls on ls.accountid = ua.id";
+        sql += " where ls.session = ?";
+        sql += " and ls.expiretime > ?";
+        sql += " and ls.isdeleted = 0";
 
         List<Object> params = new ArrayList<Object>();
         params.add(loginSession);
@@ -827,8 +828,8 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         String sql = "select distinct ua.username as username";
         sql += " from useraccount ua";
         sql += " join loginsession ls on ls.accountid = ua.id";
-        sql += " where expiretime > ?";
-        sql += " and isdeleted = 0";
+        sql += " where ls.expiretime > ?";
+        sql += " and ls.isdeleted = 0";
 
         List<Object> params = new ArrayList<Object>();
         params.add(new Date());
