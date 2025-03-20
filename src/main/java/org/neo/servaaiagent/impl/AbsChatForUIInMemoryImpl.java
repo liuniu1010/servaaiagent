@@ -19,7 +19,8 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     @Override
     public String initNewChat(String session) {
         try {
-            return innerInitNewChat(session);
+            String defaultSayHello = "Hello, How can I help you?";
+            return innerInitNewChat(session, defaultSayHello);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -29,14 +30,27 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
         }
     }
 
-    private String innerInitNewChat(String session) {
+    @Override
+    public String initNewChat(String session, String sayHello) {
+        try {
+            return innerInitNewChat(session, sayHello);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    private String innerInitNewChat(String session, String sayHello) {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         storage.clearChatRecords(session);
 
         AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(session);
         chatRecord.setIsRequest(false);
         chatRecord.setChatTime(new Date());
-        chatRecord.setContent("Hello, How can I help you?");
+        chatRecord.setContent(sayHello);
         storage.addChatRecord(session, chatRecord);
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);

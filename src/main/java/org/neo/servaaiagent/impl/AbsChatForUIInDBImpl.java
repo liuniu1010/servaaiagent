@@ -46,7 +46,8 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
             return (String)dbService.executeSaveTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerInitNewChat(dbConnection, session);
+                    String defaultSayHello = "Hello, How can I help you?";
+                    return innerInitNewChat(dbConnection, session, defaultSayHello);
                 }
 
                 @Override
@@ -68,14 +69,43 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    private String innerInitNewChat(DBConnectionIFC dbConnection, String session) {
+    @Override
+    public String initNewChat(String session, String sayHello) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeSaveTask(new AbsChatForUIInDBImpl() {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    return innerInitNewChat(dbConnection, session, sayHello);
+                }
+
+                @Override
+                public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+                    return null;
+                }
+
+                @Override
+                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+                    return null;
+                }
+            });
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    private String innerInitNewChat(DBConnectionIFC dbConnection, String session, String sayHello) {
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         storage.clearChatRecords(session);
 
         AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(session);
         chatRecord.setIsRequest(false);
         chatRecord.setChatTime(new Date());
-        chatRecord.setContent("Hello, How can I help you?");
+        chatRecord.setContent(sayHello);
         storage.addChatRecord(session, chatRecord);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
