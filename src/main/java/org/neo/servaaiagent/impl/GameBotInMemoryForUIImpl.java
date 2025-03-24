@@ -9,7 +9,7 @@ import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
-import org.neo.servaaiagent.ifc.AssistantAgentIFC;
+import org.neo.servaaiagent.ifc.GameAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
 
@@ -48,7 +48,8 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerFetchResponse(String session, String userInput) throws Exception {
-        return IOUtil.resourceFileToString("test.html");
+        GameAgentIFC gameAgent = GameAgentInMemoryImpl.getInstance();
+        return gameAgent.generatePageCode(session, userInput);
     }
 }
 
