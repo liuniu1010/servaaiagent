@@ -43,13 +43,8 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
     }
 
     private String innerGeneratePageCode(String session, String userInput) throws Exception {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
-        newRequestRecord.setChatTime(new Date());
-        newRequestRecord.setIsRequest(true);
-        newRequestRecord.setContent(userInput);
-
         String gamebotDesc = loadGameBotDesc();
-        AIModel.PromptStruct promptStruct = constructPromptStructForGameBot(session, gamebotDesc, userInput);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -72,16 +67,12 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
                 }
             }
 
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-            newResponseRecord.setChatTime(new Date());
-            newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(chatResponse.getMessage());
-
             StorageIFC storage = StorageInMemoryImpl.getInstance();
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+            codeFeedback.setCodeContent(pageCode);
+            storage.putCodeFeedback(session, codeFeedback);
 
-            return chatResponse.getMessage();
+            return pageCode;
         }
         else {
             throw new NeoAIException(chatResponse.getMessage());
@@ -93,17 +84,48 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         return IOUtil.resourceFileToString(fileName);
     }
 
-    private AIModel.PromptStruct constructPromptStructForGameBot(String session, String gamebotDesc, String userInput) throws Exception {
-        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+    private AIModel.PromptStruct constructPromptStruct(String session, String gamebotDesc, String userInput) throws Exception {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
-        promptStruct.setChatRecords(chatRecords);
+        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+        if(codeFeedback == null) {
+            return constructPromptStructAsRequirement(session, gamebotDesc, userInput);
+        }
+        else {
+            return constructPromptStructAsFeedback(session, userInput);
+        } 
+    }
 
-        promptStruct.setUserInput(userInput); 
-        promptStruct.setSystemHint(gamebotDesc);
+    private AIModel.PromptStruct constructPromptStructAsRequirement(String session, String gamebotDesc, String userInput) {
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        promptStruct.setUserInput(userInput);
+        String systemHint = gamebotDesc;
+        systemHint += "\n\nNow, the requirement you need to implement is:";
+        systemHint += "\n" + userInput;
+        promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(GameCallImpl.getInstance());
 
+        AIModel.CodeFeedback codeFeedback = new AIModel.CodeFeedback();
+        codeFeedback.setRequirement(systemHint);
+
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        storage.putCodeFeedback(session, codeFeedback);
+
         return promptStruct;
+    }
+
+    private AIModel.PromptStruct constructPromptStructAsFeedback(String session, String userInput) {
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        String feedback = "the code\n```\n";
+        feedback += codeFeedback.getCodeContent();
+        feedback += "\n```\ngot below feedback:\n";
+        feedback += userInput;
+        promptStruct.setUserInput(feedback);
+        promptStruct.setSystemHint(codeFeedback.getRequirement());
+
+        return promptStruct; 
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(AIModel.PromptStruct promptStruct) {
