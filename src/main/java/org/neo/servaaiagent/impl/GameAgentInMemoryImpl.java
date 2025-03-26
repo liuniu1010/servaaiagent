@@ -42,6 +42,24 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         throw new NeoAIException("not support!");
     }
 
+    @Override
+    public String getRecentPageCode(String session) {
+        try {
+            return innerGetRecentPageCode(session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public String getRecentPageCode(DBConnectionIFC dbConnection, String session) {
+        throw new NeoAIException("not support!");
+    }
+
     private String innerGeneratePageCode(String session, String userInput) throws Exception {
         String gamebotDesc = loadGameBotDesc();
         AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput);
@@ -91,6 +109,18 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         }
     }
 
+    private String innerGetRecentPageCode(String session) throws Exception {
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+
+        if(codeFeedback == null) {
+            return "";
+        }
+        else {
+            return codeFeedback.getCodeContent();
+        }
+    }
+
     private String loadGameBotDesc() throws Exception {
         String fileName = "gamebot.txt";
         return IOUtil.resourceFileToString(fileName);
@@ -115,13 +145,6 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         systemHint += "\n" + userInput;
         promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(GameCallImpl.getInstance());
-/*
-        AIModel.CodeFeedback codeFeedback = new AIModel.CodeFeedback();
-        codeFeedback.setRequirement(systemHint);
-
-        StorageIFC storage = StorageInMemoryImpl.getInstance();
-        storage.putCodeFeedback(session, codeFeedback);
-*/
         return promptStruct;
     }
 
@@ -131,8 +154,11 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         feedback += codeFeedback.getCodeContent();
         feedback += "\n```\ngot below feedback:\n";
         feedback += userInput;
+        feedback += "\n\nPlease always use function call generatePageCode to regenerate the page code";
+        feedback += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
         promptStruct.setUserInput(feedback);
         promptStruct.setSystemHint(codeFeedback.getRequirement());
+        promptStruct.setFunctionCall(GameCallImpl.getInstance());
 
         return promptStruct; 
     }
