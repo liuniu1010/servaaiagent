@@ -48,31 +48,43 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
-            String pageCode = null;
-            String failReason = null;
+            String pageCode = "";
+            String failReason = "";
             List<AIModel.Call> calls = chatResponse.getCalls();
+            boolean hasCall = false;
+            String informationToReturn = "";
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
                     if(!GameCallImpl.isDefinedFunction(call.getMethodName())) {
                         continue;
                     }
+
+                    hasCall = true;
                     if(call.getMethodName().equals(GameCallImpl.METHODNAME_GENERATEPAGECODE)) {
                         pageCode = (String)promptStruct.getFunctionCall().callFunction(call);
+                        informationToReturn = pageCode;
                     }
                     else {
                         failReason = (String)promptStruct.getFunctionCall().callFunction(call);
+                        informationToReturn = failReason;
                     }
+
+                    // fill codeFeedback and save in storage
+                    StorageIFC storage = StorageInMemoryImpl.getInstance();
+                    AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+                    if(codeFeedback == null) {
+                        codeFeedback = new AIModel.CodeFeedback();
+                    }
+                    codeFeedback.setRequirement(promptStruct.getSystemHint());
+                    codeFeedback.setCodeContent(pageCode);
+                    codeFeedback.setFeedback(promptStruct.getUserInput());
+                    storage.putCodeFeedback(session, codeFeedback);
 
                     break;
                 }
             }
 
-            StorageIFC storage = StorageInMemoryImpl.getInstance();
-            AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
-            codeFeedback.setCodeContent(pageCode);
-            storage.putCodeFeedback(session, codeFeedback);
-
-            return pageCode;
+            return informationToReturn;
         }
         else {
             throw new NeoAIException(chatResponse.getMessage());
@@ -88,14 +100,14 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
         if(codeFeedback == null) {
-            return constructPromptStructAsRequirement(session, gamebotDesc, userInput);
+            return constructPromptStructAsRequirement(session, userInput, gamebotDesc);
         }
         else {
-            return constructPromptStructAsFeedback(session, userInput);
+            return constructPromptStructAsFeedback(session, userInput, codeFeedback);
         } 
     }
 
-    private AIModel.PromptStruct constructPromptStructAsRequirement(String session, String gamebotDesc, String userInput) {
+    private AIModel.PromptStruct constructPromptStructAsRequirement(String session, String userInput, String gamebotDesc) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
         String systemHint = gamebotDesc;
@@ -103,20 +115,17 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         systemHint += "\n" + userInput;
         promptStruct.setSystemHint(systemHint);
         promptStruct.setFunctionCall(GameCallImpl.getInstance());
-
+/*
         AIModel.CodeFeedback codeFeedback = new AIModel.CodeFeedback();
         codeFeedback.setRequirement(systemHint);
 
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         storage.putCodeFeedback(session, codeFeedback);
-
+*/
         return promptStruct;
     }
 
-    private AIModel.PromptStruct constructPromptStructAsFeedback(String session, String userInput) {
-        StorageIFC storage = StorageInMemoryImpl.getInstance();
-        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
-
+    private AIModel.PromptStruct constructPromptStructAsFeedback(String session, String userInput, AIModel.CodeFeedback codeFeedback) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String feedback = "the code\n```\n";
         feedback += codeFeedback.getCodeContent();

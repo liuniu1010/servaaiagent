@@ -22,6 +22,19 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
+    public String initNewChat(String session) {
+        try {
+            return innerInitNewChat(session);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             return innerFetchResponse(session, userInput);
@@ -45,6 +58,12 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         catch(Exception ex) {
             throw new NeoAIException(standardExceptionMessage, ex);
         }
+    }
+
+    private String innerInitNewChat(String session) {
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        storage.removeCodeFeedback(session);
+        return "";
     }
 
     private String innerFetchResponse(String session, String userInput) throws Exception {
