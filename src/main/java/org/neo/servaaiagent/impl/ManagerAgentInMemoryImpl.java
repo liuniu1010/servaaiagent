@@ -141,38 +141,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(AIModel.PromptStruct promptStruct) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance();
         String model = CommonUtil.getConfigValue("codeModel");
-        int tryTime = 3;
-        int waitSeconds = 10; // first as 10 seconds
-        for(int i = 0;i < tryTime;i++) {
-            try {
-                return superAI.fetchChatResponse(model, promptStruct);
-            }
-            catch(NeoAIException nex) {
-                logger.error(nex.getMessage(), nex);
-                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR) {
-                    // sometimes LLM might generate error json which cannot be handled
-                    // try once more in this case
-                    logger.info("Meet json syntax error from LLM, try again...");
-                    continue;
-                }
-                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM) {
-                    // met ioexception with LLM, wait some seconds and try again
-                    try {
-                        logger.info("Meet IOException from LLM, wait " + waitSeconds + " seconds and try again...");
-                        Thread.sleep(1000 * waitSeconds);
-                        waitSeconds = waitSeconds * 2;
-                    }
-                    catch(InterruptedException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                    continue;
-                }
-                else {
-                    throw nex;
-                }
-            }
-        }
-        throw new NeoAIException("failed to generate code");
+        return superAI.fetchChatResponse(model, promptStruct);
     }
 
     private void beginProjectAndRecord(String session, String requirement) {

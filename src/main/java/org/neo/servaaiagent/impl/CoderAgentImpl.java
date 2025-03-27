@@ -236,33 +236,6 @@ public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(DBConnectionIFC dbConnection, AIModel.PromptStruct promptStruct) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String model = CommonUtil.getConfigValue(dbConnection, "codeModel");
-
-        int retryTimesOnLLMException = CommonUtil.getConfigValueAsInt(dbConnection, "retryTimesOnLLMException");
-        int waitSeconds = CommonUtil.getConfigValueAsInt(dbConnection, "firstWaitSecondsOnLLMException");
-        for(int i = 0;i < retryTimesOnLLMException;i++) {
-            try {
-                return superAI.fetchChatResponse(model, promptStruct);
-            }
-            catch(NeoAIException nex) {
-                logger.error(nex.getMessage(), nex);
-                if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHLLM 
-                    || nex.getCode() == NeoAIException.NEOAIEXCEPTION_JSONSYNTAXERROR ) {
-                    // met ioexception or syntax exception with LLM, wait some seconds and try again
-                    try {
-                        logger.info("Meet IOException or syntax exception from LLM, wait " + waitSeconds + " seconds and try again...");
-                        Thread.sleep(1000 * waitSeconds);
-                        waitSeconds = waitSeconds * 2;
-                    }
-                    catch(InterruptedException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                    continue;
-                }
-                else {
-                    throw nex;
-                }
-            }
-        }
-        throw new NeoAIException("Max iteration deep exceeded!");
+        return superAI.fetchChatResponse(model, promptStruct);
     }
 }
