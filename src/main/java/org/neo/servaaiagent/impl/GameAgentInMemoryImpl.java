@@ -15,6 +15,7 @@ import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.GameAgentIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class GameAgentInMemoryImpl implements GameAgentIFC {
     private GameAgentInMemoryImpl() {
@@ -25,9 +26,9 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
     }
 
     @Override
-    public String generatePageCode(String session, String userInput) {
+    public String generatePageCode(String session, NotifyCallbackIFC notifyCallback, String userInput) {
         try {
-            return innerGeneratePageCode(session, userInput);
+            return innerGeneratePageCode(session, notifyCallback, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -38,7 +39,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
     }
 
     @Override
-    public String generatePageCode(DBConnectionIFC dbConnection, String session, String userInput) {
+    public String generatePageCode(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String userInput) {
         throw new NeoAIException("not support!");
     }
 
@@ -60,7 +61,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         throw new NeoAIException("not support!");
     }
 
-    private String innerGeneratePageCode(String session, String userInput) throws Exception {
+    private String innerGeneratePageCode(String session, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
         String gamebotDesc = loadGameBotDesc();
         AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
@@ -91,7 +92,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
                     StorageIFC storage = StorageInMemoryImpl.getInstance();
                     AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
                     if(codeFeedback == null) {
-                        codeFeedback = new AIModel.CodeFeedback();
+                        codeFeedback = new AIModel.CodeFeedback(session);
                     }
                     codeFeedback.setRequirement(promptStruct.getSystemHint());
                     codeFeedback.setCodeContent(pageCode);
@@ -100,6 +101,10 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
 
                     break;
                 }
+            }
+
+            if(notifyCallback != null) {
+                notifyCallback.notify(informationToReturn);
             }
 
             return informationToReturn;

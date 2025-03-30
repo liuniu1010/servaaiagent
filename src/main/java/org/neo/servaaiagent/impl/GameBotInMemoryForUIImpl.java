@@ -63,7 +63,7 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     @Override
     public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
-            return innerFetchResponse(session, userInput);
+            return innerFetchResponse(session, null, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -76,7 +76,7 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     @Override
     public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
         try {
-            return innerFetchResponse(session, userInput);
+            return innerFetchResponse(session, notifyCallback, userInput);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -92,9 +92,9 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         return "";
     }
 
-    private String innerFetchResponse(String session, String userInput) throws Exception {
+    private String innerFetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
         GameAgentIFC gameAgent = GameAgentInMemoryImpl.getInstance();
-        return gameAgent.generatePageCode(session, userInput);
+        return gameAgent.generatePageCode(session, notifyCallback, userInput);
     }
 
     private String innerRefresh(String session) throws Exception {
