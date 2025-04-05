@@ -63,7 +63,19 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
 
     private String innerGeneratePageCode(String session, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
         String gamebotDesc = loadGameBotDesc();
-        AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput);
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        AIModel.CodeFeedback lastFeedback = storage.peekCodeFeedback(session);
+        String lastCodeContent = null;
+        if(lastFeedback != null) {
+            lastCodeContent = lastFeedback.getCodeContent();
+        }
+
+        AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(session);
+        newFeedback.setFeedback(userInput);
+        newFeedback.setIndex(AIModel.CodeFeedback.INDEX_FEEDBACK);
+        storage.pushCodeFeedback(session, newFeedback);
+
+        AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput, lastCodeContent);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -89,15 +101,11 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
                     }
 
                     // fill codeFeedback and save in storage
-                    StorageIFC storage = StorageInMemoryImpl.getInstance();
-                    AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
-                    if(codeFeedback == null) {
-                        codeFeedback = new AIModel.CodeFeedback(session);
-                    }
-                    codeFeedback.setRequirement(promptStruct.getSystemHint());
+                    AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
+
+                    // codeFeedback should not be null now in theory
                     codeFeedback.setCodeContent(pageCode);
-                    codeFeedback.setFeedback(promptStruct.getUserInput());
-                    storage.putCodeFeedback(session, codeFeedback);
+                    codeFeedback.setIndex(AIModel.CodeFeedback.INDEX_CODECONTENT);
 
                     break;
                 }
@@ -116,7 +124,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
 
     private String innerGetRecentPageCode(String session) throws Exception {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
+        AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
 
         if(codeFeedback == null) {
             return "";
@@ -131,41 +139,30 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         return IOUtil.resourceFileToString(fileName);
     }
 
-    private AIModel.PromptStruct constructPromptStruct(String session, String gamebotDesc, String userInput) throws Exception {
-        StorageIFC storage = StorageInMemoryImpl.getInstance();
-        AIModel.CodeFeedback codeFeedback = storage.getCodeFeedback(session);
-        if(codeFeedback == null) {
-            return constructPromptStructAsRequirement(session, userInput, gamebotDesc);
+    private AIModel.PromptStruct constructPromptStruct(String session, String gamebotDesc, String userInput, String codeContent) throws Exception {
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        if(codeContent == null || codeContent.trim().equals("")) {
+            String adjustInput = userInput;
+            adjustInput += "\n\nPlease always use function call generatePageCode to generate the page code";
+            adjustInput += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
+            promptStruct.setUserInput(adjustInput);
+            promptStruct.setSystemHint(gamebotDesc);
+            promptStruct.setFunctionCall(GameCallImpl.getInstance());
         }
         else {
-            return constructPromptStructAsFeedback(session, userInput, codeFeedback);
-        } 
-    }
+            String adjustInput = "the code\n```\n";
+            adjustInput += codeContent;
+            adjustInput += "\n```\ngot below feedback:\n```\n";
+            adjustInput += userInput;
+            adjustInput += "\n```\nPlease analyse the code and update the code according to the above feedback.";
+            adjustInput += "\n\nPlease always use function call generatePageCode to regenerate the page code";
+            adjustInput += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
+            promptStruct.setUserInput(adjustInput);
+            promptStruct.setSystemHint(gamebotDesc);
+            promptStruct.setFunctionCall(GameCallImpl.getInstance());
+        }
 
-    private AIModel.PromptStruct constructPromptStructAsRequirement(String session, String userInput, String gamebotDesc) {
-        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
-        promptStruct.setUserInput(userInput);
-        String systemHint = gamebotDesc;
-        systemHint += "\n\nNow, the requirement you need to implement is:";
-        systemHint += "\n" + userInput;
-        promptStruct.setSystemHint(systemHint);
-        promptStruct.setFunctionCall(GameCallImpl.getInstance());
         return promptStruct;
-    }
-
-    private AIModel.PromptStruct constructPromptStructAsFeedback(String session, String userInput, AIModel.CodeFeedback codeFeedback) {
-        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
-        String feedback = "the code\n```\n";
-        feedback += codeFeedback.getCodeContent();
-        feedback += "\n```\ngot below feedback:\n";
-        feedback += userInput;
-        feedback += "\n\nPlease always use function call generatePageCode to regenerate the page code";
-        feedback += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
-        promptStruct.setUserInput(feedback);
-        promptStruct.setSystemHint(codeFeedback.getRequirement());
-        promptStruct.setFunctionCall(GameCallImpl.getInstance());
-
-        return promptStruct; 
     }
 
     private AIModel.ChatResponse fetchChatResponseFromSuperAI(AIModel.PromptStruct promptStruct) {

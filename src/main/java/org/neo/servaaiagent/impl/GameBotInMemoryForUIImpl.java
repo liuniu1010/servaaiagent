@@ -88,7 +88,7 @@ public class GameBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
 
     private String innerInitNewChat(String session) {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        storage.removeCodeFeedback(session);
+        storage.clearCodeFeedbacks(session);
         return "";
     }
 
