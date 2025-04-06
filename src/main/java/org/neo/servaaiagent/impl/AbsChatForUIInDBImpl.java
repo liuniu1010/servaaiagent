@@ -28,7 +28,6 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
         return null;
     }
 
-
     @Override
     public Object save(DBConnectionIFC dbConnection) {
         return null;
@@ -41,7 +40,16 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
 
     @Override
     public String sendAudio(String session, String userInput, List<String> attachFiles) {
-        return "";
+        throw new NeoAIException("not support! Please implement this method in extended class");
+    }
+
+    @Override
+    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+        throw new NeoAIException("not support! Please implement this method in extended class");
+    }
+
+    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+        throw new NeoAIException("not support! Please implement this method in extended class");
     }
 
     @Override
