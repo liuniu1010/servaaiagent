@@ -17,6 +17,11 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
 
     @Override
+    public String sendAudio(String session, String userInput, List<String> attachFiles) {
+        return "";
+    }
+
+    @Override
     public String initNewChat(String session) {
         try {
             String defaultSayHello = "Hello, How can I help you?";

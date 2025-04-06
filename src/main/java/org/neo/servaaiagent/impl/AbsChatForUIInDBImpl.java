@@ -40,6 +40,11 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     @Override
+    public String sendAudio(String session, String userInput, List<String> attachFiles) {
+        return "";
+    }
+
+    @Override
     public String initNewChat(String session) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();

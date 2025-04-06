@@ -7,6 +7,7 @@ import java.util.List;
  * which would be shown in UI side
  */
 public interface ChatForUIIFC {
+    public String sendAudio(String session, String userInput, List<String> attachFiles);
     public String fetchResponse(String session, String userInput, List<String> attachFiles);
     public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles);
     public String initNewChat(String session);
