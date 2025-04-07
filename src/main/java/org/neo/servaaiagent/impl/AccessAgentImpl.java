@@ -221,7 +221,7 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         List<String> whiteList = ConfigUtil.getTextFileInLines(whiteListAdmin);
         boolean isInWhileList = whiteList.contains(standardEmailAddress);
         if(isInWhileList) {
-            return false;
+            return true;
         }
 
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
