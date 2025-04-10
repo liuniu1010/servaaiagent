@@ -173,6 +173,56 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         }
     }
 
+    @Override
+    public void ensureAdminByUsername(String username) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new AccessAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                ensureAdminByUsername(dbConnection, username);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void ensureAdminByUsername(DBConnectionIFC dbConnection, String username) {
+        try {
+            innerEnsureAdminByUsername(dbConnection, username);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void ensureAdminByLoginSession(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new AccessAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                ensureAdminByLoginSession(dbConnection, loginSession);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void ensureAdminByLoginSession(DBConnectionIFC dbConnection, String loginSession) {
+        try {
+            innerEnsureAdminByLoginSession(dbConnection, loginSession);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
     private boolean innerVerifyMaintenance(DBConnectionIFC dbConnection) throws Exception {
         int iValue = CommonUtil.getConfigValueAsInt(dbConnection, "verifyMaintenance");
         if(iValue != 0) {
@@ -223,6 +273,24 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         if(isInWhileList) {
             return true;
         }
+        else {
+            return false;
+        }
+    }
+
+    private void innerEnsureAdminByUsername(DBConnectionIFC dbConnection, String username) throws Exception {
+        if(!CommonUtil.isValidEmail(username)){
+            throw new NeoAIException("not a valid email address!");
+        }
+
+        String standardEmailAddress = username.trim().toLowerCase();
+
+        String whiteListAdmin = "WhiteListAdmin.txt";
+        List<String> whiteList = ConfigUtil.getTextFileInLines(whiteListAdmin);
+        boolean isInWhileList = whiteList.contains(standardEmailAddress);
+        if(isInWhileList) {
+            return;
+        }
 
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
     }
@@ -249,6 +317,30 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
         }
 
         return innerVerifyAdminByUsername(dbConnection, oUsername.toString());
+    }
+
+    private void innerEnsureAdminByLoginSession(DBConnectionIFC dbConnection, String loginSession) throws Exception {
+        if(loginSession == null
+            || loginSession.trim().equals("")) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_SESSION_INVALID);
+        }
+
+        String sql = "select ua.username as username";
+        sql += " from useraccount ua";
+        sql += " join loginsession ls on ls.accountid = ua.id";
+        sql += " where ls.session = ?";
+
+        List<Object> params = new ArrayList<Object>();
+        params.add(loginSession);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        Object oUsername = dbConnection.queryScalar(sqlStruct);
+
+        if(oUsername == null) {
+            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST);
+        }
+
+        innerEnsureAdminByUsername(dbConnection, oUsername.toString());
     }
 
     private boolean innerVerifyIP(DBConnectionIFC dbConnection, String IP) throws Exception {
