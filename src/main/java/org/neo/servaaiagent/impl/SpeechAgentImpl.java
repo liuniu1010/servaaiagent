@@ -91,12 +91,14 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     private String generateSpeechFromSuperAI(DBConnectionIFC dbConnection, AIModel.TextToSpeechPrompt textToSpeechPrompt, String onlineFileAbsolutePath) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getTextToSpeechModels();
-        return superAI.textToSpeech(models[0], textToSpeechPrompt, onlineFileAbsolutePath);
+        String model = CommonUtil.getConfigValue(dbConnection, "textToSpeechModel");
+        return superAI.textToSpeech(model, textToSpeechPrompt, onlineFileAbsolutePath);
     }
 
     private AIModel.ChatResponse speechToTextFromSuperAI(DBConnectionIFC dbConnection, AIModel.Attachment attachment) {
         SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
         String[] models = superAI.getSpeechToTextModels();
-        return superAI.speechToText(models[0], attachment); 
+        String model = CommonUtil.getConfigValue(dbConnection, "speechToTextModel");
+        return superAI.speechToText(model, attachment); 
     }
 }
