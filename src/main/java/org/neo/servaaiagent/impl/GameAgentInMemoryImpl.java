@@ -18,6 +18,7 @@ import org.neo.servaaiagent.ifc.GameAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class GameAgentInMemoryImpl implements GameAgentIFC {
+    private final static String ENDOFCODE = "*****ENDOFCODE*****";
     private GameAgentInMemoryImpl() {
     }
 
@@ -112,7 +113,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
             }
 
             if(notifyCallback != null) {
-                notifyCallback.notify(informationToReturn);
+                notifyCallback.notify(informationToReturn + ENDOFCODE);
             }
 
             return informationToReturn;
