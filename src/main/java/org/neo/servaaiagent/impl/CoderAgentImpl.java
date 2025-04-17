@@ -14,8 +14,6 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.impl.StorageInDBImpl;
-import org.neo.servaaibase.impl.OpenAIImpl;
-import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;

@@ -7,7 +7,6 @@ import java.io.File;
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.model.AIModel;

@@ -3,7 +3,6 @@ package org.neo.servaaiagent.impl;
 import java.util.List;
 import java.util.Date;
 
-import java.io.InputStream;
 import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
@@ -16,14 +15,12 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
-import org.neo.servaaibase.impl.OpenAIImpl;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
 import org.neo.servaaiagent.ifc.ManagerAgentIFC;
-import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {

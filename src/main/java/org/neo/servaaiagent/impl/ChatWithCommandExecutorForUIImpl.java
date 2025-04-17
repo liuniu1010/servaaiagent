@@ -5,7 +5,6 @@ import java.util.List;
 import org.neo.servaframe.ServiceFactory;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;

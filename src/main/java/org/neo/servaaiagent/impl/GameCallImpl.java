@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.FunctionCallIFC;
-import org.neo.servaaibase.util.CommonUtil;
 
 public class GameCallImpl implements FunctionCallIFC {
     private GameCallImpl() {

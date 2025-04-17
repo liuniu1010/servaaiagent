@@ -2,7 +2,6 @@ package org.neo.servaframe;
 
 import java.util.*;
 import java.io.*;
-import java.sql.SQLException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

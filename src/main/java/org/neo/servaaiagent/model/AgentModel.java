@@ -1,11 +1,8 @@
 package org.neo.servaaiagent.model;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Date;
 
 import org.neo.servaframe.model.VersionEntity;
-import org.neo.servaaibase.NeoAIException;
 
 public class AgentModel {
     public static class UserAccount {

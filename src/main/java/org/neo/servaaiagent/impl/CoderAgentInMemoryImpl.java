@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Date;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
-import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.SuperAIIFC;
@@ -14,8 +11,6 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
-import org.neo.servaaibase.impl.OpenAIImpl;
-import org.neo.servaaibase.impl.GoogleAIImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.CoderAgentIFC;
