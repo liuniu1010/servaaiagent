@@ -72,7 +72,7 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
     }
 
     private String loadAssistantDesc() throws Exception {
-        String fileName = "coderbotassistant.txt";
+        String fileName = "neoaiassistant.txt";
         return IOUtil.resourceFileToString(fileName);
     }
 

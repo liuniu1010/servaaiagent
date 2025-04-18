@@ -96,7 +96,7 @@ public class AdminAgentInMemoryImpl implements AdminAgentIFC {
     }
 
     private String loadAdminDesc() throws Exception {
-        String fileName = "coderbotadmin.txt";
+        String fileName = "neoaiadmin.txt";
         return IOUtil.resourceFileToString(fileName);
     }
 
