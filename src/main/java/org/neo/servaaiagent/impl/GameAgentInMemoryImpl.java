@@ -61,9 +61,18 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         throw new NeoAIException("not support!");
     }
 
+    private void checkWorkingThread(NotifyCallbackIFC notifyCallback) {
+        if(notifyCallback != null) {
+            if(!notifyCallback.isWorkingThread()) {
+                throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOT_WORKING_THREAD);
+            }
+        }
+    }
+
     private String innerGeneratePageCode(String session, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
         String gamebotDesc = loadGameBotDesc();
         StorageIFC storage = StorageInMemoryImpl.getInstance();
+        checkWorkingThread(notifyCallback);
         AIModel.CodeFeedback lastFeedback = storage.peekCodeFeedback(session);
         String lastCodeContent = null;
         if(lastFeedback != null) {
@@ -73,6 +82,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
         AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(session);
         newFeedback.setFeedback(userInput);
         newFeedback.setIndex(AIModel.CodeFeedback.INDEX_FEEDBACK);
+        checkWorkingThread(notifyCallback);
         storage.pushCodeFeedback(session, newFeedback);
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(session, gamebotDesc, userInput, lastCodeContent);
@@ -101,6 +111,7 @@ public class GameAgentInMemoryImpl implements GameAgentIFC {
                     }
 
                     // fill codeFeedback and save in storage
+                    checkWorkingThread(notifyCallback);
                     AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
 
                     // codeFeedback should not be null now in theory

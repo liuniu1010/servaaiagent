@@ -15,7 +15,6 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.SuperAIIFC;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.factory.AIFactory;
-import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
@@ -145,46 +144,17 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
         codeRecord.setCreateTime(new Date());
         codeRecord.setRequirement(requirement);
-        saveCodeRecordInDB(codeRecord);
     }
 
     private void endProjectAndRecord(String session, String declare) {
         AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
         codeRecord.setCreateTime(new Date());
         codeRecord.setContent(declare);
-        saveCodeRecordInDB(codeRecord);
     }
 
     private void exceptionRecord(String session, Exception ex) {
         AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
         codeRecord.setCreateTime(new Date());
         codeRecord.setContent(ex.getMessage());
-        saveCodeRecordInDB(codeRecord);
     }
-
-    private void saveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
-        try {
-            innerSaveCodeRecordInDB(codeRecord);
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
-
-    private void innerSaveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                innerSaveCodeRecordInDB(dbConnection, codeRecord);
-                return null;
-            }
-        });
-    }
-
-    private void innerSaveCodeRecordInDB(DBConnectionIFC dbConnection, AIModel.CodeRecord codeRecord) {
-        StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-        storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
-    }
-
 }
