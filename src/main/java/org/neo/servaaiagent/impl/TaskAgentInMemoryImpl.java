@@ -67,7 +67,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         String information = "Request: " + newInput;
         System.out.println(information);
         if(notifyCallback != null) {
-            notifyCallback.notify(information);
+            notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
@@ -79,7 +79,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         information = "Response: " + chatResponse.getMessage();
         System.out.println(information);
         if(notifyCallback != null) {
-            notifyCallback.notify(information);
+            notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
         String totalRunningResultDesc = "";
         String declare = null;
