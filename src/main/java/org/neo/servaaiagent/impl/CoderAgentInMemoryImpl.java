@@ -53,7 +53,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                         String information = "System: Max iteration deep exceeded, maybe we started from a wrong direction, let's reset and try again from the start point.";
                         System.out.println(information);
                         if(notifyCallback != null) {
-                            notifyCallback.notify(information);
+                            notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
                         }
                     }
                     continue;
@@ -105,7 +105,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         String information = "Request: " + newInput;
         System.out.println(information);
         if(notifyCallback != null) {
-            notifyCallback.notify(information);
+            notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setChatTime(new Date());
@@ -117,7 +117,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         information = "Response: " + chatResponse.getMessage();
         System.out.println(information);
         if(notifyCallback != null) {
-            notifyCallback.notify(information);
+            notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
         String totalRunningResultDesc = "";
         String declare = null;

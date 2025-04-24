@@ -12,7 +12,8 @@ public class SimpleNotifyCallbackImpl implements NotifyCallbackIFC {
 
     private OutputStream  outputStream = null;
     private int workingThreadHashCode = 0;
-    private String history = "";
+    private final static String EMPTY_HISTORY = " ";
+    private String history = EMPTY_HISTORY;
 
     private SimpleNotifyCallbackImpl() {
     }
@@ -34,7 +35,7 @@ public class SimpleNotifyCallbackImpl implements NotifyCallbackIFC {
             throw nex;
         }   
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.warn(ex.getMessage(), ex);
         }
     }
 
@@ -65,13 +66,13 @@ public class SimpleNotifyCallbackImpl implements NotifyCallbackIFC {
             flushInformation(history);
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.warn(ex.getMessage(), ex);
         }
     }
 
     @Override
     public void clearHistory() {
-        history = "";
+        history = EMPTY_HISTORY;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class SimpleNotifyCallbackImpl implements NotifyCallbackIFC {
             outputStream.close();
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.warn(ex.getMessage());
         }       
     }
 

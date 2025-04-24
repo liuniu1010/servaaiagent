@@ -54,7 +54,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             String declare = coderAgent.generateCode(coderSession, coder, notifyCallback, requirement, backgroundDesc, projectFolder);
             System.out.println("Declare = " + declare);
             if(notifyCallback != null) {
-                notifyCallback.notify(declare);
+                notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(declare));
             }
 
             // code generated, download it
@@ -65,8 +65,8 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
 
             String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
 
-            declare += "\n<h3>Please click below link to download the source code</h3>";
-            declare += "\n<a href=\"";
+            declare += "<br><h3>Please click below link to download the source code</h3>";
+            declare += "<a href=\"";
             declare += relevantFilePath; 
             declare += "\" download>Source Code</a>";
 
