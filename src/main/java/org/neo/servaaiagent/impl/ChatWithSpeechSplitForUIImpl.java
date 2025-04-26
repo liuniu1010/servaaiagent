@@ -107,7 +107,7 @@ public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
         String content = "\n<div class=\"hover-container\">";
         content += "\n<span class=\"hidden-text\">" + "<b>" + text + "</b>" + "</span>";
         content += "\n</div>";
-        content += "\n<br><audio controls>";
+        content += "\n<br><audio controls loop>";
         content += "\n<source src=\"" + relevantFilePath + "\" type=\"audio/" + outputFormat + "\">";
         content += "Your browser does not support the audio element";
         content += "\n</audio>";
