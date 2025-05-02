@@ -10,7 +10,6 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaibase.model.AIModel;
 
-import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.ifc.UtilityAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
@@ -146,7 +145,8 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         checkWorkingThread(notifyCallback);
         storage.pushCodeFeedback(session, newFeedback);
 
-        UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
+        // UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
+        UtilityAgentIFC utilityAgent = UtilityAgentRemoteImpl.getInstance();
         AIModel.ChatResponse chatResponse = utilityAgent.generatePageCode(userInput, lastCodeContent);
 
         // fill codeFeedback and save in storage
