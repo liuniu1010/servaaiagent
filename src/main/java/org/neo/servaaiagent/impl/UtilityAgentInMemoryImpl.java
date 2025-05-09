@@ -34,11 +34,6 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         }
     }
 
-    @Override
-    public AIModel.ChatResponse generatePageCodeWithJob(String requirement, String code) {
-        throw new NeoAIException("not supported");
-    }
-
     private AIModel.ChatResponse innerGeneratePageCode(String userInput, String fileContent) throws Exception {
         String gamebotDesc = loadUtilityBotDesc();
 

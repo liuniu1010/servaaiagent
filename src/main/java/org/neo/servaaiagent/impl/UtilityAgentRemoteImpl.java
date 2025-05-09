@@ -30,20 +30,8 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     @Override
     public AIModel.ChatResponse generatePageCode(String userInput, String fileContent) {
         try {
-            return innerGeneratePageCode(userInput, fileContent);
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(ex.getMessage(), ex);
-        }
-    }
-
-    @Override
-    public AIModel.ChatResponse generatePageCodeWithJob(String requirement, String code) {
-        try {
-            return innerGeneratePageCodeWithJob(requirement, code);
+            // return innerGeneratePageCode(userInput, fileContent);
+            return innerGeneratePageCodeWithJob(userInput, fileContent);
         }
         catch(NeoAIException nex) {
             throw nex;
