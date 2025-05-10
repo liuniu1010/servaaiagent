@@ -145,10 +145,8 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         checkWorkingThread(notifyCallback);
         storage.pushCodeFeedback(session, newFeedback);
 
-        // UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
-        // AIModel.ChatResponse chatResponse = utilityAgent.generatePageCode(userInput, lastCodeContent);
-
-        UtilityAgentIFC utilityAgent = UtilityAgentRemoteImpl.getInstance();
+        UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
+        // UtilityAgentIFC utilityAgent = UtilityAgentRemoteImpl.getInstance();
         AIModel.ChatResponse chatResponse = utilityAgent.generatePageCode(userInput, lastCodeContent);
 
         // fill codeFeedback and save in storage

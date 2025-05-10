@@ -48,12 +48,12 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
 
             if(calls != null && calls.size() > 0) {
                 for(AIModel.Call call: calls) {
-                    if(!GameCallImpl.isDefinedFunction(call.getMethodName())) {
+                    if(!UtilityCallImpl.isDefinedFunction(call.getMethodName())) {
                         continue;
                     }
 
                     hasCall = true;
-                    if(call.getMethodName().equals(GameCallImpl.METHODNAME_GENERATEPAGECODE)) {
+                    if(call.getMethodName().equals(UtilityCallImpl.METHODNAME_GENERATEPAGECODE)) {
                         pageCode = (String)promptStruct.getFunctionCall().callFunction(call);
                         return new AIModel.ChatResponse(true, pageCode);
                     }
