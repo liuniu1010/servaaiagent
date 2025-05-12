@@ -63,9 +63,6 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
             else if(resultGameFactoryResponse.getJob_status().equals(ResultGameFactoryResponse.JOB_STATUS_FAILED)) {
                 return new AIModel.ChatResponse(false, resultGameFactoryResponse.getMessage());
             }
-            else if(resultGameFactoryResponse.getJob_status().equals(ResultGameFactoryResponse.JOB_STATUS_CANCELLED)) {
-                return new AIModel.ChatResponse(false, resultGameFactoryResponse.getMessage());
-            }
             continue;
         }
         return new AIModel.ChatResponse(false, "time out");
@@ -213,7 +210,6 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         public final static String JOB_STATUS_INPROGRESS = "inprogress";
         public final static String JOB_STATUS_DONE = "done";
         public final static String JOB_STATUS_FAILED = "failed";
-        public final static String JOB_STATUS_CANCELLED = "cancelled";
 
         private String job_id = "";
         private String job_status = "";   // inprogress/done/failed 
