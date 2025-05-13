@@ -28,10 +28,10 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     }
 
     @Override
-    public AIModel.ChatResponse generatePageCode(String userInput, String fileContent) {
+    public AIModel.ChatResponse generatePageCode(String prompt, String code) {
         try {
-            // return innerGeneratePageCode(userInput, fileContent);
-            return innerGeneratePageCodeWithJob(userInput, fileContent);
+            // return innerGeneratePageCode(prompt, code);
+            return innerGeneratePageCodeWithJob(prompt, code);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -41,26 +41,32 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         }
     }
 
-    private AIModel.ChatResponse innerGeneratePageCode(String userInput, String fileContent) throws Exception {
+    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code) throws Exception {
         String sUrl = getGameFactoryUrl() + "/generate";
-        String jsonInput = generateJsonBodyToRemote(userInput, fileContent);
-        String jsonResult = sendInputToRemote(jsonInput, sUrl);
-        ResultRemote resultRemote = extractResultRemote(jsonResult);
-        return new AIModel.ChatResponse(resultRemote.getIsSuccess(), resultRemote.getMessage());
+        String jsonInput = generateJsonBodyToRemote(prompt, code);
+        String jsonResult = sendInputToRemote("POST", jsonInput, sUrl);
+        ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
+
+        if(resultGameFactoryResponse.getJobStatus().equals(ResultGameFactoryResponse.JOB_STATUS_DONE)) {
+            return new AIModel.ChatResponse(true, resultGameFactoryResponse.getCode());
+        }
+        else {
+            return new AIModel.ChatResponse(false, resultGameFactoryResponse.getMessage());
+        }
     }
 
-    private AIModel.ChatResponse innerGeneratePageCodeWithJob(String requirement, String code) throws Exception {
-        ResultGameFactoryResponse resultGameFactoryResponse = createJob(requirement, code);
-        String jobId = resultGameFactoryResponse.getJob_id();
+    private AIModel.ChatResponse innerGeneratePageCodeWithJob(String prompt, String code) throws Exception {
+        ResultGameFactoryResponse resultGameFactoryResponse = createJob(prompt, code);
+        String jobId = resultGameFactoryResponse.getJobId();
         int waitSeconds = 10;
         int waitTimes = 10;
         for(int i = 0;i < waitTimes;i++) {
             Thread.sleep(1000*waitSeconds);
             resultGameFactoryResponse = checkJob(jobId);
-            if(resultGameFactoryResponse.getJob_status().equals(ResultGameFactoryResponse.JOB_STATUS_DONE)) {
+            if(resultGameFactoryResponse.getJobStatus().equals(ResultGameFactoryResponse.JOB_STATUS_DONE)) {
                 return new AIModel.ChatResponse(true, resultGameFactoryResponse.getCode());
             }
-            else if(resultGameFactoryResponse.getJob_status().equals(ResultGameFactoryResponse.JOB_STATUS_FAILED)) {
+            else if(resultGameFactoryResponse.getJobStatus().equals(ResultGameFactoryResponse.JOB_STATUS_FAILED)) {
                 return new AIModel.ChatResponse(false, resultGameFactoryResponse.getMessage());
             }
             continue;
@@ -68,52 +74,42 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         return new AIModel.ChatResponse(false, "time out");
     }
 
-    private ResultGameFactoryResponse createJob(String requirement, String code) throws Exception {
-        String sUrl = getGameFactoryUrl() + "/createjob";
-        String jsonInput = generateJsonBodyOfCreateJob(requirement, code);
-        String jsonResult = sendInputToRemote(jsonInput, sUrl);
+    private ResultGameFactoryResponse createJob(String prompt, String code) throws Exception {
+        String sUrl = getGameFactoryUrl() + "/jobs";
+        String jsonInput = generateJsonBodyOfCreateJob(prompt, code);
+        String jsonResult = sendInputToRemote("POST",jsonInput, sUrl);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
         return resultGameFactoryResponse;
     }
 
     private ResultGameFactoryResponse checkJob(String jobId) throws Exception {
-        String sUrl = getGameFactoryUrl() + "/checkjob";
-        String jsonInput = generateJsonBodyOfCheckJob(jobId);
-        String jsonResult = sendInputToRemote(jsonInput, sUrl);
+        String sUrl = getGameFactoryUrl() + "/jobs/" + jobId;
+        String jsonResult = sendInputToRemote("GET", "", sUrl);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
         return resultGameFactoryResponse;
     }
 
-    private String generateJsonBodyToRemote(String userInput, String fileContent) {
+    private String generateJsonBodyToRemote(String prompt, String code) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
         
-        jsonBody.addProperty("userInput", userInput);
-        jsonBody.addProperty("fileContent", fileContent);
-        
-        return gson.toJson(jsonBody);
-    }
-
-    private String generateJsonBodyOfCreateJob(String requirement, String code) {
-        Gson gson = new Gson();
-        JsonObject jsonBody = new JsonObject();
-        
-        jsonBody.addProperty("requirement", requirement);
+        jsonBody.addProperty("prompt", prompt);
         jsonBody.addProperty("code", code);
         
         return gson.toJson(jsonBody);
     }
 
-    private String generateJsonBodyOfCheckJob(String jobId) {
+    private String generateJsonBodyOfCreateJob(String prompt, String code) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
         
-        jsonBody.addProperty("job_id", jobId);
+        jsonBody.addProperty("prompt", prompt);
+        jsonBody.addProperty("code", code);
         
         return gson.toJson(jsonBody);
     }
 
-    private String sendInputToRemote(String jsonInput, String sUrl) throws Exception {
+    private String sendInputToRemote(String method, String jsonInput, String sUrl) throws Exception {
         jsonInput = CommonUtil.alignJson(jsonInput);
         logger.debug("call remote api, jsonInput = " + jsonInput);
         logger.debug("sUrl = " + sUrl);
@@ -121,7 +117,7 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         try {
             URL url = new URL(sUrl);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
+            connection.setRequestMethod(method);
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
 
@@ -183,27 +179,9 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         return CommonUtil.getConfigValue("gameFactoryUrl");
     }
 
-    private ResultRemote extractResultRemote(String jsonResultRemote) {
-        Gson gson = new Gson();
-        return gson.fromJson(jsonResultRemote, ResultRemote.class);
-    }
-
     private ResultGameFactoryResponse extractResultGameFactoryResponse(String jsonResultGameFactoryResponse) {
         Gson gson = new Gson();
         return gson.fromJson(jsonResultGameFactoryResponse, ResultGameFactoryResponse.class);
-    }
-
-    static class ResultRemote {
-        private boolean isSuccess;
-        private String message;
-        
-        public boolean getIsSuccess() {
-            return isSuccess;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
     }
 
     static class ResultGameFactoryResponse {
@@ -211,25 +189,25 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         public final static String JOB_STATUS_DONE = "done";
         public final static String JOB_STATUS_FAILED = "failed";
 
-        private String job_id = "";
-        private String job_status = "";   // inprogress/done/failed 
+        private String jobId = "";
+        private String jobStatus = "";   // inprogress/done/failed 
         private String code = "";
         private String message = "";
 
-        public String getJob_id() {
-            return job_id;
+        public String getJobId() {
+            return jobId;
         }
 
-        public void setJob_id(String input_job_id) {
-            job_id = input_job_id == null?"":input_job_id;
+        public void setJobId(String inputJobId) {
+            jobId = inputJobId == null?"":inputJobId;
         }
 
-        public String getJob_status() {
-            return job_status;
+        public String getJobStatus() {
+            return jobStatus;
         }
 
-        public void setJob_status(String input_job_status) {
-            job_status = input_job_status == null?"":input_job_status;
+        public void setJobStatus(String inputJobStatus) {
+            jobStatus = inputJobStatus == null?"":inputJobStatus;
         }
 
         public String getCode() {

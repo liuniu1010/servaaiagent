@@ -22,9 +22,9 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
     }
 
     @Override
-    public AIModel.ChatResponse generatePageCode(String userInput, String fileContent) {
+    public AIModel.ChatResponse generatePageCode(String prompt, String code) {
         try {
-            return innerGeneratePageCode(userInput, fileContent);
+            return innerGeneratePageCode(prompt, code);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -34,10 +34,10 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         }
     }
 
-    private AIModel.ChatResponse innerGeneratePageCode(String userInput, String fileContent) throws Exception {
+    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code) throws Exception {
         String gamebotDesc = loadUtilityBotDesc();
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(gamebotDesc, userInput, fileContent);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(gamebotDesc, prompt, code);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -76,10 +76,10 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         return IOUtil.resourceFileToString(fileName);
     }
 
-    private AIModel.PromptStruct constructPromptStruct(String utilitybotDesc, String userInput, String codeContent) throws Exception {
+    private AIModel.PromptStruct constructPromptStruct(String utilitybotDesc, String prompt, String code) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
-        if(codeContent == null || codeContent.trim().equals("")) {
-            String adjustInput = userInput;
+        if(code == null || code.trim().equals("")) {
+            String adjustInput = prompt;
             adjustInput += "\n\nPlease always use function call generatePageCode to generate the page code";
             adjustInput += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
             promptStruct.setUserInput(adjustInput);
@@ -88,9 +88,9 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         }
         else {
             String adjustInput = "the code\n```\n";
-            adjustInput += codeContent;
+            adjustInput += code;
             adjustInput += "\n```\ngot below feedback:\n```\n";
-            adjustInput += userInput;
+            adjustInput += prompt;
             adjustInput += "\n```\nPlease analyse the code and update the code according to the above feedback.";
             adjustInput += "\n\nPlease always use function call generatePageCode to regenerate the page code";
             adjustInput += ", or use function call failCodeGeneration to declare the reason that it is impossible to implement.";
