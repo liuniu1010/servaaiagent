@@ -44,7 +44,7 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code) throws Exception {
         String sUrl = getGameFactoryUrl() + "/generate";
         String jsonInput = generateJsonBodyToRemote(prompt, code);
-        String jsonResult = sendInputToRemote("POST", jsonInput, sUrl);
+        String jsonResult = sendInputToRemoteWithPost(sUrl, jsonInput);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
 
         if(resultGameFactoryResponse.getJobStatus().equals(ResultGameFactoryResponse.JOB_STATUS_DONE)) {
@@ -77,14 +77,14 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     private ResultGameFactoryResponse createJob(String prompt, String code) throws Exception {
         String sUrl = getGameFactoryUrl() + "/jobs";
         String jsonInput = generateJsonBodyOfCreateJob(prompt, code);
-        String jsonResult = sendInputToRemote("POST",jsonInput, sUrl);
+        String jsonResult = sendInputToRemoteWithPost(sUrl, jsonInput);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
         return resultGameFactoryResponse;
     }
 
     private ResultGameFactoryResponse checkJob(String jobId) throws Exception {
         String sUrl = getGameFactoryUrl() + "/jobs/" + jobId;
-        String jsonResult = sendInputToRemote("GET", "", sUrl);
+        String jsonResult = sendInputToRemoteWithGet(sUrl);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
         return resultGameFactoryResponse;
     }
@@ -109,70 +109,73 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         return gson.toJson(jsonBody);
     }
 
-    private String sendInputToRemote(String method, String jsonInput, String sUrl) throws Exception {
+    /**
+     * Issue a POST request with a JSON body and return the server-supplied body as a String.
+     */
+    private String sendInputToRemoteWithPost(String sUrl, String jsonInput) throws Exception {
         jsonInput = CommonUtil.alignJson(jsonInput);
-        logger.debug("call remote api, jsonInput = " + jsonInput);
-        logger.debug("sUrl = " + sUrl);
-        HttpURLConnection connection = null;
+        logger.info("call remote api");
+        logger.info("POST " + sUrl);
+        logger.info("body = " + jsonInput);
+
+        HttpURLConnection conn = null;
         try {
             URL url = new URL(sUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod(method);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
+            conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
 
-            try (OutputStream os = connection.getOutputStream()){
+            try (OutputStream os = conn.getOutputStream()) {
                 IOUtil.stringToOutputStream(jsonInput, os);
             }
 
-            try (InputStream in = connection.getInputStream()){
-                String response = IOUtil.inputStreamToString(in);
-                response = CommonUtil.alignJson(response);
-                logger.debug("return from remote api, response = " + response);
-                return response;
-            }
-        }
-        catch(java.net.ConnectException cex) {
-            try (InputStream errIn = connection.getErrorStream()) {
-                if(errIn == null) {
-                    logger.error("get ConnectException from remote api, ", cex);
-                }
-                else {
-                    String errorResponse = IOUtil.inputStreamToString(errIn);
-                    logger.error("get ConnectException from remote api, response = " + errorResponse, cex);
-                }
-            }
-            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHSANDBOX, "The associated remote interface is not ready", cex);
-        }
-        catch(IOException iex) {
-            try (InputStream errIn = connection.getErrorStream()) {
-                if(errIn == null) {
-                    logger.error("get IOException from remote api, ", iex);
-                }
-                else {
-                    String errorResponse = IOUtil.inputStreamToString(errIn);
-                    logger.error("get IOException from remote api, response = " + errorResponse, iex);
-                }
-            }
-            throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_IOEXCEPTIONWITHSANDBOX, "The associated remote interface is not ready", iex);
-        }
-        catch(Exception ex) {
-            try (InputStream errIn = connection.getErrorStream()) {
-                if(errIn == null) {
-                    logger.error("get Exception from remote api, ", ex);
-                }
-                else {
-                    String errorResponse = IOUtil.inputStreamToString(errIn);
-                    logger.error("get Exception from remote api, response = " + errorResponse, ex);
-                }
-            }
-            throw new NeoAIException(ex);
-        }
+            return readResponse(conn);
+        } 
         finally {
-            if(connection != null) {
-                connection.disconnect();
+            if (conn != null) {
+                conn.disconnect();
             }
         }
+    }
+
+    /**
+     * Issue a GET request with no body and return the server-supplied body as a String.
+     */
+    private String sendInputToRemoteWithGet(String sUrl) throws Exception {
+        logger.info("call remote api");
+        logger.info("GET " + sUrl);
+
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(sUrl);
+            conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            return readResponse(conn);
+        } 
+        finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+
+    /**
+     * Reads either the normal stream (2xx) or the error stream (4xx/5xx) from the connection.
+     */
+    private String readResponse(HttpURLConnection conn) throws IOException {
+        int status = conn.getResponseCode();
+        InputStream in = (status >= 400)?conn.getErrorStream():conn.getInputStream();
+
+        String body = CommonUtil.alignJson(IOUtil.inputStreamToString(in));
+        logger.info("return from remote api");
+        logger.info("HTTP " + status);
+        logger.info("response = " + body);
+        return body;
     }
 
     private String getGameFactoryUrl() {
