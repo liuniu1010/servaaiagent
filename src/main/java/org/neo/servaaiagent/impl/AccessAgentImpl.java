@@ -406,6 +406,6 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
 
     private boolean innerVerifySecret(DBConnectionIFC dbConnection, String secretName, String secretValue) {
         String secretValueInDB = CommonUtil.getConfigValue(dbConnection, secretName);
-        return secretValue.equals(secretValueInDB); 
+        return secretValueInDB.equals(secretValue); 
     }
 }

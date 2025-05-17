@@ -19,6 +19,7 @@ import org.neo.servaaiagent.ifc.UtilityAgentIFC;
 
 public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(UtilityAgentRemoteImpl.class);
+    final static String RAPIDAPI_SECRET = "X-RapidAPI-Proxy-Secret";
 
     private UtilityAgentRemoteImpl() {
     }
@@ -30,8 +31,8 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     @Override
     public AIModel.ChatResponse generatePageCode(String prompt, String code) {
         try {
-            // return innerGeneratePageCode(prompt, code);
-            return innerGeneratePageCodeWithJob(prompt, code);
+            return innerGeneratePageCode(prompt, code);
+            // return innerGeneratePageCodeWithJob(prompt, code);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -125,6 +126,7 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty(RAPIDAPI_SECRET, CommonUtil.getConfigValue(RAPIDAPI_SECRET));
             conn.setDoOutput(true);
 
             try (OutputStream os = conn.getOutputStream()) {
@@ -153,6 +155,7 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
             conn = (HttpURLConnection)url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty(RAPIDAPI_SECRET, CommonUtil.getConfigValue(RAPIDAPI_SECRET));
 
             return readResponse(conn);
         } 
