@@ -175,6 +175,10 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         logger.info("return from remote api");
         logger.info("HTTP " + status);
         logger.info("response = " + body);
+
+        if(status >= 400) {
+            throw new NeoAIException(body);
+        }
         return body;
     }
 

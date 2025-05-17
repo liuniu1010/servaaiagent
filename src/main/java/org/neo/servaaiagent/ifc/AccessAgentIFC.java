@@ -21,6 +21,9 @@ public interface AccessAgentIFC {
     public boolean verifyRegion(String IP);
     public boolean verifyRegion(DBConnectionIFC dbConnection, String IP);
 
+    public boolean verifySecret(String secretName, String secretValue);
+    public boolean verifySecret(DBConnectionIFC dbConnection, String secretName, String secretValue);
+
     public void ensureAdminByUsername(String username);
     public void ensureAdminByUsername(DBConnectionIFC dbConnection, String username);
 

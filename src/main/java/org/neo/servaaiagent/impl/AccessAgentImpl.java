@@ -174,6 +174,30 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
     }
 
     @Override
+    public boolean verifySecret(String secretName, String secretValue) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (boolean)dbService.executeQueryTask(new AccessAgentImpl() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                return verifySecret(dbConnection, secretName, secretValue);
+            }
+        });
+    }
+
+    @Override
+    public boolean verifySecret(DBConnectionIFC dbConnection, String secretName, String secretValue) {
+        try {
+            return innerVerifySecret(dbConnection, secretName, secretValue);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public void ensureAdminByUsername(String username) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new AccessAgentImpl() {
@@ -371,20 +395,17 @@ public class AccessAgentImpl implements AccessAgentIFC, DBQueryTaskIFC {
             List<String> whiteList = ConfigUtil.getTextFileInLines(whiteListRegionsIsoCode);
             boolean isInWhileList = whiteList.contains(regionIsoCode);
             if(isInWhileList) {
-                return true;
+                return false;
             }
             else {
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_REGION_NOTIN_WHITELIST);
             }
-/*
-            String blackListIP = "BlackListRegionsIsoCode.txt";
-            List<String> blackList = ConfigUtil.getTextFileInLines(blackListRegion);
-            boolean isInBlackList = blackList.contains(regionIsoCode);
-            if(isInBlackList) {
-                throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_REGION_IN_BLACKLIST);
-            }
-*/
         }
         return false;
+    }
+
+    private boolean innerVerifySecret(DBConnectionIFC dbConnection, String secretName, String secretValue) {
+        String secretValueInDB = CommonUtil.getConfigValue(dbConnection, secretName);
+        return secretValue.equals(secretValueInDB); 
     }
 }
