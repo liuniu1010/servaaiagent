@@ -702,6 +702,9 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     }
 
     private void innerConsumeCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String consumeFunction) throws Exception {
+        if(credits <= 0) {
+            return;
+        }
         Date consumeTime = new Date();
         AgentModel.ConsumedCredits consumedCredits = new AgentModel.ConsumedCredits(accountId);
         consumedCredits.setCredits(credits);
