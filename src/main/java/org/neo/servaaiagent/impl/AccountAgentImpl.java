@@ -258,6 +258,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         }
     }
 
+    @Override
     public void topupWithPayment(String username, int credits, String chasedSource) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
@@ -269,9 +270,35 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         });
     }
 
+    @Override
     public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource) {
         try {
             innerTopupWithPayment(dbConnection, username, credits, chasedSource);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void removeAccount(String username) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                removeAccount(dbConnection, username);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void removeAccount(DBConnectionIFC dbConnection, String username) {
+        try {
+            innerRemoveAccount(dbConnection, username);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -747,6 +774,59 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
         // topup with the payment amount
         innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource);
+    }
+
+    private void removeLoginSessionsByAccountId(DBConnectionIFC dbConnection, String accountId) throws Exception {
+        String sql = "delete from loginsession";
+        sql += " where accountid = ?";
+        
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
+    }
+
+    private void removeChasedCreditsByAccountId(DBConnectionIFC dbConnection, String accountId) throws Exception {
+        String sql = "delete from chasedcredits";
+        sql += " where accountid = ?";
+        
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
+    }
+
+    private void removeConsumedCreditsByAccountId(DBConnectionIFC dbConnection, String accountId) throws Exception {
+        String sql = "delete from consumedcredits";
+        sql += " where accountid = ?";
+        
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
+    }
+
+    private void innerRemoveAccount(DBConnectionIFC dbConnection, String username) throws Exception {
+        String accountId = getAccountIdFromUsername(dbConnection, username);
+        if(accountId == null) {
+            throw new NeoAIException("no such account: " + username);
+        } 
+
+        removeLoginSessionsByAccountId(dbConnection, accountId);
+        removeChasedCreditsByAccountId(dbConnection, accountId);
+        removeConsumedCreditsByAccountId(dbConnection, accountId);
+
+        String sql = "delete from useraccount";
+        sql += " where id = ?";
+        
+        List<Object> params = new ArrayList<Object>();
+        params.add(accountId);
+
+        SQLStruct sqlStruct = new SQLStruct(sql, params);
+        dbConnection.execute(sqlStruct); 
     }
 
     private void innerConsumeCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits, String consumeFunction) throws Exception {

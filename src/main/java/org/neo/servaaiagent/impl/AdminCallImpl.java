@@ -38,6 +38,7 @@ public class AdminCallImpl implements FunctionCallIFC {
         AIModel.Function getConfigVariables = generateFunctionForGetConfigVariables();
         AIModel.Function getConfigVariableValue = generateFunctionForGetConfigVariableValue();
         AIModel.Function setConfigVariableValue = generateFunctionForSetConfigVariableValue();
+        AIModel.Function removeAccount = generateFunctionForRemoveAccount();
 
         List<AIModel.Function> functions = new ArrayList<AIModel.Function>();
         functions.add(getRegisterNumber);
@@ -47,6 +48,7 @@ public class AdminCallImpl implements FunctionCallIFC {
         functions.add(getConfigVariables);
         functions.add(getConfigVariableValue);
         functions.add(setConfigVariableValue);
+        functions.add(removeAccount);
         return functions;
     }
 
@@ -78,6 +80,10 @@ public class AdminCallImpl implements FunctionCallIFC {
 
         if(call.getMethodName().equals(METHODNAME_SETCONFIGVARIABLEVALUE)) {
             return call_setConfigVariableValue(call);
+        }
+
+        if(call.getMethodName().equals(METHODNAME_REMOVEACCOUNT)) {
+            return call_removeAccount(call);
         }
 
         return null;
@@ -182,6 +188,22 @@ public class AdminCallImpl implements FunctionCallIFC {
         function.setMethodName(METHODNAME_SETCONFIGVARIABLEVALUE);
         function.setParams(params);
         function.setDescription("set the value to the preferred config name");
+
+        return function;
+    }
+
+    private static AIModel.Function generateFunctionForRemoveAccount() {
+        AIModel.FunctionParam param1 = new AIModel.FunctionParam();
+        param1.setName(REMOVEACCOUNT_PARAM_USERNAME);
+        param1.setDescription("the username of the account, always an email address");
+
+        List<AIModel.FunctionParam> params = new ArrayList<AIModel.FunctionParam>();
+        params.add(param1);
+
+        AIModel.Function function = new AIModel.Function();
+        function.setMethodName(METHODNAME_REMOVEACCOUNT);
+        function.setParams(params);
+        function.setDescription("remove the account with preferred username");
 
         return function;
     }
@@ -370,6 +392,39 @@ public class AdminCallImpl implements FunctionCallIFC {
         return getConfigVariableValue(configName);
     }
 
+    private static String METHODNAME_REMOVEACCOUNT = "removeAccount";
+    private static String REMOVEACCOUNT_PARAM_USERNAME = "username";
+    private String removeAccount(String username) {
+        try {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            return (String)dbService.executeSaveTask(new DBSaveTaskIFC() {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    try {
+                        return removeAccount(dbConnection, username);
+                    }
+                    catch(RuntimeException rex) {
+                        throw rex;
+                    }
+                    catch(Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                }
+            });
+        }
+        catch(Exception ex) {
+            return "meet exception in removing account " + username + ", the exception message is: " + ex.getMessage();
+        }
+    }
+
+    private String removeAccount(DBConnectionIFC dbConnection, String username) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.removeAccount(dbConnection, username);
+
+        String result = "remove account " + username + " success";
+        return result;
+    }
+
     private static String METHODNAME_SETCONFIGVARIABLEVALUE = "setConfigVariableValue";
     private static String SETCONFIGVARIABLEVALUE_PARAM_CONFIGNAME = "configName";
     private static String SETCONFIGVARIABLEVALUE_PARAM_CONFIGVALUE = "configValue";
@@ -432,5 +487,17 @@ public class AdminCallImpl implements FunctionCallIFC {
         }
 
         return setConfigVariableValue(configName, configValue);
+    }
+
+    private String call_removeAccount(AIModel.Call call) {
+        List<AIModel.CallParam> params = call.getParams();
+        String username = "";
+        for(AIModel.CallParam param: params) {
+            if(param.getName().equals(REMOVEACCOUNT_PARAM_USERNAME)) {
+                username = param.getValue();
+            }
+        }
+
+        return removeAccount(username);
     }
 }
