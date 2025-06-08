@@ -23,11 +23,14 @@ public interface AccountAgentIFC {
     public String getUserNameWithSession(String loginSession);
     public String getUserNameWithSession(DBConnectionIFC dbConnection, String loginSession);
 
-    public void purchaseCreditsWithSession(String loginSession, int credits);
-    public void purchaseCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits);
+    public void purchaseCreditsWithSession(String loginSession, int credits, String chasedSource);
+    public void purchaseCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits, String chasedSource);
 
-    public void purchaseCreditsWithAccount(String accountId, int credits);
-    public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits);
+    public void purchaseCreditsWithAccount(String accountId, int credits, String chasedSource);
+    public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String chasedSource);
+
+    public void topupWithPayment(String username, int credits, String chasedSource);
+    public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource);
 
     public void consumeCreditsWithSession(String loginSession, int credits, String consumeFunction);
     public void consumeCreditsWithSession(DBConnectionIFC dbConnetion, String loginSession, int credits, String consumeFunction);
