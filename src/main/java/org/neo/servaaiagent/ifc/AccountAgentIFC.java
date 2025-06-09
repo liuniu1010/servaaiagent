@@ -29,8 +29,8 @@ public interface AccountAgentIFC {
     public void purchaseCreditsWithAccount(String accountId, int credits, String chasedSource);
     public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String chasedSource);
 
-    public void topupWithPayment(String username, int credits, String chasedSource);
-    public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource);
+    public void topupWithPayment(String username, int credits, String chasedSource, String transactionId);
+    public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource, String transactionId);
 
     public void removeAccount(String username);
     public void removeAccount(DBConnectionIFC dbConnection, String username);

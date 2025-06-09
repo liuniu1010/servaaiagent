@@ -148,6 +148,7 @@ public class AgentModel {
         public static final String CREDITS = "credits";
         public static final String EXPIRETIME = "expiretime";
         public static final String CHASEDSOURCE = "chasedsource";
+        public static final String TRANSACTIONID = "transactionid";
 
         public ChasedCredits(VersionEntity inputVersionEntity) {
             versionEntity = inputVersionEntity;
@@ -200,6 +201,14 @@ public class AgentModel {
 
         public void setChasedSource(String chasedSource) {
             versionEntity.setAttribute(CHASEDSOURCE, chasedSource);
+        }
+
+        public String getTransactionId() {
+            return (String)versionEntity.getAttribute(TRANSACTIONID);
+        }
+
+        public void setTransactionId(String transactionId) {
+            versionEntity.setAttribute(TRANSACTIONID, transactionId);
         }
     }
 

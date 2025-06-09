@@ -248,7 +248,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     @Override
     public void purchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String chasedSource) {
         try {
-            innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource);
+            innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource, null);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -259,21 +259,21 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     }
 
     @Override
-    public void topupWithPayment(String username, int credits, String chasedSource) {
+    public void topupWithPayment(String username, int credits, String chasedSource, String transactionId) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                topupWithPayment(dbConnection, username, credits, chasedSource);
+                topupWithPayment(dbConnection, username, credits, chasedSource, transactionId);
                 return null;
             }
         });
     }
 
     @Override
-    public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource) {
+    public void topupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource, String transactionId) {
         try {
-            innerTopupWithPayment(dbConnection, username, credits, chasedSource);
+            innerTopupWithPayment(dbConnection, username, credits, chasedSource, transactionId);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -594,7 +594,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
             // for new register user, auto topup some initial credits for trying
             int topupCredits = CommonUtil.getConfigValueAsInt(dbConnection, "topupOnRegister");
-            innerPurchaseCreditsWithAccount(dbConnection, userAccount.getId(), topupCredits, CHASED_SOURCE_ONTOPUP);
+            innerPurchaseCreditsWithAccount(dbConnection, userAccount.getId(), topupCredits, CHASED_SOURCE_ONTOPUP, null);
         }
         else {
             VersionEntity versionEntity = dbConnection.loadVersionEntityById(AgentModel.UserAccount.ENTITYNAME, accountId);
@@ -738,21 +738,38 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
     private void innerPurchaseCreditsWithSession(DBConnectionIFC dbConnection, String loginSession, int credits, String chasedSource) throws Exception {
         String accountId = getAccountId(dbConnection, loginSession);
-        innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource);
+        innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource, null);
     }
 
-    private void innerPurchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String chasedSource) throws Exception {
+    private void innerPurchaseCreditsWithAccount(DBConnectionIFC dbConnection, String accountId, int credits, String chasedSource, String transactionId) throws Exception {
+        if(transactionId != null 
+            && !transactionId.trim().equals("")) {
+            // ensure idempotency
+            String sql = "select id";
+            sql += " from chasedcredits";
+            sql += " where transactionid = ?";
+
+            List<Object> params = new ArrayList<Object>();
+            params.add(transactionId);
+
+            SQLStruct sqlStruct = new SQLStruct(sql, params);
+            Object id = dbConnection.queryScalar(sqlStruct);
+            if(id != null) {
+                throw new NeoAIException("This payment has been recorded already!");
+            }
+        }
         int expireMonths = CommonUtil.getConfigValueAsInt(dbConnection, "creditsExpireMonths");
         Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, expireMonths);
         AgentModel.ChasedCredits chasedCredits = new AgentModel.ChasedCredits(accountId);
         chasedCredits.setCredits(credits);
         chasedCredits.setExpireTime(expireTime);
         chasedCredits.setChasedSource(chasedSource);
+        chasedCredits.setTransactionId(transactionId);
 
         dbConnection.insert(chasedCredits.getVersionEntity());
     }
 
-    private void innerTopupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource) throws Exception {
+    private void innerTopupWithPayment(DBConnectionIFC dbConnection, String username, int credits, String chasedSource, String transactionId) throws Exception {
         String accountId = getAccountIdFromUsername(dbConnection, username);
 
         if(accountId == null) {
@@ -769,11 +786,11 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
 
             int topupCredits = CommonUtil.getConfigValueAsInt(dbConnection, "topupOnRegister");
             accountId = userAccount.getId();
-            innerPurchaseCreditsWithAccount(dbConnection, accountId, topupCredits, CHASED_SOURCE_ONTOPUP);
+            innerPurchaseCreditsWithAccount(dbConnection, accountId, topupCredits, CHASED_SOURCE_ONTOPUP, null);
         }
 
         // topup with the payment amount
-        innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource);
+        innerPurchaseCreditsWithAccount(dbConnection, accountId, credits, chasedSource, transactionId);
     }
 
     private void removeLoginSessionsByAccountId(DBConnectionIFC dbConnection, String accountId) throws Exception {
