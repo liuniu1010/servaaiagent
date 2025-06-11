@@ -755,7 +755,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
             SQLStruct sqlStruct = new SQLStruct(sql, params);
             Object id = dbConnection.queryScalar(sqlStruct);
             if(id != null) {
-                throw new NeoAIException("This payment has been recorded already!");
+                return;
             }
         }
         int expireMonths = CommonUtil.getConfigValueAsInt(dbConnection, "creditsExpireMonths");
