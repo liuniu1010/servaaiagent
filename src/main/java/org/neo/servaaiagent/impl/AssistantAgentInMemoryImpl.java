@@ -2,6 +2,7 @@ package org.neo.servaaiagent.impl;
 
 import java.util.List;
 import java.util.Date;
+import java.util.Map;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.util.IOUtil;
@@ -73,7 +74,19 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
 
     private String loadAssistantDesc() throws Exception {
         String fileName = "neoaiassistant.txt";
-        return IOUtil.resourceFileToString(fileName);
+        String fileContent = IOUtil.resourceFileToString(fileName);
+
+        String[] consumedConfigNames = new String[]{"consumedCreditsOnCoderBot"
+                                                   ,"consumedCreditsOnSpeechSplit"
+                                                   ,"consumedCreditsOnUtilityBot"
+                                                   ,"consumedCreditsOnChatWithAssistant"
+                                                   ,"consumedCreditsOnSpeechToText"};
+        Map<String, String> consumedConfigMap = CommonUtil.getConfigValues(consumedConfigNames);
+        for(String consumedConfigName: consumedConfigNames) {
+            fileContent = fileContent.replace("<" + consumedConfigName + ">", consumedConfigMap.get(consumedConfigName));
+        }
+
+        return fileContent;
     }
 
     private AIModel.PromptStruct constructPromptStructForAssistant(String session, String assistantDesc, String userInput) throws Exception {
