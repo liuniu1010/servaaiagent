@@ -56,10 +56,34 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
+            List<AIModel.Call> calls = chatResponse.getCalls();
+            boolean hasCall = false;
+            String totalFunctionCallResultDesc = "";
+            String summarizeResult = "";
+            if(calls != null && calls.size() > 0) {
+                for(AIModel.Call call: calls) {
+                    if(!AssistantCallImpl.isDefinedFunction(call.getMethodName())) {
+                        continue;
+                    }
+    
+                    hasCall = true;
+                    String functionCallResultDesc = (String)promptStruct.getFunctionCall().callFunction(call);
+                    totalFunctionCallResultDesc += "\n" + functionCallResultDesc;
+                }
+            }
+
+            if(hasCall) {
+                // summarize call results
+                summarizeResult = summarizeCallResults(session, userInput, totalFunctionCallResultDesc);
+            }
+            else {
+                summarizeResult = chatResponse.getMessage();
+            }
+
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
             newResponseRecord.setChatTime(new Date());
             newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(chatResponse.getMessage());
+            newResponseRecord.setContent(summarizeResult);
 
             StorageIFC storage = StorageInMemoryImpl.getInstance();
             storage.addChatRecord(session, newRequestRecord);
@@ -89,6 +113,30 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
         return fileContent;
     }
 
+    private String summarizeCallResults(String session, String userInput, String totalFunctionCallResultDesc) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForSummarize(session, userInput, totalFunctionCallResultDesc);
+        AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
+        if(chatResponse.getIsSuccess()) {
+            return chatResponse.getMessage();
+        }
+        else {
+            logger.error("error occurred in summarize, return original text");
+            return totalFunctionCallResultDesc;
+        }
+    }
+
+    private AIModel.PromptStruct constructPromptStructForSummarize(String session, String userInput, String totalFunctionCallResultDesc) throws Exception {
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        StorageIFC storage = StorageInMemoryImpl.getInstance();
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        promptStruct.setChatRecords(chatRecords);
+
+        promptStruct.setUserInput(userInput);
+        promptStruct.setSystemHint("Please answer user's question according to below Information:\n" + totalFunctionCallResultDesc);
+
+        return promptStruct;
+    }
+
     private AIModel.PromptStruct constructPromptStructForAssistant(String session, String assistantDesc, String userInput) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInMemoryImpl.getInstance();
@@ -97,6 +145,7 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
 
         promptStruct.setUserInput(userInput);
         promptStruct.setSystemHint(assistantDesc);
+        promptStruct.setFunctionCall(AssistantCallImpl.getInstance());
 
         return promptStruct;
     }

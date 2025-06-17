@@ -1,10 +1,69 @@
 package org.neo.servaaiagent.model;
 
 import java.util.Date;
+import java.util.List;
 
 import org.neo.servaframe.model.VersionEntity;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class AgentModel {
+    public static class UIParams {
+        private String session;
+        private String loginSession;
+        private String userInput;
+        private List<String> attachFiles;
+        private NotifyCallbackIFC notifyCallback;
+        private String sayHello;
+
+        public String getSession() {
+            return session;
+        }
+
+        public void setSession(String inputSession) {
+            session = inputSession;
+        }
+
+        public String getLoginSession() {
+            return loginSession;
+        }
+
+        public void setLoginSession(String inputLoginSession) {
+            loginSession = inputLoginSession;
+        }
+
+        public String getUserInput() {
+            return userInput;
+        }
+
+        public void setUserInput(String inputUserInput) {
+            userInput = inputUserInput;
+        }
+
+        public List<String> getAttachFiles() {
+            return attachFiles;
+        }
+
+        public void setAttachFiles(List<String> inputAttachFiles) {
+            attachFiles = inputAttachFiles;
+        }
+
+        public NotifyCallbackIFC getNotifyCallback() {
+            return notifyCallback;
+        }
+
+        public void setNotifyCallback(NotifyCallbackIFC inputNotifyCallback) {
+            notifyCallback = inputNotifyCallback;
+        }
+
+        public String getSayHello() {
+            return sayHello;
+        }
+
+        public void setSayHello(String inputSayHello) {
+            sayHello = inputSayHello;
+        }
+    }
+
     public static class UserAccount {
         public static final String ENTITYNAME = "useraccount";
         private VersionEntity versionEntity = null;

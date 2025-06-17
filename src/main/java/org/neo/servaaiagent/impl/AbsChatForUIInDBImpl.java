@@ -19,6 +19,7 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
+import org.neo.servaaiagent.model.AgentModel;
 
 abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC, DBAutoCommitSaveTaskIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
@@ -39,38 +40,23 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     @Override
-    public String sendAudio(String session, String userInput, List<String> attachFiles) {
+    public String sendAudio(AgentModel.UIParams params) {
         throw new NeoAIException("not support! Please implement this method in extended class");
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-        throw new NeoAIException("not support! Please implement this method in extended class");
-    }
-
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         throw new NeoAIException("not support! Please implement this method in extended class");
     }
 
     @Override
-    public String initNewChat(String session) {
+    public String initNewChat(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    String defaultSayHello = "Hello, How can I help you?";
-                    return innerInitNewChat(dbConnection, session, defaultSayHello);
-                }
-
-                @Override
-                public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-                    return null;
-                }
-
-                @Override
-                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-                    return null;
+                    return innerInitNewChat(dbConnection, params);
                 }
             });
         }
@@ -82,36 +68,13 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    @Override
-    public String initNewChat(String session, String sayHello) {
-        try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new AbsChatForUIInDBImpl() {
-                @Override
-                public Object save(DBConnectionIFC dbConnection) {
-                    return innerInitNewChat(dbConnection, session, sayHello);
-                }
-
-                @Override
-                public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-                    return null;
-                }
-
-                @Override
-                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-                    return null;
-                }
-            });
+    private String innerInitNewChat(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
+        String session = params.getSession();
+        String sayHello = params.getSayHello();
+        if(sayHello == null || sayHello.trim().equals("")) {
+            sayHello = "Hello, How can I help you?";
         }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(ex.getMessage(), ex);
-        }
-    }
 
-    private String innerInitNewChat(DBConnectionIFC dbConnection, String session, String sayHello) {
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         storage.clearChatRecords(session);
 
@@ -125,23 +88,13 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     @Override
-    public String refresh(String session) {
+    public String refresh(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeQueryTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object query(DBConnectionIFC dbConnection) {
-                    return innerRefresh(dbConnection, session);
-                }
-
-                @Override
-                public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-                    return null;
-                }
-
-                @Override
-                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-                    return null;
+                    return innerRefresh(dbConnection, params);
                 }
             });
         }
@@ -153,30 +106,22 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    private String innerRefresh(DBConnectionIFC dbConnection, String session) {
+    private String innerRefresh(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
+        String session = params.getSession();
+
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
     }
 
     @Override
-    public String echo(String session, String userInput) {
+    public String echo(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeQueryTask(new AbsChatForUIInDBImpl() {
                 @Override
                 public Object query(DBConnectionIFC dbConnection) {
-                    return innerEcho(dbConnection, session, userInput);
-                }
-
-                @Override
-                public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-                    return null;
-                }
-
-                @Override
-                public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-                    return null;
+                    return innerEcho(dbConnection, params);
                 }
             });
         }
@@ -188,7 +133,10 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    private String innerEcho(DBConnectionIFC dbConnection, String session, String userInput) {
+    private String innerEcho(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
+
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
         List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(session);
  

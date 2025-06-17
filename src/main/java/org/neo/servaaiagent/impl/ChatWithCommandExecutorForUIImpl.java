@@ -14,6 +14,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.LinuxCommanderAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class ChatWithCommandExecutorForUIImpl extends AbsChatForUIInDBImpl {
     private ChatWithCommandExecutorForUIImpl() {
@@ -24,13 +25,13 @@ public class ChatWithCommandExecutorForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new ChatWithCommandExecutorForUIImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput);
+                    return innerFetchResponse(dbConnection, params);
                 }
             });
         }
@@ -42,26 +43,10 @@ public class ChatWithCommandExecutorForUIImpl extends AbsChatForUIInDBImpl {
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithCommandExecutorForUIImpl() {
-                @Override
-                public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput);
-                }
-            });
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
-        }
-    }
+    private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput) {
         LinuxCommanderAgentIFC linuxCommanderAgent = LinuxCommanderAgentImpl.getInstance();
         linuxCommanderAgent.generateAndExecute(dbConnection, session, userInput);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");

@@ -17,6 +17,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
     private String outputFormat = "mp3";
@@ -35,14 +36,14 @@ public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new ChatWithSpeechSplitForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
                     try {
-                        return innerFetchResponse(dbConnection, session, userInput, attachFiles);
+                        return innerFetchResponse(dbConnection, params);
                     }
                     catch(NeoAIException nex) {
                         throw nex;
@@ -61,34 +62,11 @@ public class ChatWithSpeechSplitForUIImpl extends AbsChatForUIInDBImpl {
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithSpeechSplitForUIImpl(onlineFileAbsolutePath, relevantVisitPath) {
-                @Override
-                public Object save(DBConnectionIFC dbConnection) {
-                    try {
-                        return innerFetchResponse(dbConnection, session, userInput, attachFiles);
-                    }
-                    catch(NeoAIException nex) {
-                        throw nex;
-                    }
-                    catch(Exception ex) {
-                        throw new NeoAIException(ex);
-                    }
-                }
-            });
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
-        }
-    }
+    private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) throws Exception {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
+        List<String> attachFiles = params.getAttachFiles();
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, List<String> attachFiles) throws Exception {
         String base64 = attachFiles.get(0);
         String fileName = CommonUtil.base64ToFile(base64, onlineFileAbsolutePath);
         String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;

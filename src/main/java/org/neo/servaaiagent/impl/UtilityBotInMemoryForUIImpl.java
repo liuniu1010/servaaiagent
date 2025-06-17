@@ -3,7 +3,6 @@ package org.neo.servaaiagent.impl;
 import java.util.List;
 import java.io.File;
 
-
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.util.CommonUtil;
@@ -13,6 +12,7 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaiagent.ifc.UtilityAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private String onlineFileAbsolutePath;
@@ -32,22 +32,9 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String initNewChat(String session) {
+    public String initNewChat(AgentModel.UIParams params) {
         try {
-            return innerInitNewChat(session);
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(ex.getMessage(), ex);
-        }
-    }
-
-    @Override
-    public String initNewChat(String session, String sayHello) {
-        try {
-            return innerInitNewChat(session);
+            return innerInitNewChat(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -58,9 +45,9 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override 
-    public String refresh(String session) {
+    public String refresh(AgentModel.UIParams params) {
         try {
-            return innerRefresh(session);
+            return innerRefresh(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -71,9 +58,9 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
-            return innerFetchResponse(session, null, userInput, attachFiles);
+            return innerFetchResponse(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -83,26 +70,20 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            return innerFetchResponse(session, notifyCallback, userInput, attachFiles);
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
-        }
-    }
+    private String innerInitNewChat(AgentModel.UIParams params) {
+        String session = params.getSession();
 
-    private String innerInitNewChat(String session) {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         storage.clearCodeFeedbacks(session);
         return "";
     }
 
-    private String innerFetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) throws Exception {
+    private String innerFetchResponse(AgentModel.UIParams params) throws Exception {
+        String session = params.getSession();
+        NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
+        String userInput = params.getUserInput();
+        List<String> attachFiles = params.getAttachFiles();
+
         if(attachFiles != null && attachFiles.size() > 0) {
             return returnAttachedPageCode(session, notifyCallback, attachFiles.get(0));
         }
@@ -169,7 +150,9 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         }
     }
 
-    private String innerRefresh(String session) throws Exception {
+    private String innerRefresh(AgentModel.UIParams params) throws Exception {
+        String session = params.getSession();
+
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
     

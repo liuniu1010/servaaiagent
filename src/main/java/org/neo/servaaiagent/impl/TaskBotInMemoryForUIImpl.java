@@ -8,6 +8,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.TaskAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class TaskBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private TaskBotInMemoryForUIImpl() {
@@ -18,9 +19,9 @@ public class TaskBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
-            return innerFetchResponse(session, null, userInput);
+            return innerFetchResponse(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -30,20 +31,11 @@ public class TaskBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            return innerFetchResponse(session, notifyCallback, userInput);
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(ex.getMessage(), ex);
-        }
-    }
+    private String innerFetchResponse(AgentModel.UIParams params) {
+        String session = params.getSession();
+        NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
+        String userInput = params.getUserInput();
 
-    private String innerFetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput) {
         TaskAgentIFC taskAgent = TaskAgentInMemoryImpl.getInstance();
         String declare = taskAgent.executeTask(session, notifyCallback, userInput);
         return declare;

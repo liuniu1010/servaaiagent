@@ -10,6 +10,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.AssistantAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class ChatWithAssistantInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private ChatWithAssistantInMemoryForUIImpl() {
@@ -20,9 +21,9 @@ public class ChatWithAssistantInMemoryForUIImpl extends AbsChatForUIInMemoryImpl
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
-            return innerFetchResponse(session, userInput);
+            return innerFetchResponse(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -32,20 +33,10 @@ public class ChatWithAssistantInMemoryForUIImpl extends AbsChatForUIInMemoryImpl
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            return innerFetchResponse(session, userInput);
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
-        }
-    }
+    private String innerFetchResponse(AgentModel.UIParams params) {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
 
-    private String innerFetchResponse(String session, String userInput) {
         AssistantAgentIFC assistantAgent = AssistantAgentInMemoryImpl.getInstance();
         assistantAgent.chat(session, userInput);
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");

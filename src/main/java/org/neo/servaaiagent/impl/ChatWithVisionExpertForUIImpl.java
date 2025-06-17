@@ -14,6 +14,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.VisionAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class ChatWithVisionExpertForUIImpl extends AbsChatForUIInDBImpl {
     private ChatWithVisionExpertForUIImpl() {
@@ -24,13 +25,13 @@ public class ChatWithVisionExpertForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         try {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             return (String)dbService.executeSaveTask(new ChatWithVisionExpertForUIImpl() {
                 @Override
                 public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput, attachFiles);
+                    return innerFetchResponse(dbConnection, params);
                 }
             });
         }
@@ -42,26 +43,11 @@ public class ChatWithVisionExpertForUIImpl extends AbsChatForUIInDBImpl {
         }
     }
 
-    @Override
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
-        try {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            return (String)dbService.executeSaveTask(new ChatWithVisionExpertForUIImpl() {
-                @Override
-                public Object save(DBConnectionIFC dbConnection) {
-                    return innerFetchResponse(dbConnection, session, userInput, attachFiles);
-                }
-            });
-        }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(standardExceptionMessage, ex);
-        }
-    }
+    private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
+        List<String> attachFiles = params.getAttachFiles();
 
-    private String innerFetchResponse(DBConnectionIFC dbConnection, String session, String userInput, List<String> attachFiles) {
         VisionAgentIFC visionAgent = VisionAgentImpl.getInstance();
         visionAgent.vision(dbConnection, session, userInput, attachFiles);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");

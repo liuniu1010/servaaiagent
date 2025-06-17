@@ -12,29 +12,25 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
+import org.neo.servaaiagent.model.AgentModel;
 
 abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     protected static String standardExceptionMessage = "Exception occurred! Please contact administrator";
 
     @Override
-    public String sendAudio(String session, String userInput, List<String> attachFiles) {
+    public String sendAudio(AgentModel.UIParams params) {
         throw new NeoAIException("not support! Please implement this method in extended class"); 
     }
 
     @Override
-    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
-        throw new NeoAIException("not support! Please implement this method in extended class"); 
-    }
-
-    public String fetchResponse(String session, NotifyCallbackIFC notifyCallback, String userInput, List<String> attachFiles) {
+    public String fetchResponse(AgentModel.UIParams params) {
         throw new NeoAIException("not support! Please implement this method in extended class"); 
     }
 
     @Override
-    public String initNewChat(String session) {
+    public String initNewChat(AgentModel.UIParams params) {
         try {
-            String defaultSayHello = "Hello, How can I help you?";
-            return innerInitNewChat(session, defaultSayHello);
+            return innerInitNewChat(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -44,20 +40,14 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
         }
     }
 
-    @Override
-    public String initNewChat(String session, String sayHello) {
-        try {
-            return innerInitNewChat(session, sayHello);
+    private String innerInitNewChat(AgentModel.UIParams params) {
+        String session = params.getSession();
+        String sayHello = params.getSayHello();
+        if(sayHello == null || sayHello.trim().equals("")) {
+            // use default
+            sayHello = "Hello, How can I help you?";
         }
-        catch(NeoAIException nex) {
-            throw nex;
-        }
-        catch(Exception ex) {
-            throw new NeoAIException(ex.getMessage(), ex);
-        }
-    }
 
-    private String innerInitNewChat(String session, String sayHello) {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         storage.clearChatRecords(session);
 
@@ -71,9 +61,9 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     }
 
     @Override
-    public String refresh(String session) {
+    public String refresh(AgentModel.UIParams params) {
         try {
-            return innerRefresh(session);
+            return innerRefresh(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -83,16 +73,18 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
         }
     }
 
-    private String innerRefresh(String session) {
+    private String innerRefresh(AgentModel.UIParams params) {
+        String session = params.getSession();
+
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
     }
 
     @Override
-    public String echo(String session, String userInput) {
+    public String echo(AgentModel.UIParams params) {
         try {
-            return innerEcho(session, userInput);
+            return innerEcho(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -102,7 +94,10 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
         }
     }
 
-    private String innerEcho(String session, String userInput) {
+    private String innerEcho(AgentModel.UIParams params) {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
+
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(session);
  

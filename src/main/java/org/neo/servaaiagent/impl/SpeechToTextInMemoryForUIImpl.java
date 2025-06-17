@@ -8,6 +8,7 @@ import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 import org.neo.servaaiagent.impl.AbsChatForUIInMemoryImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 public class SpeechToTextInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     private String outputFormat = "mp3";
@@ -27,9 +28,9 @@ public class SpeechToTextInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     @Override
-    public String sendAudio(String session, String userInput, List<String> attachFiles) {
+    public String sendAudio(AgentModel.UIParams params) {
         try {
-            return innerSendAudio(session, userInput, attachFiles);
+            return innerSendAudio(params);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -39,7 +40,11 @@ public class SpeechToTextInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         }
     }
 
-    private String innerSendAudio(String session, String userInput, List<String> attachFiles) throws Exception {
+    private String innerSendAudio(AgentModel.UIParams params) throws Exception {
+        String session = params.getSession();
+        String userInput = params.getUserInput();
+        List<String> attachFiles = params.getAttachFiles();
+
         String base64 = attachFiles.get(0);
         String fileName = CommonUtil.base64ToFile(base64, onlineFileAbsolutePath);
         String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
