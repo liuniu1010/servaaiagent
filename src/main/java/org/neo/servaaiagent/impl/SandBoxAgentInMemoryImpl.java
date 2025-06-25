@@ -26,11 +26,11 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     @Override
-    public String executeCommand(String session, String commandSandBox, String sUrl) {
+    public String executeCommand(String alignedSession, String commandSandBox, String sUrl) {
         try {
             logger.debug("prepare to send command to sandbox, command: " + commandSandBox);
             logger.debug("url: " + sUrl);
-            String jsonCommandSandBox = generateJsonBodyForSandBox(session, commandSandBox);
+            String jsonCommandSandBox = generateJsonBodyForSandBox(alignedSession, commandSandBox);
             logger.debug("jsonCommandSandBox = " + jsonCommandSandBox);
             String jsonResultSandBox = sendCommandToSandBox(jsonCommandSandBox, sUrl);
             logger.debug("sandbox result: " + jsonResultSandBox);
@@ -51,14 +51,14 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     @Override
-    public String executeCommand(DBConnectionIFC dbConnection, String session, String command, String sUrl) {
+    public String executeCommand(DBConnectionIFC dbConnection, String alignedSession, String command, String sUrl) {
         throw new NeoAIException("not supported");
     }
 
     @Override
-    public String downloadProject(String session, String projectFolder, String sUrl) {
+    public String downloadProject(String alignedSession, String projectFolder, String sUrl) {
         try {
-            String jsonDownloadSandBox = generateJsonBodyForSandBox(session, projectFolder);
+            String jsonDownloadSandBox = generateJsonBodyForSandBox(alignedSession, projectFolder);
             String jsonResultSandBox = sendDownloadToSandBox(jsonDownloadSandBox, sUrl);
             ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
             if(resultSandBox.getIsSuccess()) {
@@ -77,14 +77,14 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     @Override
-    public String downloadProject(DBConnectionIFC dbConnection, String session, String projectFolder, String sUrl) {
+    public String downloadProject(DBConnectionIFC dbConnection, String alignedSession, String projectFolder, String sUrl) {
         throw new NeoAIException("not supported");
     }
 
     @Override
-    public void terminateShell(String session, String sUrl) {
+    public void terminateShell(String alignedSession, String sUrl) {
         try {
-            String jsonTerminationSandBox = generateJsonBodyForSandBox(session, "");
+            String jsonTerminationSandBox = generateJsonBodyForSandBox(alignedSession, "");
             String jsonResultSandBox = sendTerminationToSandBox(jsonTerminationSandBox, sUrl);
             ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
             if(resultSandBox.getIsSuccess()) {
@@ -103,14 +103,14 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     @Override
-    public void terminateShell(DBConnectionIFC dbConnection, String session, String sUrl) {
+    public void terminateShell(DBConnectionIFC dbConnection, String alignedSession, String sUrl) {
         throw new NeoAIException("not supported");
     }
 
     @Override
-    public boolean isUnix(String session, String sUrl) {
+    public boolean isUnix(String alignedSession, String sUrl) {
         try {
-            String jsonIsUnixSandBox = generateJsonBodyForSandBox(session, "");
+            String jsonIsUnixSandBox = generateJsonBodyForSandBox(alignedSession, "");
             String jsonResultSandBox = sendIsUnixToSandBox(jsonIsUnixSandBox, sUrl);
             ResultSandBox resultSandBox = extractResultSandBox(jsonResultSandBox);
             if(resultSandBox.getIsSuccess()) {
@@ -129,15 +129,15 @@ public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
     }
 
     @Override
-    public boolean isUnix(DBConnectionIFC dbConnection, String session, String sUrl) {
+    public boolean isUnix(DBConnectionIFC dbConnection, String alignedSession, String sUrl) {
         throw new NeoAIException("not supported");
     }
 
-    private String generateJsonBodyForSandBox(String session, String input) {
+    private String generateJsonBodyForSandBox(String alignedSession, String input) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
         
-        jsonBody.addProperty("session", session);
+        jsonBody.addProperty("loginSession", alignedSession);
         jsonBody.addProperty("userInput", input);
     
         return gson.toJson(jsonBody);

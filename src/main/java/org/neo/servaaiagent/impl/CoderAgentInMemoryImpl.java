@@ -28,7 +28,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
     }
 
     @Override
-    public String generateCode(String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+    public String generateCode(String alignedSession, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
         String sandBoxUrl = getSandBoxUrl(coder);
         int codeIterationRounds = CommonUtil.getConfigValueAsInt("codeIterationRounds");
@@ -38,13 +38,13 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                 // init projectFolder, clean codesession
                 projectFolder = projectFolder.trim();
                 String command = "mkdir -p " + projectFolder + " && rm -rf " + projectFolder + "/*";
-                sandBoxAgent.executeCommand(session, command, sandBoxUrl);
+                sandBoxAgent.executeCommand(alignedSession, command, sandBoxUrl);
                 logger.debug("command:\n" + command + "\nexecuted success in sandbox");
                 StorageIFC storage = StorageInMemoryImpl.getInstance();
-                storage.clearChatRecords(session);
+                storage.clearChatRecords(alignedSession);
 
                 // begin to generate code
-                return innerGenerateCode(session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, codeIterationDeep);
+                return innerGenerateCode(alignedSession, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, codeIterationDeep);
             }
             catch(NeoAIException nex) {
                 if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED) {
@@ -64,24 +64,24 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
             }
             finally {
                 StorageIFC storage = StorageInMemoryImpl.getInstance();
-                storage.clearChatRecords(session);
+                storage.clearChatRecords(alignedSession);
             }
         }
         throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
     }
 
     @Override
-    public String generateCode(DBConnectionIFC dbConnection, String session, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
+    public String generateCode(DBConnectionIFC dbConnection, String alignedSession, String coder, NotifyCallbackIFC notifyCallback, String requirement, String backgroundDesc, String projectFolder) {
         throw new NeoAIException("not supported");
     }
 
     @Override
-    public String downloadCode(String session, String coder, String projectFolder) {
+    public String downloadCode(String alignedSession, String coder, String projectFolder) {
         try {
             SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
             String sandBoxUrl = getSandBoxUrl(coder);
-            String base64OfCode = sandBoxAgent.downloadProject(session, projectFolder, sandBoxUrl);
-            sandBoxAgent.terminateShell(session, sandBoxUrl);
+            String base64OfCode = sandBoxAgent.downloadProject(alignedSession, projectFolder, sandBoxUrl);
+            sandBoxAgent.terminateShell(alignedSession, sandBoxUrl);
             return base64OfCode;
         }
         catch(NeoAIException nex) {
@@ -93,11 +93,11 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
     }
 
     @Override
-    public String downloadCode(DBConnectionIFC dbConnection, String session, String coder, String projectFolder) {
+    public String downloadCode(DBConnectionIFC dbConnection, String alignedSession, String coder, String projectFolder) {
         throw new NeoAIException("not supported");
     }
 
-    private String innerGenerateCode(String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
+    private String innerGenerateCode(String alignedSession, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterateDeep) {
         if(iterateDeep <= 0) {
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
@@ -107,12 +107,12 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         if(notifyCallback != null) {
             notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(newInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(session, sandBoxUrl, newInput, requirement, backgroundDesc);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(alignedSession, sandBoxUrl, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
         information = "Response: " + chatResponse.getMessage();
         System.out.println(information);
@@ -150,22 +150,22 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
                 }
             }
 
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
             newResponseRecord.setChatTime(new Date());
             newResponseRecord.setIsRequest(false);
             newResponseRecord.setContent(chatResponse.getMessage());
 
             StorageIFC storage = StorageInMemoryImpl.getInstance();
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            storage.addChatRecord(alignedSession, newRequestRecord);
+            storage.addChatRecord(alignedSession, newResponseRecord);
  
             if(!shouldStop) {
                 if(hasCall) {
-                    return innerGenerateCode(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
+                    return innerGenerateCode(alignedSession, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterateDeep - 1);
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishCodeGeneration/failCodeGeneration, DONOT use multi_tool_use.parallel";
-                    return innerGenerateCode(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
+                    return innerGenerateCode(alignedSession, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterateDeep - 1);
                 }
             }
             else {
@@ -194,10 +194,10 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(String session, String sandBoxUrl, String newInput, String requirement, String backgroundDesc) {
+    private AIModel.PromptStruct constructPromptStruct(String alignedSession, String sandBoxUrl, String newInput, String requirement, String backgroundDesc) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(alignedSession);
 
         // reduce chatrecord's content
         for(AIModel.ChatRecord chatRecord: chatRecords) {
@@ -212,7 +212,7 @@ public class CoderAgentInMemoryImpl implements CoderAgentIFC {
         systemHint += "\n\nNow, the requirement you need to implement is:";
         systemHint += "\n" + requirement;
         promptStruct.setSystemHint(systemHint);
-        promptStruct.setFunctionCall(CoderCallImpl.getInstance(session, sandBoxUrl));
+        promptStruct.setFunctionCall(CoderCallImpl.getInstance(alignedSession, sandBoxUrl));
 
         return promptStruct;
     }

@@ -8,19 +8,19 @@ import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class AgentModel {
     public static class UIParams {
-        private String session;
+        private String alignedSession;
         private String loginSession;
         private String userInput;
         private List<String> attachFiles;
         private NotifyCallbackIFC notifyCallback;
         private String sayHello;
 
-        public String getSession() {
-            return session;
+        public String getAlignedSession() {
+            return alignedSession;
         }
 
-        public void setSession(String inputSession) {
-            session = inputSession;
+        public void setAlignedSession(String inputAlignedSession) {
+            alignedSession = inputAlignedSession;
         }
 
         public String getLoginSession() {

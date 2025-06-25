@@ -12,19 +12,19 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 
 public class CoderCallImpl implements FunctionCallIFC {
-    private String session;
+    private String alignedSession;
     private String sandBoxUrl;
 
     private CoderCallImpl() {
     }
 
-    private CoderCallImpl(String inputSession, String inputSandBoxUrl) {
-        session = inputSession;
+    private CoderCallImpl(String inputAlignedSession, String inputSandBoxUrl) {
+        alignedSession = inputAlignedSession;
         sandBoxUrl = inputSandBoxUrl;
     }
 
-    public static CoderCallImpl getInstance(String inputSession, String inputSandBoxUrl) {
-        return new CoderCallImpl(inputSession, inputSandBoxUrl);
+    public static CoderCallImpl getInstance(String inputAlignedSession, String inputSandBoxUrl) {
+        return new CoderCallImpl(inputAlignedSession, inputSandBoxUrl);
     }
 
     @Override
@@ -121,7 +121,7 @@ public class CoderCallImpl implements FunctionCallIFC {
     private static String EXECUTECOMMAND_PARAM_COMMAND = "command";
     private String executeCommand(String command) {
         SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
-        return sandBoxAgent.executeCommand(session, command, sandBoxUrl);
+        return sandBoxAgent.executeCommand(alignedSession, command, sandBoxUrl);
     }
 
     protected static String METHODNAME_FINISHCODEGENERATION = "finishCodeGeneration";

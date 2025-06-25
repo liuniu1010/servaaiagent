@@ -41,7 +41,7 @@ public class SpeechToTextInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerSendAudio(AgentModel.UIParams params) throws Exception {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
         List<String> attachFiles = params.getAttachFiles();
 
@@ -50,7 +50,7 @@ public class SpeechToTextInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
 
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
-        String text = speechAgent.speechToText(session, filePath);
+        String text = speechAgent.speechToText(alignedSession, filePath);
         return text;
     }
 }

@@ -34,37 +34,37 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String generateSpeech(String session, String userInput, String onlineFileAbsolutePath) {
+    public String generateSpeech(String alignedSession, String userInput, String onlineFileAbsolutePath) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new SpeechAgentImpl(outputFormat) {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateSpeech(dbConnection, session, userInput, onlineFileAbsolutePath);
+                return generateSpeech(dbConnection, alignedSession, userInput, onlineFileAbsolutePath);
             }
         });
     }
 
     @Override
-    public String generateSpeech(DBConnectionIFC dbConnection, String session, String userInput, String onlineFileAbsolutePath) {
-        AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, session, userInput);
+    public String generateSpeech(DBConnectionIFC dbConnection, String alignedSession, String userInput, String onlineFileAbsolutePath) {
+        AIModel.TextToSpeechPrompt TextToSpeechPrompt = constructTextToSpeechPrompt(dbConnection, alignedSession, userInput);
         return generateSpeechFromSuperAI(dbConnection, TextToSpeechPrompt, onlineFileAbsolutePath);
     }
 
     @Override
-    public String speechToText(String session, String filePath) {
+    public String speechToText(String alignedSession, String filePath) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new SpeechAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return speechToText(dbConnection, session, filePath);
+                return speechToText(dbConnection, alignedSession, filePath);
             }
         });
     }
 
     @Override
-    public String speechToText(DBConnectionIFC dbConnection, String session, String filePath) {
+    public String speechToText(DBConnectionIFC dbConnection, String alignedSession, String filePath) {
         AIModel.Attachment attachment = new AIModel.Attachment();
         attachment.setContent(filePath);
         AIModel.ChatResponse chatResponse = speechToTextFromSuperAI(dbConnection, attachment);
@@ -76,7 +76,7 @@ public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.TextToSpeechPrompt constructTextToSpeechPrompt(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.TextToSpeechPrompt constructTextToSpeechPrompt(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
         AIModel.TextToSpeechPrompt textToSpeechPrompt = new AIModel.TextToSpeechPrompt();
         textToSpeechPrompt.setUserInput(userInput);
         textToSpeechPrompt.setOutputFormat(this.outputFormat);

@@ -57,14 +57,14 @@ public class EmailAgentImpl implements EmailAgentIFC, DBSaveTaskIFC {
         props.put("mail.smtp.host", CommonUtil.getConfigValue(dbConnection, "mail.smtp.host"));
         props.put("mail.smtp.port", CommonUtil.getConfigValue(dbConnection, "mail.smtp.port"));
 
-        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+        Session emailSession = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(username, password);
             }
         });
 
         try {
-            Message message = new MimeMessage(session);
+            Message message = new MimeMessage(emailSession);
             message.setFrom(new InternetAddress(username));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(subject);

@@ -64,7 +64,7 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) throws Exception {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
         List<String> attachFiles = params.getAttachFiles();
 
@@ -72,14 +72,14 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIInDBImpl {
         String fileName = CommonUtil.base64ToFile(base64, onlineFileAbsolutePath);
         String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
 
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setChatTime(new Date());
         String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
 
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
         TranslateAgentIFC translateAgent = TranslateAgentImpl.getInstance();
-        String text = speechAgent.speechToText(dbConnection, session, filePath);
+        String text = speechAgent.speechToText(dbConnection, alignedSession, filePath);
 
         String content = "<b>" + text + "</b>";
         content += "<br><audio controls>";
@@ -88,8 +88,8 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIInDBImpl {
         content += "</audio>";
         newRequestRecord.setContent(content);
 
-        String translation = translateAgent.translate(dbConnection, session, text);
-        String translateFileName = speechAgent.generateSpeech(dbConnection, session, translation, onlineFileAbsolutePath);
+        String translation = translateAgent.translate(dbConnection, alignedSession, text);
+        String translateFileName = speechAgent.generateSpeech(dbConnection, alignedSession, translation, onlineFileAbsolutePath);
 
         String relevantTranslateFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + translateFileName;
 
@@ -99,17 +99,17 @@ public class ChatWithSpeechTranslateForUIImpl extends AbsChatForUIInDBImpl {
         responseText += "Your browser does not support the audio element";
         responseText += "</audio>";
 
-        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
         newResponseRecord.setIsRequest(false);
         newResponseRecord.setContent(responseText);
         newResponseRecord.setChatTime(new Date());
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.addChatRecord(session, newRequestRecord);
-        storage.addChatRecord(session, newResponseRecord);
+        storage.addChatRecord(alignedSession, newRequestRecord);
+        storage.addChatRecord(alignedSession, newResponseRecord);
 
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

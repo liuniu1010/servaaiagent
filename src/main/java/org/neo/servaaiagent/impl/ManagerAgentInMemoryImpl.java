@@ -41,11 +41,11 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
     }
 
     @Override
-    public String runProject(String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(String alignedSession, NotifyCallbackIFC notifyCallback, String requirement) {
         try {
-            beginProjectAndRecord(session, requirement);
+            beginProjectAndRecord(alignedSession, requirement);
 
-            String coder = chooseCoder(session, requirement);
+            String coder = chooseCoder(alignedSession, requirement);
             String coderSession = "coder" + CommonUtil.getRandomString(8);
             String projectFolder = generateProjectFolderName(coderSession);
             String backgroundDesc = loadBackgroundDesc(coder);
@@ -70,21 +70,21 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
             declare += relevantFilePath; 
             declare += "\" download>Source Code</a>";
 
-            endProjectAndRecord(session, declare);
+            endProjectAndRecord(alignedSession, declare);
             return declare;
         }
         catch(NeoAIException nex) {
-            exceptionRecord(session, nex);
+            exceptionRecord(alignedSession, nex);
             throw nex;
         }
         catch(Exception ex) {
-            exceptionRecord(session, ex);
+            exceptionRecord(alignedSession, ex);
             throw new NeoAIException(ex.getMessage(), ex);
         }
     }
 
     @Override
-    public String runProject(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String runProject(DBConnectionIFC dbConnection, String alignedSession, NotifyCallbackIFC notifyCallback, String requirement) {
         throw new NeoAIException("not supported");
     }
 
@@ -92,8 +92,8 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         return "/tmp/" + coderSession + "/myProject";
     }
 
-    private String chooseCoder(String session, String requirement) throws Exception {
-        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(session, requirement);
+    private String chooseCoder(String alignedSession, String requirement) throws Exception {
+        AIModel.PromptStruct promptStruct = constructPromptStructForAssign(alignedSession, requirement);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
         if(chatResponse.getIsSuccess()) {
@@ -122,7 +122,7 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStructForAssign(String session, String requirement) throws Exception {
+    private AIModel.PromptStruct constructPromptStructForAssign(String alignedSession, String requirement) throws Exception {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String userInput = "Please choose a suitable coder to implement requirement:";
         userInput += "\n" + requirement;
@@ -140,20 +140,20 @@ public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
         return superAI.fetchChatResponse(model, promptStruct);
     }
 
-    private void beginProjectAndRecord(String session, String requirement) {
-        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
+    private void beginProjectAndRecord(String alignedSession, String requirement) {
+        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
         codeRecord.setCreateTime(new Date());
         codeRecord.setRequirement(requirement);
     }
 
-    private void endProjectAndRecord(String session, String declare) {
-        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
+    private void endProjectAndRecord(String alignedSession, String declare) {
+        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
         codeRecord.setCreateTime(new Date());
         codeRecord.setContent(declare);
     }
 
-    private void exceptionRecord(String session, Exception ex) {
-        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(session);
+    private void exceptionRecord(String alignedSession, Exception ex) {
+        AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
         codeRecord.setCreateTime(new Date());
         codeRecord.setContent(ex.getMessage());
     }

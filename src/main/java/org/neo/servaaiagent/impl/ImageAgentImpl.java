@@ -29,39 +29,39 @@ public class ImageAgentImpl implements ImageAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String[] generateImages(String session, String userInput) {
+    public String[] generateImages(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String[])dbService.executeSaveTask(new ImageAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateImages(dbConnection, session, userInput);
+                return generateImages(dbConnection, alignedSession, userInput);
             }
         });
     }
 
     @Override
-    public String[] generateImages(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+    public String[] generateImages(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.ImagePrompt imagePrompt = constructImagePrompt(dbConnection, session, userInput);
+        AIModel.ImagePrompt imagePrompt = constructImagePrompt(dbConnection, alignedSession, userInput);
         String[] urls = generateImagesFromSuperAI(dbConnection, imagePrompt);
-        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
         newResponseRecord.setIsRequest(false);
         newResponseRecord.setContent("<img src=\"" + urls[0] + "\">");
         newResponseRecord.setChatTime(new Date());
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.addChatRecord(session, newRequestRecord);
-        storage.addChatRecord(session, newResponseRecord);
+        storage.addChatRecord(alignedSession, newRequestRecord);
+        storage.addChatRecord(alignedSession, newResponseRecord);
 
         return urls;
     }
 
-    private AIModel.ImagePrompt constructImagePrompt(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.ImagePrompt constructImagePrompt(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
         AIModel.ImagePrompt imagePrompt = new AIModel.ImagePrompt();
         imagePrompt.setUserInput(userInput);
 

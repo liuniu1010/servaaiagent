@@ -44,15 +44,15 @@ public class ChatWithVisionExpertForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
         List<String> attachFiles = params.getAttachFiles();
 
         VisionAgentIFC visionAgent = VisionAgentImpl.getInstance();
-        visionAgent.vision(dbConnection, session, userInput, attachFiles);
+        visionAgent.vision(dbConnection, alignedSession, userInput, attachFiles);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

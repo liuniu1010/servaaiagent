@@ -63,7 +63,7 @@ public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) throws Exception {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
         List<String> attachFiles = params.getAttachFiles();
 
@@ -71,7 +71,7 @@ public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIInDBImpl {
         String fileName = CommonUtil.base64ToFile(base64, onlineFileAbsolutePath);
         String filePath = CommonUtil.normalizeFolderPath(onlineFileAbsolutePath) + File.separator + fileName;
 
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         String relevantFilePath = CommonUtil.normalizeFolderPath(relevantVisitPath) + File.separator + fileName;
         String content = "<b>input speech</b>";
@@ -83,19 +83,19 @@ public class ChatWithSpeechToTextExpertForUIImpl extends AbsChatForUIInDBImpl {
         newRequestRecord.setChatTime(new Date());
 
         SpeechAgentIFC speechAgent = SpeechAgentImpl.getInstance(outputFormat);
-        String text = speechAgent.speechToText(dbConnection, session, filePath);
+        String text = speechAgent.speechToText(dbConnection, alignedSession, filePath);
 
-        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
         newResponseRecord.setIsRequest(false);
         newResponseRecord.setContent(text);
         newResponseRecord.setChatTime(new Date());
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.addChatRecord(session, newRequestRecord);
-        storage.addChatRecord(session, newResponseRecord);
+        storage.addChatRecord(alignedSession, newRequestRecord);
+        storage.addChatRecord(alignedSession, newResponseRecord);
 
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

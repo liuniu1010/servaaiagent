@@ -32,10 +32,10 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
     Map<String, ShellIFC> shellCache = new ConcurrentHashMap<String, ShellIFC>();
 
     @Override
-    public String execute(String session, String command) {
+    public String execute(String alignedSession, String command) {
         try {
             int repeatDeep = 2;
-            return innerExecute(session, command, repeatDeep);
+            return innerExecute(alignedSession, command, repeatDeep);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -46,55 +46,55 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
     }
 
     @Override
-    public String execute(DBConnectionIFC dbConnection, String session, String command) {
+    public String execute(DBConnectionIFC dbConnection, String alignedSession, String command) {
         throw new NeoAIException("not supported");
     }
 
     @Override 
-    public void terminateShell(String session) {
-        if(shellCache.containsKey(session)) {
-            ShellIFC shell = shellCache.get(session);
-            shellCache.remove(session);
+    public void terminateShell(String alignedSession) {
+        if(shellCache.containsKey(alignedSession)) {
+            ShellIFC shell = shellCache.get(alignedSession);
+            shellCache.remove(alignedSession);
             shell.close();
         }
     }
 
     @Override 
-    public void terminateShell(DBConnectionIFC dbConnection, String session) {
+    public void terminateShell(DBConnectionIFC dbConnection, String alignedSession) {
         throw new NeoAIException("not supported");
     }
 
     @Override
-    public boolean isUnix(String session) {
+    public boolean isUnix(String alignedSession) {
         return CommonUtil.isUnix();
     }
 
-    public boolean isUnix(DBConnectionIFC dbConnection, String session) {
+    public boolean isUnix(DBConnectionIFC dbConnection, String alignedSession) {
         throw new NeoAIException("not supported");
     }
 
-    private String innerExecute(String session, String command, int repeatDeep) throws Exception {
+    private String innerExecute(String alignedSession, String command, int repeatDeep) throws Exception {
         if(repeatDeep <= 0) {
             throw new RuntimeException("Shell crashed!");
         }
 
-        ShellIFC shell = getOrCreateShell(session);
+        ShellIFC shell = getOrCreateShell(alignedSession);
         try {
             return shell.executeCommand(command);
         }
         catch(TimeoutException tex) {
-            terminateShell(session);
+            terminateShell(alignedSession);
             throw tex;
         }
         catch(IOException iex) {
-            terminateShell(session);
-            return innerExecute(session, command, repeatDeep - 1);
+            terminateShell(alignedSession);
+            return innerExecute(alignedSession, command, repeatDeep - 1);
         }
     }
 
-    private ShellIFC getOrCreateShell(String session) throws Exception {
-        if(shellCache.containsKey(session)) {
-            return shellCache.get(session);
+    private ShellIFC getOrCreateShell(String alignedSession) throws Exception {
+        if(shellCache.containsKey(alignedSession)) {
+            return shellCache.get(alignedSession);
         }
 
         ShellIFC shell = null;
@@ -104,7 +104,7 @@ public class ShellAgentInMemoryImpl implements ShellAgentIFC {
         else {
             shell = new WindowsShell();
         }
-        shellCache.put(session, shell);
+        shellCache.put(alignedSession, shell);
         return shell;
     }
 }

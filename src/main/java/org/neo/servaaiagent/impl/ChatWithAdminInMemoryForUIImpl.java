@@ -34,14 +34,14 @@ public class ChatWithAdminInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerFetchResponse(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
 
         AdminAgentIFC adminAgent = AdminAgentInMemoryImpl.getInstance();
-        adminAgent.chat(session, userInput);
+        adminAgent.chat(alignedSession, userInput);
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

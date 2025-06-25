@@ -27,20 +27,20 @@ public class TranslateAgentImpl implements TranslateAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String translate(String session, String userInput) {
+    public String translate(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new TranslateAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return translate(dbConnection, session, userInput);
+                return translate(dbConnection, alignedSession, userInput);
             }
         });
     }
 
     @Override
-    public String translate(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, userInput);
+    public String translate(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, alignedSession, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         if(chatResponse.getIsSuccess()) {
             return chatResponse.getMessage();
@@ -50,7 +50,7 @@ public class TranslateAgentImpl implements TranslateAgentIFC, DBSaveTaskIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         String systemHint = "You are a great language expert, you never response user prompt with your own idea, what you need to do is just translating input prompt, in case the input is English, you translate it into Chinese, in case the input is Chinese, you translate it into English";
         promptStruct.setUserInput(userInput);

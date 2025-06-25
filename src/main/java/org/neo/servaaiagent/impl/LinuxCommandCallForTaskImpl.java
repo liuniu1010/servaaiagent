@@ -12,19 +12,19 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 
 public class LinuxCommandCallForTaskImpl implements FunctionCallIFC {
-    private String session;
+    private String alignedSession;
     private String sandBoxUrl;
 
     private LinuxCommandCallForTaskImpl() {
     }
 
-    private LinuxCommandCallForTaskImpl(String inputSession, String inputSandBoxUrl) {
-        session = inputSession;
+    private LinuxCommandCallForTaskImpl(String inputAlignedSession, String inputSandBoxUrl) {
+        alignedSession = inputAlignedSession;
         sandBoxUrl = inputSandBoxUrl;
     }
 
-    public static LinuxCommandCallForTaskImpl getInstance(String inputSession, String inputSandBoxUrl) {
-        return new LinuxCommandCallForTaskImpl(inputSession, inputSandBoxUrl);
+    public static LinuxCommandCallForTaskImpl getInstance(String inputAlignedSession, String inputSandBoxUrl) {
+        return new LinuxCommandCallForTaskImpl(inputAlignedSession, inputSandBoxUrl);
     }
 
     @Override
@@ -121,7 +121,7 @@ public class LinuxCommandCallForTaskImpl implements FunctionCallIFC {
     private static String EXECUTECOMMAND_PARAM_COMMAND = "command";
     private String executeCommand(String command) {
         SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
-        return sandBoxAgent.executeCommand(session, command, sandBoxUrl);
+        return sandBoxAgent.executeCommand(alignedSession, command, sandBoxUrl);
     }
 
     protected static String METHODNAME_FINISHTASK = "finishTask";

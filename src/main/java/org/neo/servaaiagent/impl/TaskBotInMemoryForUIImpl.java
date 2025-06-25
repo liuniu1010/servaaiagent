@@ -32,12 +32,12 @@ public class TaskBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerFetchResponse(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
         String userInput = params.getUserInput();
 
         TaskAgentIFC taskAgent = TaskAgentInMemoryImpl.getInstance();
-        String declare = taskAgent.executeTask(session, notifyCallback, userInput);
+        String declare = taskAgent.executeTask(alignedSession, notifyCallback, userInput);
         return declare;
     }
 }

@@ -31,35 +31,35 @@ public class ChatAgentImpl implements ChatAgentIFC, DBSaveTaskIFC {
     }
 
     @Override
-    public String chat(String session, String userInput) {
+    public String chat(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new ChatAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return chat(dbConnection, session, userInput);
+                return chat(dbConnection, alignedSession, userInput);
             }
         });
     }
 
     @Override
-    public String chat(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+    public String chat(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, userInput);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, alignedSession, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         if(chatResponse.getIsSuccess()) {
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
             newResponseRecord.setChatTime(new Date());
             newResponseRecord.setIsRequest(false);
             newResponseRecord.setContent(chatResponse.getMessage());
 
             StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            storage.addChatRecord(alignedSession, newRequestRecord);
+            storage.addChatRecord(alignedSession, newResponseRecord);
 
             return chatResponse.getMessage();
         }
@@ -68,10 +68,10 @@ public class ChatAgentImpl implements ChatAgentIFC, DBSaveTaskIFC {
         } 
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(alignedSession);
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
 

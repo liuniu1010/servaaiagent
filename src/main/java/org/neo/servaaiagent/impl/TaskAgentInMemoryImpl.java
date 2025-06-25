@@ -29,17 +29,17 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
     }
 
     @Override
-    public String executeTask(String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String executeTask(String alignedSession, NotifyCallbackIFC notifyCallback, String requirement) {
         String sandBoxUrl = getSandBoxUrl("task");
         int iterationDeep = 100;
         try {
             SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
             StorageIFC storage = StorageInMemoryImpl.getInstance();
-            storage.clearChatRecords(session);
-            String backgroundDesc = loadBackgroundDesc(session, sandBoxUrl);
+            storage.clearChatRecords(alignedSession);
+            String backgroundDesc = loadBackgroundDesc(alignedSession, sandBoxUrl);
             // begin to executeTask
-            String result = innerExecuteTask(session, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterationDeep);
-            sandBoxAgent.terminateShell(session, sandBoxUrl);
+            String result = innerExecuteTask(alignedSession, sandBoxUrl, notifyCallback, requirement, requirement, backgroundDesc, iterationDeep);
+            sandBoxAgent.terminateShell(alignedSession, sandBoxUrl);
             return result;
         }
         catch(NeoAIException nex) {
@@ -50,16 +50,16 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         }
         finally {
             StorageIFC storage = StorageInMemoryImpl.getInstance();
-            storage.clearChatRecords(session);
+            storage.clearChatRecords(alignedSession);
         }
     }
 
     @Override
-    public String executeTask(DBConnectionIFC dbConnection, String session, NotifyCallbackIFC notifyCallback, String requirement) {
+    public String executeTask(DBConnectionIFC dbConnection, String alignedSession, NotifyCallbackIFC notifyCallback, String requirement) {
         throw new NeoAIException("not supported");
     }
 
-    private String innerExecuteTask(String session, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterationDeep) {
+    private String innerExecuteTask(String alignedSession, String sandBoxUrl, NotifyCallbackIFC notifyCallback, String newInput, String requirement, String backgroundDesc, int iterationDeep) {
         if(iterationDeep <= 0) {
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXITERATIONDEEP_EXCEED);
         }
@@ -69,12 +69,12 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         if(notifyCallback != null) {
             notifyCallback.notify("<br>" + CommonUtil.renderToShowAsOrigin(information));
         }
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(newInput);
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(session, sandBoxUrl, newInput, requirement, backgroundDesc);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(alignedSession, sandBoxUrl, newInput, requirement, backgroundDesc);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
         information = "Response: " + chatResponse.getMessage();
         System.out.println(information);
@@ -112,22 +112,22 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
                 }
             }
 
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
             newResponseRecord.setChatTime(new Date());
             newResponseRecord.setIsRequest(false);
             newResponseRecord.setContent(chatResponse.getMessage());
 
             StorageIFC storage = StorageInMemoryImpl.getInstance();
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            storage.addChatRecord(alignedSession, newRequestRecord);
+            storage.addChatRecord(alignedSession, newResponseRecord);
 
             if(!shouldStop) {
                 if(hasCall) {
-                    return innerExecuteTask(session, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterationDeep - 1);
+                    return innerExecuteTask(alignedSession, sandBoxUrl, notifyCallback, totalRunningResultDesc, requirement, backgroundDesc, iterationDeep - 1);
                 }
                 else {
                     String newHint = "You must call at least one of the three methods, executeCommand/finishTask/failTask, DONOT use multi_tool_use.parallel";
-                    return innerExecuteTask(session, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterationDeep - 1);
+                    return innerExecuteTask(alignedSession, sandBoxUrl, notifyCallback, newHint, requirement, backgroundDesc, iterationDeep - 1);
                 }
             }
             else {
@@ -157,10 +157,10 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(String session, String sandBoxUrl, String newInput, String requirement, String backgroundDesc) {
+    private AIModel.PromptStruct constructPromptStruct(String alignedSession, String sandBoxUrl, String newInput, String requirement, String backgroundDesc) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(alignedSession);
 
         // reduce chatrecord's content
         for(AIModel.ChatRecord chatRecord: chatRecords) {
@@ -175,7 +175,7 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         systemHint += "\n\nNow, the task requirement you need to execute is:";
         systemHint += "\n" + requirement;
         promptStruct.setSystemHint(systemHint);
-        promptStruct.setFunctionCall(LinuxCommandCallForTaskImpl.getInstance(session, sandBoxUrl));
+        promptStruct.setFunctionCall(LinuxCommandCallForTaskImpl.getInstance(alignedSession, sandBoxUrl));
 
         return promptStruct;
     }
@@ -186,9 +186,9 @@ public class TaskAgentInMemoryImpl implements TaskAgentIFC {
         return superAI.fetchChatResponse(model, promptStruct);
     }
 
-    private String loadBackgroundDesc(String session, String sandBoxUrl) throws Exception {
+    private String loadBackgroundDesc(String alignedSession, String sandBoxUrl) throws Exception {
         SandBoxAgentIFC sandBoxAgent = SandBoxAgentInMemoryImpl.getInstance();
-        boolean isUnix = sandBoxAgent.isUnix(session, sandBoxUrl);
+        boolean isUnix = sandBoxAgent.isUnix(alignedSession, sandBoxUrl);
         String fileName = isUnix?"linuxcommanderfortask.txt":"windowscommanderfortask.txt";
         return IOUtil.resourceFileToString(fileName);
     }

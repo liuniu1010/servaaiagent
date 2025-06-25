@@ -39,12 +39,12 @@ public class CoderBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerFetchResponse(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
         String userInput = params.getUserInput();
 
         ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
-        String declare = managerAgent.runProject(session, notifyCallback, userInput);
+        String declare = managerAgent.runProject(alignedSession, notifyCallback, userInput);
         return declare;
     }
 }

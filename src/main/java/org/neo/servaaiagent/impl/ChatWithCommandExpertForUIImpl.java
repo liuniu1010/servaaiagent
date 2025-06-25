@@ -44,14 +44,14 @@ public class ChatWithCommandExpertForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
 
         LinuxCommanderAgentIFC linuxCommanderAgent = LinuxCommanderAgentImpl.getInstance();
-        linuxCommanderAgent.generateCommand(dbConnection, session, userInput);
+        linuxCommanderAgent.generateCommand(dbConnection, alignedSession, userInput);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

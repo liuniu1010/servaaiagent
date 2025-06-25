@@ -69,22 +69,22 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     private String innerInitNewChat(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String sayHello = params.getSayHello();
         if(sayHello == null || sayHello.trim().equals("")) {
             sayHello = "Hello, How can I help you?";
         }
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.clearChatRecords(session);
+        storage.clearChatRecords(alignedSession);
 
-        AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(alignedSession);
         chatRecord.setIsRequest(false);
         chatRecord.setChatTime(new Date());
         chatRecord.setContent(sayHello);
-        storage.addChatRecord(session, chatRecord);
+        storage.addChatRecord(alignedSession, chatRecord);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 
     @Override
@@ -107,11 +107,11 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     private String innerRefresh(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
 
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 
     @Override
@@ -134,16 +134,16 @@ abstract public class AbsChatForUIInDBImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     private String innerEcho(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(alignedSession);
  
         List<AIModel.ChatRecord> tmpChatRecords = new ArrayList<AIModel.ChatRecord>();
         tmpChatRecords.addAll(chatRecordsInStorage);
 
-        AIModel.ChatRecord echoRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord echoRecord = new AIModel.ChatRecord(alignedSession);
         echoRecord.setIsRequest(true);
         echoRecord.setChatTime(new Date());
         echoRecord.setContent(userInput);

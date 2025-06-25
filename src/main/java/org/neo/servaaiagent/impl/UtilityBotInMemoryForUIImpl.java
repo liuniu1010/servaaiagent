@@ -71,37 +71,37 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerInitNewChat(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
 
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        storage.clearCodeFeedbacks(session);
+        storage.clearCodeFeedbacks(alignedSession);
         return "";
     }
 
     private String innerFetchResponse(AgentModel.UIParams params) throws Exception {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
         String userInput = params.getUserInput();
         List<String> attachFiles = params.getAttachFiles();
 
         if(attachFiles != null && attachFiles.size() > 0) {
-            return returnAttachedPageCode(session, notifyCallback, attachFiles.get(0));
+            return returnAttachedPageCode(alignedSession, notifyCallback, attachFiles.get(0));
         }
         else {
-            return innerGeneratePageCode(session, notifyCallback, userInput);
+            return innerGeneratePageCode(alignedSession, notifyCallback, userInput);
         }
     }
 
-    private String returnAttachedPageCode(String session, NotifyCallbackIFC notifyCallback, String attachFileInBase64) throws Exception {
+    private String returnAttachedPageCode(String alignedSession, NotifyCallbackIFC notifyCallback, String attachFileInBase64) throws Exception {
         String pageCode = CommonUtil.base64ToString(attachFileInBase64);
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         checkWorkingThread(notifyCallback);
-        storage.clearCodeFeedbacks(session);
+        storage.clearCodeFeedbacks(alignedSession);
 
-        AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(session);
+        AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(alignedSession);
         newFeedback.setCodeContent(pageCode);
         newFeedback.setIndex(AIModel.CodeFeedback.INDEX_CODECONTENT);
-        storage.pushCodeFeedback(session, newFeedback);
+        storage.pushCodeFeedback(alignedSession, newFeedback);
 
         String informationToReturn = pageCode;
         if(notifyCallback != null) {
@@ -111,20 +111,20 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         return informationToReturn;
     }
 
-    private String innerGeneratePageCode(String session, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
+    private String innerGeneratePageCode(String alignedSession, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         checkWorkingThread(notifyCallback);
-        AIModel.CodeFeedback lastFeedback = storage.peekCodeFeedback(session);
+        AIModel.CodeFeedback lastFeedback = storage.peekCodeFeedback(alignedSession);
         String lastCodeContent = null;
         if(lastFeedback != null) {
             lastCodeContent = lastFeedback.getCodeContent();
         }
 
-        AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(session);
+        AIModel.CodeFeedback newFeedback = new AIModel.CodeFeedback(alignedSession);
         newFeedback.setFeedback(userInput);
         newFeedback.setIndex(AIModel.CodeFeedback.INDEX_FEEDBACK);
         checkWorkingThread(notifyCallback);
-        storage.pushCodeFeedback(session, newFeedback);
+        storage.pushCodeFeedback(alignedSession, newFeedback);
 
         UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
         // UtilityAgentIFC utilityAgent = UtilityAgentRemoteImpl.getInstance();
@@ -132,7 +132,7 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
 
         // fill codeFeedback and save in storage
         checkWorkingThread(notifyCallback);
-        AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
+        AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(alignedSession);
 
         // codeFeedback should not be null now in theory
         codeFeedback.setCodeContent(chatResponse.getMessage());
@@ -151,10 +151,10 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
     }
 
     private String innerRefresh(AgentModel.UIParams params) throws Exception {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
 
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(session);
+        AIModel.CodeFeedback codeFeedback = storage.peekCodeFeedback(alignedSession);
     
         if(codeFeedback == null) {
             return "";

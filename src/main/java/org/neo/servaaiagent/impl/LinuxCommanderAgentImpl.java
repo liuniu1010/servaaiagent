@@ -33,20 +33,20 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
     }
 
     @Override
-    public String execute(String session, String userInput) {
+    public String execute(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new LinuxCommanderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return execute(dbConnection, session, userInput);
+                return execute(dbConnection, alignedSession, userInput);
             }
         });
     }
 
     @Override
-    public String execute(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+    public String execute(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
@@ -60,47 +60,47 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
         }
 
         String result = "$ " + userInput + "\n" + runningResult;
-        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
         newResponseRecord.setIsRequest(false);
         newResponseRecord.setContent(result);
         newResponseRecord.setChatTime(new Date());
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        storage.addChatRecord(session, newRequestRecord);
-        storage.addChatRecord(session, newResponseRecord);
+        storage.addChatRecord(alignedSession, newRequestRecord);
+        storage.addChatRecord(alignedSession, newResponseRecord);
 
         return result;
     }
 
-    public String generateCommand(String session, String userInput) {
+    public String generateCommand(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new LinuxCommanderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateCommand(dbConnection, session, userInput);
+                return generateCommand(dbConnection, alignedSession, userInput);
             }
         });
     }
 
-    public String generateCommand(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+    public String generateCommand(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, userInput);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, alignedSession, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         if(chatResponse.getIsSuccess()) {
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
             newResponseRecord.setIsRequest(false);
             String command = extractCommandFromChatResponse(chatResponse);
             newResponseRecord.setContent(command);
             newResponseRecord.setChatTime(new Date());
 
             StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            storage.addChatRecord(alignedSession, newRequestRecord);
+            storage.addChatRecord(alignedSession, newResponseRecord);
 
             return command;
         }
@@ -109,10 +109,10 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
         }
     }
 
-    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String session, String userInput) {
+    private AIModel.PromptStruct constructPromptStruct(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(alignedSession);
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
         promptStruct.setFunctionCall(LinuxCommandCallImpl.getInstance());
@@ -161,35 +161,35 @@ public class LinuxCommanderAgentImpl implements LinuxCommanderAgentIFC, DBSaveTa
         }
     }
 
-    public String generateAndExecute(String session, String userInput) {
+    public String generateAndExecute(String alignedSession, String userInput) {
         // no input dbConnection, start/commmit transaction itself
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String)dbService.executeSaveTask(new LinuxCommanderAgentImpl() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                return generateAndExecute(dbConnection, session, userInput);
+                return generateAndExecute(dbConnection, alignedSession, userInput);
             }
         });
     }
 
-    public String generateAndExecute(DBConnectionIFC dbConnection, String session, String userInput) {
-        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
+    public String generateAndExecute(DBConnectionIFC dbConnection, String alignedSession, String userInput) {
+        AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(alignedSession);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, session, userInput);
+        AIModel.PromptStruct promptStruct = constructPromptStruct(dbConnection, alignedSession, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(dbConnection, promptStruct);
         if(chatResponse.getIsSuccess()) {
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(alignedSession);
             newResponseRecord.setIsRequest(false);
             String runningResult = executeCommandFromChatResponse(chatResponse);
             newResponseRecord.setContent(runningResult);
             newResponseRecord.setChatTime(new Date());
 
             StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+            storage.addChatRecord(alignedSession, newRequestRecord);
+            storage.addChatRecord(alignedSession, newResponseRecord);
 
             return runningResult;
         }

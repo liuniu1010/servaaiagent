@@ -44,14 +44,14 @@ public class ChatWithBotForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
 
         ChatAgentIFC chatAgent = ChatAgentImpl.getInstance();
-        chatAgent.chat(dbConnection, session, userInput);
+        chatAgent.chat(dbConnection, alignedSession, userInput);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

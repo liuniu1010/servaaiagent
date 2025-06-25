@@ -34,14 +34,15 @@ public class ChatWithAssistantInMemoryForUIImpl extends AbsChatForUIInMemoryImpl
     }
 
     private String innerFetchResponse(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
+        String loginSession = params.getLoginSession();
         String userInput = params.getUserInput();
 
         AssistantAgentIFC assistantAgent = AssistantAgentInMemoryImpl.getInstance();
-        assistantAgent.chat(session, userInput);
+        assistantAgent.chat(alignedSession, loginSession, userInput);
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 }
 

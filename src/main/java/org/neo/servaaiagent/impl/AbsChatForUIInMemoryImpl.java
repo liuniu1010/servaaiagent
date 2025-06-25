@@ -41,7 +41,7 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     }
 
     private String innerInitNewChat(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String sayHello = params.getSayHello();
         if(sayHello == null || sayHello.trim().equals("")) {
             // use default
@@ -49,15 +49,15 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
         }
 
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        storage.clearChatRecords(session);
+        storage.clearChatRecords(alignedSession);
 
-        AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord chatRecord = new AIModel.ChatRecord(alignedSession);
         chatRecord.setIsRequest(false);
         chatRecord.setChatTime(new Date());
         chatRecord.setContent(sayHello);
-        storage.addChatRecord(session, chatRecord);
+        storage.addChatRecord(alignedSession, chatRecord);
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 
     @Override
@@ -74,11 +74,11 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     }
 
     private String innerRefresh(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
 
         String datetimeFormat = CommonUtil.getConfigValue("DateTimeFormat");
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
+        return CommonUtil.renderChatRecords(storage.getChatRecords(alignedSession), datetimeFormat);
     }
 
     @Override
@@ -95,16 +95,16 @@ abstract public class AbsChatForUIInMemoryImpl implements ChatForUIIFC {
     }
 
     private String innerEcho(AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         String userInput = params.getUserInput();
 
         StorageIFC storage = StorageInMemoryImpl.getInstance();
-        List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(session);
+        List<AIModel.ChatRecord> chatRecordsInStorage = storage.getChatRecords(alignedSession);
  
         List<AIModel.ChatRecord> tmpChatRecords = new ArrayList<AIModel.ChatRecord>();
         tmpChatRecords.addAll(chatRecordsInStorage);
 
-        AIModel.ChatRecord echoRecord = new AIModel.ChatRecord(session);
+        AIModel.ChatRecord echoRecord = new AIModel.ChatRecord(alignedSession);
         echoRecord.setIsRequest(true);
         echoRecord.setChatTime(new Date());
         echoRecord.setContent(userInput);

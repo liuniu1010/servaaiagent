@@ -48,12 +48,12 @@ public class CoderBotForUIImpl extends AbsChatForUIInDBImpl {
     }
 
     private String innerFetchResponse(DBConnectionIFC dbConnection, AgentModel.UIParams params) {
-        String session = params.getSession();
+        String alignedSession = params.getAlignedSession();
         NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
         String userInput = params.getUserInput();
 
         ManagerAgentIFC managerAgent = ManagerAgentInMemoryImpl.getInstance(onlineFileAbsolutePath, relevantVisitPath);
-        String declare = managerAgent.runProject(dbConnection, session, notifyCallback, userInput);
+        String declare = managerAgent.runProject(dbConnection, alignedSession, notifyCallback, userInput);
         return declare;
     }
 }
