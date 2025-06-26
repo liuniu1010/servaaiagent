@@ -759,9 +759,11 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
             }
         }
         int expireMonths = CommonUtil.getConfigValueAsInt(dbConnection, "creditsExpireMonths");
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MONTH, expireMonths);
+        Date createTime = new Date();
+        Date expireTime = CommonUtil.addTimeSpan(createTime, Calendar.MONTH, expireMonths);
         AgentModel.ChasedCredits chasedCredits = new AgentModel.ChasedCredits(accountId);
         chasedCredits.setCredits(credits);
+        chasedCredits.setCreateTime(createTime);
         chasedCredits.setExpireTime(expireTime);
         chasedCredits.setChasedSource(chasedSource);
         chasedCredits.setTransactionId(transactionId);

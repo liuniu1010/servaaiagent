@@ -205,6 +205,7 @@ public class AgentModel {
 
         public static final String ACCOUNTID = "accountid";
         public static final String CREDITS = "credits";
+        public static final String CREATETIME = "createtime";
         public static final String EXPIRETIME = "expiretime";
         public static final String CHASEDSOURCE = "chasedsource";
         public static final String TRANSACTIONID = "transactionid";
@@ -244,6 +245,14 @@ public class AgentModel {
 
         public void setCredits(int credits) {
             versionEntity.setAttribute(CREDITS, credits);
+        }
+
+        public Date getCreateTime() {
+            return (Date)versionEntity.getAttribute(CREATETIME);
+        }
+
+        public void setCreateTime(Date createTime) {
+            versionEntity.setAttribute(CREATETIME, createTime);
         }
 
         public Date getExpireTime() {
