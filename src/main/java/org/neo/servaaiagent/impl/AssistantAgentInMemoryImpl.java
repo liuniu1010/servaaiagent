@@ -15,7 +15,7 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.factory.AIFactory;
 import org.neo.servaaibase.NeoAIException;
 
-
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.AssistantAgentIFC;
 
 public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
@@ -51,7 +51,7 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
 
-        String assistantDesc = loadAssistantDesc();
+        String assistantDesc = loadAssistantDesc(loginSession);
         AIModel.PromptStruct promptStruct = constructPromptStructForAssistant(alignedSession, loginSession, assistantDesc, userInput);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
 
@@ -96,18 +96,28 @@ public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
         }
     }
 
-    private String loadAssistantDesc() throws Exception {
+    private String loadAssistantDesc(String loginSession) throws Exception {
         String fileName = "neoaiassistant.txt";
         String fileContent = IOUtil.resourceFileToString(fileName);
 
-        String[] consumedConfigNames = new String[]{"consumedCreditsOnCoderBot"
-                                                   ,"consumedCreditsOnSpeechSplit"
-                                                   ,"consumedCreditsOnUtilityBot"
-                                                   ,"consumedCreditsOnChatWithAssistant"
-                                                   ,"consumedCreditsOnSpeechToText"};
-        Map<String, String> consumedConfigMap = CommonUtil.getConfigValues(consumedConfigNames);
-        for(String consumedConfigName: consumedConfigNames) {
-            fileContent = fileContent.replace("<" + consumedConfigName + ">", consumedConfigMap.get(consumedConfigName));
+        String[] configNames = new String[]{"consumedCreditsOnCoderBot"
+                                           ,"consumedCreditsOnSpeechSplit"
+                                           ,"consumedCreditsOnUtilityBot"
+                                           ,"consumedCreditsOnChatWithAssistant"
+                                           ,"consumedCreditsOnSpeechToText"
+                                           ,"paymentLinkOnStripe"
+                                           ,"topupOnRegister"};
+        Map<String, String> configMap = CommonUtil.getConfigValues(configNames);
+        for(String configName: configNames) {
+            if(configName.equals("paymentLinkOnStripe")) {
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                String userName = accountAgent.getUserNameWithSession(loginSession);
+                String paymentLink = configMap.get(configName) + "?prefilled_email=" + userName;
+                fileContent = fileContent.replace("<" + configName + ">", paymentLink);
+            }
+            else {
+                fileContent = fileContent.replace("<" + configName + ">", configMap.get(configName));
+            }
         }
 
         return fileContent;
