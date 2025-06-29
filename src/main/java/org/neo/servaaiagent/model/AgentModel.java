@@ -14,6 +14,7 @@ public class AgentModel {
         private List<String> attachFiles;
         private NotifyCallbackIFC notifyCallback;
         private String sayHello;
+        private String theFunction;
 
         public String getAlignedSession() {
             return alignedSession;
@@ -61,6 +62,14 @@ public class AgentModel {
 
         public void setSayHello(String inputSayHello) {
             sayHello = inputSayHello;
+        }
+
+        public String getTheFunction() {
+            return theFunction;
+        }
+
+        public void setTheFunction(String inputTheFunction) {
+            theFunction = inputTheFunction;
         }
     }
 

@@ -82,13 +82,14 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         String alignedSession = params.getAlignedSession();
         NotifyCallbackIFC notifyCallback = params.getNotifyCallback();
         String userInput = params.getUserInput();
+        String theFunction = params.getTheFunction();
         List<String> attachFiles = params.getAttachFiles();
 
         if(attachFiles != null && attachFiles.size() > 0) {
             return returnAttachedPageCode(alignedSession, notifyCallback, attachFiles.get(0));
         }
         else {
-            return innerGeneratePageCode(alignedSession, notifyCallback, userInput);
+            return innerGeneratePageCode(alignedSession, notifyCallback, userInput, theFunction);
         }
     }
 
@@ -111,7 +112,7 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
         return informationToReturn;
     }
 
-    private String innerGeneratePageCode(String alignedSession, NotifyCallbackIFC notifyCallback, String userInput) throws Exception {
+    private String innerGeneratePageCode(String alignedSession, NotifyCallbackIFC notifyCallback, String userInput, String theFunction) throws Exception {
         StorageIFC storage = StorageInMemoryImpl.getInstance();
         checkWorkingThread(notifyCallback);
         AIModel.CodeFeedback lastFeedback = storage.peekCodeFeedback(alignedSession);
@@ -128,7 +129,7 @@ public class UtilityBotInMemoryForUIImpl extends AbsChatForUIInMemoryImpl {
 
         UtilityAgentIFC utilityAgent = UtilityAgentInMemoryImpl.getInstance();
         // UtilityAgentIFC utilityAgent = UtilityAgentRemoteImpl.getInstance();
-        AIModel.ChatResponse chatResponse = utilityAgent.generatePageCode(userInput, lastCodeContent);
+        AIModel.ChatResponse chatResponse = utilityAgent.generatePageCode(userInput, lastCodeContent, theFunction);
 
         // fill codeFeedback and save in storage
         checkWorkingThread(notifyCallback);

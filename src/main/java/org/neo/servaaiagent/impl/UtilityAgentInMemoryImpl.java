@@ -22,9 +22,9 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
     }
 
     @Override
-    public AIModel.ChatResponse generatePageCode(String prompt, String code) {
+    public AIModel.ChatResponse generatePageCode(String prompt, String code, String theFunction) {
         try {
-            return innerGeneratePageCode(prompt, code);
+            return innerGeneratePageCode(prompt, code, theFunction);
         }
         catch(NeoAIException nex) {
             throw nex;
@@ -34,8 +34,8 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         }
     }
 
-    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code) throws Exception {
-        String gamebotDesc = loadUtilityBotDesc();
+    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code, String theFunction) throws Exception {
+        String gamebotDesc = loadUtilityBotDesc(theFunction);
 
         AIModel.PromptStruct promptStruct = constructPromptStruct(gamebotDesc, prompt, code);
         AIModel.ChatResponse chatResponse = fetchChatResponseFromSuperAI(promptStruct);
@@ -71,8 +71,8 @@ public class UtilityAgentInMemoryImpl implements UtilityAgentIFC {
         }
     }
 
-    private String loadUtilityBotDesc() throws Exception {
-        String fileName = "utilitybot.txt";
+    private String loadUtilityBotDesc(String theFunction) throws Exception {
+        String fileName = theFunction + ".txt";
         return IOUtil.resourceFileToString(fileName);
     }
 

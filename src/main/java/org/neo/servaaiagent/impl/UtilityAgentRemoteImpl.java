@@ -29,9 +29,9 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
     }
 
     @Override
-    public AIModel.ChatResponse generatePageCode(String prompt, String code) {
+    public AIModel.ChatResponse generatePageCode(String prompt, String code, String theFunction) {
         try {
-            return innerGeneratePageCode(prompt, code);
+            return innerGeneratePageCode(prompt, code, theFunction);
             // return innerGeneratePageCodeWithJob(prompt, code);
         }
         catch(NeoAIException nex) {
@@ -42,9 +42,9 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         }
     }
 
-    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code) throws Exception {
+    private AIModel.ChatResponse innerGeneratePageCode(String prompt, String code, String theFunction) throws Exception {
         String sUrl = getGameFactoryUrl() + "/generate";
-        String jsonInput = generateJsonBodyToRemote(prompt, code);
+        String jsonInput = generateJsonBodyToRemote(prompt, code, theFunction);
         String jsonResult = sendInputToRemoteWithPost(sUrl, jsonInput);
         ResultGameFactoryResponse resultGameFactoryResponse = extractResultGameFactoryResponse(jsonResult);
 
@@ -90,12 +90,13 @@ public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
         return resultGameFactoryResponse;
     }
 
-    private String generateJsonBodyToRemote(String prompt, String code) {
+    private String generateJsonBodyToRemote(String prompt, String code, String theFunction) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
         
         jsonBody.addProperty("prompt", prompt);
         jsonBody.addProperty("code", code);
+        jsonBody.addProperty("theFunction", theFunction);
         
         return gson.toJson(jsonBody);
     }
