@@ -11,6 +11,9 @@ public interface AccountAgentIFC {
     public String login(String username, String password, String sourceIP);
     public String login(DBConnectionIFC dbConnection, String username, String password, String sourceIP);
 
+    public String loginWithOAuth(String username, String sourceIP);
+    public String loginWithOAuth(DBConnectionIFC dbConnection, String username, String sourceIP);
+
     public void logout(String loginSession);
     public void logout(DBConnectionIFC dbConnection, String loginSession);
 

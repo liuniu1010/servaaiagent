@@ -90,6 +90,30 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
     }
 
     @Override
+    public String loginWithOAuth(String username, String sourceIP) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (String)dbService.executeSaveTask(new AccountAgentImpl() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                return loginWithOAuth(dbConnection, username, sourceIP);
+            }
+        });
+    }
+
+    @Override
+    public String loginWithOAuth(DBConnectionIFC dbConnection, String username, String sourceIP) {
+        try {
+            return innerLoginWithOAuth(dbConnection, username, sourceIP);
+        }
+        catch(NeoAIException nex) {
+            throw nex;
+        }
+        catch(Exception ex) {
+            throw new NeoAIException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public void logout(String loginSession) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new AccountAgentImpl() {
@@ -570,12 +594,13 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         return (String)dbConnection.queryScalar(sqlStruct);
     }
 
-    private void innerSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
+    private String registerNewUserOrUpdateIfExist(DBConnectionIFC dbConnection, String username, String sourceIP, boolean updatePassword) throws Exception {
         String accountId = getAccountIdFromUsername(dbConnection, username);
         String standardEmailAddress = username.trim().toLowerCase();
         String password = CommonUtil.getRandomString(6);
         String encryptedPassword = CommonUtil.getSaltedHash(password);
 
+        AgentModel.UserAccount userAccount = null;
         if(accountId == null) {
             int iValue = CommonUtil.getConfigValueAsInt(dbConnection, "verifyMaxRegisterNumber");
             if(iValue != 0) {
@@ -586,7 +611,7 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
                 }
             }
 
-            AgentModel.UserAccount userAccount = new AgentModel.UserAccount(standardEmailAddress);
+            userAccount = new AgentModel.UserAccount(standardEmailAddress);
             userAccount.setEncryptedPassword(encryptedPassword);
             userAccount.setRegistTime(new Date());
             userAccount.setIP(sourceIP);
@@ -596,12 +621,19 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
             int topupCredits = CommonUtil.getConfigValueAsInt(dbConnection, "topupOnRegister");
             innerPurchaseCreditsWithAccount(dbConnection, userAccount.getId(), topupCredits, CHASED_SOURCE_ONTOPUP, null);
         }
-        else {
+        else if(updatePassword){
             VersionEntity versionEntity = dbConnection.loadVersionEntityById(AgentModel.UserAccount.ENTITYNAME, accountId);
-            AgentModel.UserAccount userAccount = new AgentModel.UserAccount(versionEntity);
+            userAccount = new AgentModel.UserAccount(versionEntity);
             userAccount.setEncryptedPassword(encryptedPassword);
             dbConnection.update(userAccount.getVersionEntity());
         }
+
+        return password;
+    }
+
+    private void innerSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
+        String password = registerNewUserOrUpdateIfExist(dbConnection, username, sourceIP, true);
+        String standardEmailAddress = username.trim().toLowerCase();
 
         // send password to user
         String subject = "Your Password for NeoAI";
@@ -611,12 +643,10 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
         emailAgent.sendEmail(dbConnection, standardEmailAddress, subject, body);
     }
 
-    private String innerLogin(DBConnectionIFC dbConnection, String username, String password, String sourceIP) throws Exception {
+    private void preLoginCheck(DBConnectionIFC dbConnection, String username) throws Exception {
         if(!CommonUtil.isValidEmail(username)){
             throw new NeoAIException("not a valid email address!");
         }
-
-        String standardEmailAddress = username.trim().toLowerCase();
 
         int iValue = CommonUtil.getConfigValueAsInt(dbConnection, "verifyMaxOnlineNumber");
         if(iValue != 0) {
@@ -626,7 +656,25 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_MAXONLINENUMBER_EXCEED);
             }
         }
+    }
 
+    private String generateLoginSession(DBConnectionIFC dbConnection, String accountId, String sourceIP) throws Exception {
+        String loginSession = CommonUtil.getRandomString(10);
+        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
+        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
+
+        AgentModel.LoginSession modelLoginSession = new AgentModel.LoginSession(loginSession);
+        modelLoginSession.setAccountId(accountId);
+        modelLoginSession.setExpireTime(expireTime);
+        modelLoginSession.setIP(sourceIP);
+        modelLoginSession.setIsDeleted(false);
+        dbConnection.insert(modelLoginSession.getVersionEntity());
+
+        return loginSession;
+    }
+
+    private String getAccountIdWithLocalLoginVerify(DBConnectionIFC dbConnection, String username, String password) throws Exception {
+        String standardEmailAddress = username.trim().toLowerCase();
         // read encyrpted password from DB
         String sql = "select *";
         sql += " from useraccount";
@@ -647,19 +695,24 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
             throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL);
         }
 
-        // passed, generate login loginSession
-        String loginSession = CommonUtil.getRandomString(10);
-        int expireMinutes = CommonUtil.getConfigValueAsInt(dbConnection, "sessionExpireMinutes");
-        Date expireTime = CommonUtil.addTimeSpan(new Date(), Calendar.MINUTE, expireMinutes);
+        return userAccount.getId();
+    }
 
-        AgentModel.LoginSession modelLoginSession = new AgentModel.LoginSession(loginSession);
-        modelLoginSession.setAccountId(userAccount.getId());
-        modelLoginSession.setExpireTime(expireTime);
-        modelLoginSession.setIP(sourceIP);
-        modelLoginSession.setIsDeleted(false);
-        dbConnection.insert(modelLoginSession.getVersionEntity());
+    private String getAccountIdWithOAuthLogin(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
+        registerNewUserOrUpdateIfExist(dbConnection, username, sourceIP, false);
+        return getAccountIdFromUsername(dbConnection, username);
+    }
 
-        return loginSession;
+    private String innerLogin(DBConnectionIFC dbConnection, String username, String password, String sourceIP) throws Exception {
+        preLoginCheck(dbConnection, username);
+        String accountId = getAccountIdWithLocalLoginVerify(dbConnection, username, password);
+        return generateLoginSession(dbConnection, accountId, sourceIP);
+    }
+
+    private String innerLoginWithOAuth(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
+        preLoginCheck(dbConnection, username);
+        String accountId = getAccountIdWithOAuthLogin(dbConnection, username, sourceIP);
+        return generateLoginSession(dbConnection, accountId, sourceIP);
     }
 
     private String getAccountId(DBConnectionIFC dbConnection, String loginSession) throws Exception {
