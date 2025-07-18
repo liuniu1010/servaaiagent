@@ -22,6 +22,7 @@ import org.neo.servaaiagent.ifc.EmailAgentIFC;
 import org.neo.servaaiagent.model.AgentModel;
 
 public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AccountAgentImpl.class);
     private final static String CHASED_SOURCE_ONTOPUP = "topupOnRegister";
     private AccountAgentImpl() {
     }
@@ -620,15 +621,17 @@ public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSave
             // for new register user, auto topup some initial credits for trying
             int topupCredits = CommonUtil.getConfigValueAsInt(dbConnection, "topupOnRegister");
             innerPurchaseCreditsWithAccount(dbConnection, userAccount.getId(), topupCredits, CHASED_SOURCE_ONTOPUP, null);
+            return password;
         }
-        else if(updatePassword){
+        else if(updatePassword) {
             VersionEntity versionEntity = dbConnection.loadVersionEntityById(AgentModel.UserAccount.ENTITYNAME, accountId);
             userAccount = new AgentModel.UserAccount(versionEntity);
             userAccount.setEncryptedPassword(encryptedPassword);
             dbConnection.update(userAccount.getVersionEntity());
+            return password;
         }
 
-        return password;
+        return null;
     }
 
     private void innerSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) throws Exception {
