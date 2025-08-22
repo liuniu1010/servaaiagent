@@ -18,7 +18,7 @@ import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class CoderAgentInMemoryImpl implements CoderAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(CoderAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(CoderAgentInMemoryImpl.class);
 
     private CoderAgentInMemoryImpl() {
     }

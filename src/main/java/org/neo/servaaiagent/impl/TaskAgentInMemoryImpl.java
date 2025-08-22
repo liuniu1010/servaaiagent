@@ -19,7 +19,7 @@ import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class TaskAgentInMemoryImpl implements TaskAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(TaskAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(TaskAgentInMemoryImpl.class);
 
     private TaskAgentInMemoryImpl() {
     }

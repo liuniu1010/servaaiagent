@@ -23,7 +23,7 @@ import org.neo.servaaiagent.ifc.ManagerAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class ManagerAgentInMemoryImpl implements ManagerAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ManagerAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(ManagerAgentInMemoryImpl.class);
 
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;

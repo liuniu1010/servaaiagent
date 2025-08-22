@@ -19,7 +19,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ShellAgentIFC;
 
 public class ShellAgentInMemoryImpl implements ShellAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ShellAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(ShellAgentInMemoryImpl.class);
     private static ShellAgentIFC instance = new ShellAgentInMemoryImpl();
 
     private ShellAgentInMemoryImpl() {
@@ -115,7 +115,7 @@ interface ShellIFC {
 }
 
 abstract class AbsShell implements ShellIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsShell.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AbsShell.class);
     protected Process shellProcess;
     protected BufferedWriter shellWriter;
     protected BufferedReader shellReader;

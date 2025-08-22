@@ -19,7 +19,7 @@ import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.AssistantAgentIFC;
 
 public class AssistantAgentInMemoryImpl implements AssistantAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AssistantAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AssistantAgentInMemoryImpl.class);
     private AssistantAgentInMemoryImpl() {
     }
 

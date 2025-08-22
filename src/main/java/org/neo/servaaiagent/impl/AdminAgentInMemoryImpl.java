@@ -18,7 +18,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.AdminAgentIFC;
 
 public class AdminAgentInMemoryImpl implements AdminAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AdminAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AdminAgentInMemoryImpl.class);
     private AdminAgentInMemoryImpl() {
     }
 

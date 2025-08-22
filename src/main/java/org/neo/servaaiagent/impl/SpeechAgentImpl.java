@@ -15,7 +15,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.SpeechAgentIFC;
 
 public class SpeechAgentImpl implements SpeechAgentIFC, DBSaveTaskIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SpeechAgentImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(SpeechAgentImpl.class);
     private String outputFormat;
     private SpeechAgentImpl() {
     }

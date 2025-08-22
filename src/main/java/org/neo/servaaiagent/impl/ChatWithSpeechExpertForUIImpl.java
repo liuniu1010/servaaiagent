@@ -20,7 +20,7 @@ import org.neo.servaaiagent.impl.AbsChatForUIInDBImpl;
 import org.neo.servaaiagent.model.AgentModel;
 
 public class ChatWithSpeechExpertForUIImpl extends AbsChatForUIInDBImpl {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(ChatWithSpeechExpertForUIImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(ChatWithSpeechExpertForUIImpl.class);
     private String outputFormat = "mp3";
     private String onlineFileAbsolutePath;
     private String relevantVisitPath;

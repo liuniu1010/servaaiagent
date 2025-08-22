@@ -22,7 +22,7 @@ import org.neo.servaaiagent.ifc.EmailAgentIFC;
 import org.neo.servaaiagent.model.AgentModel;
 
 public class AccountAgentImpl implements AccountAgentIFC, DBQueryTaskIFC, DBSaveTaskIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AccountAgentImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AccountAgentImpl.class);
     private final static String CHASED_SOURCE_ONTOPUP = "topupOnRegister";
     private AccountAgentImpl() {
     }

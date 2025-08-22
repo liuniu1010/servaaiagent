@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <!-- Appenders -->
+  <Appenders>
+    <!-- Console appender -->
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
+    </Console>
+
+    <!-- Rolling file appender: 10MB size, keep 10 backups, overwrite on restart -->
+    <RollingFile
+        name="File"
+        fileName="logs/servaaiagent.log"
+        filePattern="logs/servaaiagent-%i.log.gz"
+        append="false">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{1}][%t]:%L - %m%n"/>
+      <Policies>
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
+  </Appenders>
+
+  <!-- Loggers -->
+  <Loggers>
+    <!-- Keep package logger at DEBUG, send only to File, no propagation -->
+    <Logger name="org.neo.servaaiagent" level="debug" additivity="false">
+      <AppenderRef ref="File"/>
+    </Logger>
+
+    <!-- Root at ERROR, to both console and file -->
+    <Root level="error">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="File"/>
+    </Root>
+  </Loggers>
+</Configuration>
+

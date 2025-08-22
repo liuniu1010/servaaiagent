@@ -21,7 +21,7 @@ import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class CoderAgentImpl implements CoderAgentIFC, DBAutoCommitSaveTaskIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(CoderAgentImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(CoderAgentImpl.class);
 
     private CoderAgentImpl() {
     }

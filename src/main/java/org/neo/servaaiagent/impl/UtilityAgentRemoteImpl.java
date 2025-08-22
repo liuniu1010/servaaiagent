@@ -18,7 +18,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.UtilityAgentIFC;
 
 public class UtilityAgentRemoteImpl implements UtilityAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(UtilityAgentRemoteImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(UtilityAgentRemoteImpl.class);
     final static String RAPIDAPI_SECRET = "X-RapidAPI-Proxy-Secret";
 
     private UtilityAgentRemoteImpl() {

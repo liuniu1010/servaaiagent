@@ -16,7 +16,7 @@ import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaiagent.ifc.SandBoxAgentIFC;
 
 public class SandBoxAgentInMemoryImpl implements SandBoxAgentIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SandBoxAgentInMemoryImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(SandBoxAgentInMemoryImpl.class);
 
     private SandBoxAgentInMemoryImpl() {
     }

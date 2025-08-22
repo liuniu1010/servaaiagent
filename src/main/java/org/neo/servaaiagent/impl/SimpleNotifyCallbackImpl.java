@@ -8,7 +8,7 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 public class SimpleNotifyCallbackImpl implements NotifyCallbackIFC {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SimpleNotifyCallbackImpl.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(SimpleNotifyCallbackImpl.class);
 
     private OutputStream  outputStream = null;
     private int workingThreadHashCode = 0;
